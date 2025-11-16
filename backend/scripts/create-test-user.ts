@@ -8,7 +8,9 @@
 import bcrypt from 'bcryptjs';
 import prisma from '../src/config/database';
 
-// Default credentials - CHANGE IN PRODUCTION!
+// Default credentials for initial setup
+// ⚠️ SECURITY WARNING: Change these credentials immediately after first login in production!
+// Use environment variables DEFAULT_ADMIN_USERNAME and DEFAULT_ADMIN_PASSWORD for custom values
 const DEFAULT_USERNAME = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
 const DEFAULT_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';
 const DEFAULT_ROLE = 'ADMIN';

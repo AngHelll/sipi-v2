@@ -8,7 +8,7 @@
 ![React](https://img.shields.io/badge/React-19.2-blue.svg)
 ![Node](https://img.shields.io/badge/Node.js-18+-green.svg)
 
-**Sistema moderno de registro estudiantil para instituciones técnicas mexicanas**
+**Sistema moderno de registro estudiantil para instituciones educativas**
 
 Un sistema completo de gestión académica con roles diferenciados, autenticación segura y arquitectura escalable.
 
@@ -121,9 +121,11 @@ Pages → Components → Context → API Client
 ### 1. Clonar el Repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/sipi-modern.git
-cd sipi-modern
+git clone https://github.com/AngHelll/sipi-v2.git
+cd sipi-v2
 ```
+
+O descarga el código fuente desde [GitHub Releases](https://github.com/AngHelll/sipi-v2/releases).
 
 ### 2. Configurar Backend
 
@@ -137,8 +139,9 @@ npm install
 cp .env.example .env
 
 # Editar .env con tus credenciales
+# ⚠️ IMPORTANTE: Usa credenciales seguras en producción
 # DATABASE_URL="mysql://usuario:password@localhost:3306/sipi_db"
-# JWT_SECRET="tu_secret_key_super_segura"
+# JWT_SECRET="genera_un_secret_key_seguro_minimo_32_caracteres"
 # PORT=3001
 # FRONTEND_URL="http://localhost:5173"
 
@@ -148,7 +151,8 @@ npm run prisma:generate
 # Ejecutar migraciones
 npm run prisma:migrate
 
-# (Opcional) Crear usuario administrador de prueba
+# (Opcional) Crear usuario administrador inicial
+# ⚠️ IMPORTANTE: Cambia las credenciales por defecto en producción
 npm run create:user
 ```
 
@@ -182,7 +186,9 @@ PORT=3001
 NODE_ENV=development
 
 # JWT
-JWT_SECRET=tu_secret_key_super_segura_minimo_32_caracteres
+# ⚠️ Genera un secret seguro y único para producción
+# Puedes usar: openssl rand -base64 32
+JWT_SECRET=genera_un_secret_key_seguro_minimo_32_caracteres
 JWT_EXPIRES_IN=7d
 
 # CORS
@@ -377,7 +383,7 @@ npm run lint            # Linter
 npm run prisma:generate # Generar cliente Prisma
 npm run prisma:migrate  # Ejecutar migraciones
 npm run prisma:studio   # Abrir Prisma Studio
-npm run create:user     # Crear usuario admin de prueba
+npm run create:user     # Crear usuario admin inicial (solo desarrollo)
 ```
 
 **Frontend:**
@@ -422,6 +428,8 @@ Ver `backend/prisma/schema.prisma` para el esquema completo.
 - ✅ CORS configurado
 - ✅ Manejo seguro de contraseñas con bcrypt
 
+**⚠️ Importante**: Después de la instalación inicial, cambia las credenciales por defecto y genera un JWT_SECRET seguro. Ver [SECURITY.md](SECURITY.md) para más detalles.
+
 ## 🎨 Características de UI
 
 - 🌓 Modo oscuro/claro
@@ -449,7 +457,7 @@ Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 
 ## 🙏 Agradecimientos
 
-Sistema desarrollado como muestra de un sistema estándar moderno para instituciones educativas mexicanas.
+Sistema desarrollado como una solución moderna y escalable para la gestión académica en instituciones educativas.
 
 ---
 
