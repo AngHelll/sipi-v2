@@ -1,0 +1,164 @@
+// Prisma schema for SIPI Modern - Student Registration System (IMPROVED VERSION)
+// Database: MySQL
+// This is an improved version with better consistency, indexes, and validations
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum StudentStatus {
+  ACTIVO
+  INACTIVO
+  EGRESADO
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+// User model - Base authentication model
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique @db.VarChar(50) // Limit length
+  passwordHash String   @db.VarChar(255)
+  role         UserRole
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  student Student?
+  teacher Teacher?
+
+  @@index([username]) // Index for login queries
+  @@map("users")
+}
+
+// Student model - Extended user profile for students
+model Student {
+  id              String        @id @default(uuid())
+  userId          String        @unique
+  matricula       String        @unique @db.VarChar(20) // Limit length, e.g., "2024-001234"
+  nombre          String        @db.VarChar(100)
+  apellidoPaterno String        @db.VarChar(100)
+  apellidoMaterno String        @db.VarChar(100)
+  carrera         String        @db.VarChar(100)
+  semestre        Int           // Range: 1-12 (validated in application)
+  estatus         StudentStatus // Changed from String to Enum
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+
+  @@index([matricula]) // Index for quick lookups
+  @@index([carrera]) // Index for filtering by carrera
+  @@index([semestre]) // Index for filtering by semestre
+  @@index([estatus]) // Index for filtering by status
+  @@index([carrera, semestre]) // Composite index for common queries
+  @@map("students")
+}
+
+// Teacher model - Extended user profile for teachers
+model Teacher {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  nombre          String   @db.VarChar(100)
+  apellidoPaterno String   @db.VarChar(100)
+  apellidoMaterno String   @db.VarChar(100)
+  departamento    String   @db.VarChar(100)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groups  Group[]
+
+  @@index([departamento]) // Index for filtering by department
+  @@map("teachers")
+}
+
+// Subject model - Academic subjects/courses
+model Subject {
+  id       String  @id @default(uuid())
+  clave    String  @unique @db.VarChar(20) // Limit length, e.g., "MAT101"
+  nombre   String  @db.VarChar(200)
+  creditos Int     // Should be > 0 (validated in application)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  groups Group[]
+
+  @@index([clave]) // Index for quick lookups
+  @@map("subjects")
+}
+
+// Group model - Class groups for subjects
+model Group {
+  id        String   @id @default(uuid())
+  subjectId String
+  teacherId String
+  nombre    String   @db.VarChar(50) // Limit length, e.g., "Grupo A"
+  periodo   String   @db.VarChar(10) // Limit length, e.g., "2024-1"
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Restrict) // Changed from Cascade to Restrict
+  teacher     Teacher     @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  enrollments Enrollment[]
+
+  @@index([subjectId]) // Index for joins with Subject
+  @@index([teacherId]) // Index for joins with Teacher
+  @@index([periodo]) // Index for filtering by periodo
+  @@index([subjectId, periodo]) // Composite index for common queries
+  @@index([teacherId, periodo]) // Composite index for teacher's groups by period
+  @@map("groups")
+}
+
+// Enrollment model - Student enrollment in groups
+model Enrollment {
+  id          String   @id @default(uuid())
+  studentId   String
+  groupId     String
+  calificacion Float?   @db.Decimal(5, 2) // Nullable, range: 0.00-100.00 (validated in application)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, groupId]) // Prevents duplicate enrollments
+  @@index([studentId]) // Index for joins with Student
+  @@index([groupId]) // Index for joins with Group
+  @@index([studentId, groupId]) // Composite index for unique constraint
+  @@map("enrollments")
+}
+
