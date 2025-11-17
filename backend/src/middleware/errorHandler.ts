@@ -5,6 +5,16 @@ export interface AppError extends Error {
   statusCode?: number;
 }
 
+export class AuthenticationError extends Error implements AppError {
+  statusCode: number;
+  
+  constructor(message: string = 'Invalid credentials') {
+    super(message);
+    this.name = 'AuthenticationError';
+    this.statusCode = 401;
+  }
+}
+
 /**
  * Global error handler middleware
  * Catches all errors and sends appropriate response

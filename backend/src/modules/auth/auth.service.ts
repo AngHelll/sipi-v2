@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import prisma from '../../config/database';
 import { config } from '../../config/env';
 import { JwtPayload, UserRole } from '../../types';
+import { AuthenticationError } from '../../middleware/errorHandler';
 
 export interface LoginCredentials {
   username: string;
@@ -33,13 +34,16 @@ export const login = async (
   });
 
   if (!user) {
-    throw new Error('Invalid credentials');
+    // Throw authentication error with 401 status code
+    throw new AuthenticationError('Invalid credentials');
   }
 
   // Verify password
   const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+  
   if (!isValidPassword) {
-    throw new Error('Invalid credentials');
+    // Throw authentication error with 401 status code
+    throw new AuthenticationError('Invalid credentials');
   }
 
   return {

@@ -158,6 +158,8 @@ Pages → Components → Context → API Client
 - MySQL 8.0+
 - Git
 
+> 📖 **Instalación en Windows**: Si estás en Windows, consulta la [Guía de Instalación para Windows](docs/setup/windows-installation.md) para instrucciones detalladas paso a paso.
+
 ### 1. Clonar el Repositorio
 
 ```bash
@@ -503,6 +505,12 @@ Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 
 ## 📚 Documentación Adicional
 
+### Guías de Instalación
+- [Instalación en Windows](docs/setup/windows-installation.md) - Guía completa para Windows
+- [Instalación en macOS/Linux](README.md#-instalación) - Instrucciones en el README principal
+- [Solución de Problemas](docs/setup/troubleshooting.md) - Problemas comunes y soluciones
+
+### Documentación Técnica
 - [ESTATUS_EJECUTIVO.md](ESTATUS_EJECUTIVO.md) - Análisis completo del estado del proyecto
 - [SUGERENCIAS_MEJORA.md](SUGERENCIAS_MEJORA.md) - Plan de mejoras priorizado
 - [RECOMENDACIONES.md](RECOMENDACIONES.md) - Recomendaciones técnicas y roadmap
