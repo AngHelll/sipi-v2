@@ -189,7 +189,12 @@ cp .env.example .env
 npm run prisma:generate
 
 # Ejecutar migraciones
+# ⚠️ IMPORTANTE: Si es la primera vez, esto creará todas las tablas
+# Si ya existe la base de datos, esto aplicará solo las migraciones pendientes
 npm run prisma:migrate
+
+# (Opcional) Si necesitas sincronizar el schema sin crear migración (solo desarrollo):
+# npx prisma db push
 
 # (Opcional) Crear usuario administrador inicial
 # ⚠️ IMPORTANTE: Cambia las credenciales por defecto en producción
