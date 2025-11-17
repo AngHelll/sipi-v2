@@ -14,6 +14,7 @@ export interface FormFieldProps {
   max?: number;
   minLength?: number;
   maxLength?: number;
+  step?: number | string;
   error?: string | null;
   touched?: boolean;
   validate?: (value: string | number) => string | null;
@@ -37,6 +38,7 @@ export const FormField = ({
   max,
   minLength,
   maxLength,
+  step,
   error: externalError,
   touched: externalTouched,
   validate,
@@ -145,6 +147,7 @@ export const FormField = ({
           max={max}
           minLength={minLength}
           maxLength={maxLength}
+          step={step}
           placeholder={placeholder}
           className={inputClasses}
         />

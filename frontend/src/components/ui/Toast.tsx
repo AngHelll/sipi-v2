@@ -30,15 +30,15 @@ export const ToastItem = ({ toast, onRemove }: ToastProps) => {
     
     switch (toast.type) {
       case 'success':
-        return `${baseStyles} bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200`;
+        return `${baseStyles} bg-green-50 border border-green-200 text-green-800`;
       case 'error':
-        return `${baseStyles} bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200`;
+        return `${baseStyles} bg-red-50 border border-red-200 text-red-800`;
       case 'warning':
-        return `${baseStyles} bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200`;
+        return `${baseStyles} bg-yellow-50 border border-yellow-200 text-yellow-800`;
       case 'info':
-        return `${baseStyles} bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200`;
+        return `${baseStyles} bg-blue-50 border border-blue-200 text-blue-800`;
       default:
-        return `${baseStyles} bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200`;
+        return `${baseStyles} bg-gray-50 border border-gray-200 text-gray-800`;
     }
   };
 
@@ -83,7 +83,7 @@ export const ToastItem = ({ toast, onRemove }: ToastProps) => {
       </div>
       <button
         onClick={() => onRemove(toast.id)}
-        className="ml-4 shrink-0 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+        className="ml-4 shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -36,19 +36,16 @@ export const ProtectedRoute = ({
     const hasAccess = allowedRolesStrings.includes(userRoleString);
     
     if (!hasAccess) {
-      console.warn('ProtectedRoute: Access denied', {
-        userRole: userRoleString,
-        allowedRoles: allowedRolesStrings,
-        path: window.location.pathname,
-        user: user.username,
-      });
+      // Only log in development mode
+      if (import.meta.env.DEV) {
+        console.warn('ProtectedRoute: Access denied', {
+          userRole: userRoleString,
+          allowedRoles: allowedRolesStrings,
+          path: window.location.pathname,
+        });
+      }
       return <Navigate to="/dashboard" replace />;
     }
-    
-    console.log('ProtectedRoute: Access granted', {
-      userRole: userRoleString,
-      path: window.location.pathname,
-    });
   }
 
   return <>{children}</>;

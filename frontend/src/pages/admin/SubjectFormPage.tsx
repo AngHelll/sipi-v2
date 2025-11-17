@@ -75,7 +75,7 @@ export const SubjectFormPage = () => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     const newValue = name === 'creditos' ? parseInt(value, 10) || 0 : value;
@@ -194,7 +194,7 @@ export const SubjectFormPage = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-2xl">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-2xl border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               label="Clave"

@@ -75,7 +75,7 @@ export const EnrollmentFormPage = () => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     
@@ -179,7 +179,7 @@ export const EnrollmentFormPage = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-2xl">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-2xl border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               label="Estudiante"

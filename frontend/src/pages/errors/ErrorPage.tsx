@@ -50,7 +50,7 @@ export const ErrorPage = ({
             </div>
             <p className="text-red-700 mb-4">{message}</p>
             
-            {error && process.env.NODE_ENV === 'development' && (
+            {error && (import.meta.env.DEV || import.meta.env.MODE === 'development') && (
               <details className="mt-4">
                 <summary className="cursor-pointer text-sm font-medium text-red-800 mb-2">
                   Detalles del error (solo en desarrollo)

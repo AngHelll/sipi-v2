@@ -56,7 +56,7 @@ export const StudentFormPage = () => {
         apellidoMaterno: student.apellidoMaterno,
         carrera: student.carrera,
         semestre: student.semestre,
-        estatus: student.estatus,
+        estatus: student.estatus as 'ACTIVO' | 'INACTIVO' | 'EGRESADO',
         curp: student.curp || '',
       });
     } catch (err: any) {
@@ -149,7 +149,7 @@ export const StudentFormPage = () => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     const newValue = name === 'semestre' ? parseInt(value, 10) || 0 : value;
@@ -296,7 +296,7 @@ export const StudentFormPage = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* User fields (only for new students) */}
             {!isEdit && (

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Professional Dark Mode Strategy:
+ * - Tailwind CSS v4 handles ALL theming via 'dark' class on <html>
+ * - NO custom CSS colors - let Tailwind handle everything
+ * - Only base styles that don't interfere with theming
+ */
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

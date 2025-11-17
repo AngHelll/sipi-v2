@@ -16,17 +16,19 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Sistema de inscripciones estudiantiles
 - Gestión de calificaciones para maestros
 - Dashboards personalizados por rol (Estudiante, Maestro, Administrador)
-- Búsqueda global avanzada
-- Exportación de datos a Excel
-- Modo oscuro/claro
+- Búsqueda global avanzada con autocompletado
+- Exportación de datos a Excel con filtros aplicados
 - Rate limiting para protección contra abuso
 - Sanitización y validación de entrada
-- Manejo robusto de errores
-- Notificaciones toast
-- Gráficas interactivas con Recharts
+- Manejo robusto de errores con ErrorBoundary
+- Notificaciones toast para feedback al usuario
+- Gráficas interactivas con Recharts (estilos optimizados)
 - Filtros y paginación en todas las listas
 - Validación de UUIDs en parámetros
+- Componentes UI reutilizables (Card, Badge, Avatar, Icon, etc.)
+- Formularios con validación en tiempo real
 - Documentación completa del proyecto
+- Documentos estratégicos (ESTATUS_EJECUTIVO.md, SUGERENCIAS_MEJORA.md)
 
 ### Seguridad
 - Autenticación JWT con cookies HTTP-only
@@ -44,9 +46,23 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Prisma ORM para gestión de base de datos
 - Separación clara de responsabilidades
 
+### Mejorado
+- Optimización de estilos en gráficas (mejor legibilidad de textos)
+- Mejora de componentes UI con diseño más profesional
+- Refinamiento de dashboards con estadísticas más claras
+- Optimización de rendimiento en listados con paginación
+- Mejora de experiencia de usuario en formularios
+
+### Removido
+- Modo oscuro/claro (removido temporalmente para re-implementación futura más robusta)
+- Archivos temporales de desarrollo y scripts de migración
+
 ### Documentación
 - README completo con instrucciones de instalación
 - CONTRIBUTING.md con guía de contribución
+- ESTATUS_EJECUTIVO.md con análisis completo del proyecto
+- SUGERENCIAS_MEJORA.md con plan de mejoras priorizado
+- RECOMENDACIONES.md con roadmap técnico
 - Templates de Issues y Pull Requests
 - Documentación de API
 - Ejemplos de configuración (.env.example)

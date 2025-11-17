@@ -2,7 +2,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
-import { ThemeProvider } from './context/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
@@ -26,10 +25,9 @@ import { UserRole } from './types';
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <BrowserRouter>
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
             <Routes>
           {/* Public route */}
           <Route path="/login" element={<LoginPage />} />
@@ -210,7 +208,6 @@ function App() {
           </BrowserRouter>
         </AuthProvider>
       </ToastProvider>
-      </ThemeProvider>
     </ErrorBoundary>
   );
 }
@@ -221,7 +218,7 @@ const DashboardRedirect = () => {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-gray-600">Cargando...</div>
       </div>
     );

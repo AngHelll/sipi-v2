@@ -137,8 +137,6 @@ const transformError = (error: AxiosError): Error => {
       return new Error(
         data?.error || 'Error de validación. Por favor verifica los datos ingresados.'
       );
-    case 429:
-      return new Error('Demasiadas solicitudes. Por favor intenta más tarde.');
     case 500:
       return new Error(
         'Error del servidor. Por favor intenta más tarde o contacta al administrador.'

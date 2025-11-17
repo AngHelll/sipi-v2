@@ -18,8 +18,47 @@ Un sistema completo de gestión académica con roles diferenciados, autenticaci�
 
 ---
 
+## 📸 Capturas de Pantalla
+
+<div align="center">
+
+### Dashboard del Administrador
+
+![Dashboard Administrador](docs/images/dashboard-admin.png)
+
+*Panel principal con estadísticas generales, gráficas interactivas y resumen del sistema*
+
+### Gestión de Estudiantes
+
+![Gestión de Estudiantes](docs/images/students-management.png)
+
+*Listado completo de estudiantes con filtros avanzados por carrera, semestre y estatus, búsqueda y paginación*
+
+### Gestión de Maestros
+
+![Gestión de Maestros](docs/images/teachers-management.png)
+
+*Administración de maestros con filtros por departamento, búsqueda y exportación a Excel*
+
+### Gestión de Materias
+
+![Gestión de Materias](docs/images/subjects-management.png)
+
+*Catálogo de materias académicas con clave, nombre y créditos, ordenamiento y acciones rápidas*
+
+### Gestión de Grupos
+
+![Gestión de Grupos](docs/images/groups-management.png)
+
+*Administración de grupos académicos con asignación de maestros y materias, filtros por período y exportación*
+
+</div>
+
+---
+
 ## 📋 Tabla de Contenidos
 
+- [Capturas de Pantalla](#-capturas-de-pantalla)
 - [Características](#-características)
 - [Tecnologías](#-tecnologías)
 - [Arquitectura](#-arquitectura)
@@ -62,10 +101,11 @@ Un sistema completo de gestión académica con roles diferenciados, autenticaci�
 
 ### 🎨 Interfaz de Usuario
 - Diseño moderno y responsivo con Tailwind CSS
-- Modo oscuro/claro
 - Notificaciones toast para feedback al usuario
 - Manejo de errores robusto
 - Navegación intuitiva con sidebar y topbar
+- Componentes UI reutilizables y profesionales
+- Gráficas interactivas con estilos optimizados
 
 ## 🛠 Tecnologías
 
@@ -286,7 +326,6 @@ sipi-modern/
 │   │   │   └── errors/           # Páginas de error
 │   │   ├── context/              # Context API
 │   │   │   ├── AuthContext.tsx
-│   │   │   ├── ThemeContext.tsx
 │   │   │   └── ToastContext.tsx
 │   │   ├── lib/                   # Utilidades
 │   │   │   └── api.ts            # Cliente API
@@ -432,14 +471,16 @@ Ver `backend/prisma/schema.prisma` para el esquema completo.
 
 ## 🎨 Características de UI
 
-- 🌓 Modo oscuro/claro
-- 📱 Diseño responsivo
-- 🔔 Notificaciones toast
+- 📱 Diseño responsivo y moderno
+- 🔔 Notificaciones toast para feedback
 - 🔍 Búsqueda global con autocompletado
-- 📊 Gráficas interactivas
-- 📥 Exportación a Excel
+- 📊 Gráficas interactivas con Recharts (estilos optimizados)
+- 📥 Exportación a Excel con filtros aplicados
 - ⚡ Carga rápida con Vite
-- 🎯 Manejo de errores robusto
+- 🎯 Manejo de errores robusto con ErrorBoundary
+- 🎨 Componentes UI reutilizables (Card, Badge, Avatar, etc.)
+- 📋 Formularios con validación en tiempo real
+- 🔄 Paginación y ordenamiento en todas las listas
 
 ## 🤝 Contribuir
 
@@ -454,6 +495,16 @@ Las contribuciones son bienvenidas. Por favor:
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
+
+## 📚 Documentación Adicional
+
+- [ESTATUS_EJECUTIVO.md](ESTATUS_EJECUTIVO.md) - Análisis completo del estado del proyecto
+- [SUGERENCIAS_MEJORA.md](SUGERENCIAS_MEJORA.md) - Plan de mejoras priorizado
+- [RECOMENDACIONES.md](RECOMENDACIONES.md) - Recomendaciones técnicas y roadmap
+- [PROJECT_STATUS.md](PROJECT_STATUS.md) - Estado detallado del proyecto
+- [SECURITY.md](SECURITY.md) - Guía de seguridad
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Guía de contribución
+- [CHANGELOG.md](CHANGELOG.md) - Historial de cambios
 
 ## 🙏 Agradecimientos
 

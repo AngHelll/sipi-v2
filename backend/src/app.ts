@@ -18,10 +18,32 @@ import exportRoutes from './modules/export/export.routes';
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: config.cors.frontendUrl,
+// CORS configuration - in development, allow any localhost port
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // In development, allow any localhost port
+    if (config.server.nodeEnv === 'development') {
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return callback(null, true);
+      }
+    }
+    
+    // In production, only allow the configured frontend URL
+    if (origin === config.cors.frontendUrl) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true, // Allow cookies
-}));
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

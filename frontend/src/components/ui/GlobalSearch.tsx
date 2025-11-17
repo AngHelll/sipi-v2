@@ -170,7 +170,7 @@ export const GlobalSearch = () => {
             }
           }}
           placeholder="Buscar estudiantes, maestros, materias..."
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 sm:text-sm"
+          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         />
         {loading && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -181,35 +181,35 @@ export const GlobalSearch = () => {
 
       {/* Results Dropdown */}
       {isOpen && results.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg max-h-96 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full bg-white shadow-lg max-h-96 rounded-lg border border-gray-200 overflow-hidden">
           <div className="py-1 overflow-auto max-h-96">
             {results.map((result) => (
               <button
                 key={`${result.type}-${result.id}`}
                 onClick={() => handleResultClick(result)}
-                className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-start gap-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100 last:border-b-0"
               >
                 <div className="shrink-0 mt-0.5">
                   {getTypeIcon(result.type)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    <p className="text-sm font-medium text-gray-900 truncate">
                       {result.title}
                     </p>
-                    <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
+                    <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
                       {getTypeLabel(result.type)}
                     </span>
                   </div>
                   {result.subtitle && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    <p className="text-xs text-gray-500 truncate">
                       {result.subtitle}
                     </p>
                   )}
                 </div>
                 <div className="shrink-0">
                   <svg
-                    className="w-4 h-4 text-gray-400 dark:text-gray-500"
+                    className="w-4 h-4 text-gray-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -226,7 +226,7 @@ export const GlobalSearch = () => {
             ))}
           </div>
           {results.length >= 8 && (
-            <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 text-center">
+            <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-500 text-center">
               Mostrando primeros 8 resultados. Refina tu búsqueda para más precisión.
             </div>
           )}
@@ -234,8 +234,8 @@ export const GlobalSearch = () => {
       )}
 
       {isOpen && query.trim().length >= 2 && !loading && results.length === 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+        <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-lg border border-gray-200 p-4">
+          <p className="text-sm text-gray-500 text-center">
             No se encontraron resultados para "{query}"
           </p>
         </div>
