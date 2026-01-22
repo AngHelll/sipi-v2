@@ -18,6 +18,29 @@ export interface CreateTeacherDataDto {
   apellidoPaterno: string;
   apellidoMaterno: string;
   departamento: string;
+  // Optional personal information
+  fechaNacimiento?: string; // ISO date string
+  genero?: 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'PREFIERO_NO_DECIR';
+  nacionalidad?: string;
+  lugarNacimiento?: string;
+  direccion?: string;
+  ciudad?: string;
+  estado?: string;
+  codigoPostal?: string;
+  pais?: string;
+  // Optional contact information
+  email?: string;
+  telefono?: string;
+  // Optional academic information
+  gradoAcademico?: string;
+  especialidad?: string;
+  cedulaProfesional?: string;
+  universidad?: string;
+  // Optional employment information
+  tipoContrato?: 'TIEMPO_COMPLETO' | 'MEDIO_TIEMPO' | 'POR_HONORARIOS' | 'INTERINO';
+  fechaContratacion?: string; // ISO date string
+  estatus?: 'ACTIVO' | 'INACTIVO' | 'JUBILADO' | 'LICENCIA';
+  salario?: number;
 }
 
 /**
@@ -38,6 +61,30 @@ export interface UpdateTeacherDto {
   apellidoPaterno?: string;
   apellidoMaterno?: string;
   departamento?: string;
+  // Contact information
+  email?: string;
+  telefono?: string;
+  // Personal information
+  fechaNacimiento?: string; // ISO date string
+  genero?: 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'PREFIERO_NO_DECIR';
+  nacionalidad?: string;
+  lugarNacimiento?: string;
+  direccion?: string;
+  ciudad?: string;
+  estado?: string;
+  codigoPostal?: string;
+  pais?: string;
+  // Academic information
+  gradoAcademico?: string;
+  especialidad?: string;
+  cedulaProfesional?: string;
+  universidad?: string;
+  // Employment information
+  tipoContrato?: 'TIEMPO_COMPLETO' | 'MEDIO_TIEMPO' | 'POR_HONORARIOS' | 'INTERINO';
+  fechaContratacion?: string; // ISO date string
+  estatus?: 'ACTIVO' | 'INACTIVO' | 'JUBILADO' | 'LICENCIA';
+  salario?: number;
+  observaciones?: string;
 }
 
 /**
@@ -79,6 +126,32 @@ export interface TeacherResponseDto {
   apellidoPaterno: string;
   apellidoMaterno: string;
   departamento: string;
+  // Contact information
+  email?: string;
+  telefono?: string;
+  // Personal information
+  fechaNacimiento?: string;
+  genero?: 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'PREFIERO_NO_DECIR';
+  nacionalidad?: string;
+  lugarNacimiento?: string;
+  direccion?: string;
+  ciudad?: string;
+  estado?: string;
+  codigoPostal?: string;
+  pais?: string;
+  // Academic information
+  gradoAcademico?: string;
+  especialidad?: string;
+  cedulaProfesional?: string;
+  universidad?: string;
+  // Employment information
+  tipoContrato?: 'TIEMPO_COMPLETO' | 'MEDIO_TIEMPO' | 'POR_HONORARIOS' | 'INTERINO';
+  fechaContratacion?: string;
+  estatus?: 'ACTIVO' | 'INACTIVO' | 'JUBILADO' | 'LICENCIA';
+  salario?: number;
+  gruposAsignados?: number;
+  estudiantesTotal?: number;
+  observaciones?: string;
   user?: TeacherUserDto; // Optional: included when needed
 }
 

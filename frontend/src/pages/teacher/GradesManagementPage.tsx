@@ -2,8 +2,9 @@
 // Allows teachers to view their groups and update student grades
 import { useEffect, useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
-import { groupsApi, enrollmentsApi } from '../../lib/api';
+import { groupsApi, enrollmentsApi, specialCoursesApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
+import { Loader, ButtonLoader } from '../../components/ui';
 import type { Group, Enrollment } from '../../types';
 
 export const GradesManagementPage = () => {
@@ -66,7 +67,7 @@ export const GradesManagementPage = () => {
     }
   };
 
-  const handleUpdateGrade = async (enrollmentId: string, newGrade: number | null) => {
+  const handleUpdateGrade = async (enrollmentId: string, newGrade: number | null, enrollment?: Enrollment) => {
     if (newGrade !== null && (newGrade < 0 || newGrade > 100)) {
       const errorMessage = 'La calificación debe estar entre 0 y 100';
       setError(errorMessage);
@@ -74,15 +75,28 @@ export const GradesManagementPage = () => {
       return;
     }
 
+    // Check if this is a special course (English course)
+    const isSpecialCourse = (enrollment as any)?.isSpecialCourse === true;
+
     try {
       setUpdatingGrade(enrollmentId);
       setError(null);
 
-      await enrollmentsApi.update(enrollmentId, {
-        calificacion: newGrade === null ? undefined : newGrade,
-      });
-
-      showToast('Calificación actualizada correctamente', 'success');
+      if (isSpecialCourse) {
+        // Use special courses API for English courses
+        if (newGrade === null) {
+          showToast('La calificación es requerida para cursos de inglés', 'error');
+          return;
+        }
+        await specialCoursesApi.completeCourse(enrollmentId, { calificacion: newGrade });
+        showToast('Calificación del curso de inglés actualizada correctamente', 'success');
+      } else {
+        // Use regular enrollments API for regular courses
+        await enrollmentsApi.update(enrollmentId, {
+          calificacion: newGrade === null ? undefined : newGrade,
+        });
+        showToast('Calificación actualizada correctamente', 'success');
+      }
       
       // Refresh enrollments
       if (selectedGroupId) {
@@ -118,7 +132,7 @@ export const GradesManagementPage = () => {
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <Loader variant="spinner" size="lg" text="Cargando grupos..." />
           </div>
         ) : groups.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -169,7 +183,7 @@ export const GradesManagementPage = () => {
 
                   {loadingEnrollments ? (
                     <div className="flex justify-center items-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <Loader variant="spinner" size="md" text="Cargando inscripciones..." />
                     </div>
                   ) : enrollments.length === 0 ? (
                     <div className="p-8 text-center">
@@ -201,7 +215,7 @@ export const GradesManagementPage = () => {
                             <GradeRow
                               key={enrollment.id}
                               enrollment={enrollment}
-                              onUpdate={handleUpdateGrade}
+                              onUpdate={(id, grade) => handleUpdateGrade(id, grade, enrollment)}
                               updating={updatingGrade === enrollment.id}
                             />
                           ))}

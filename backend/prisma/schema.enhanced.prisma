@@ -1,0 +1,577 @@
+// Prisma schema for SIPI Modern - Enhanced Version
+// Sistema Estudiantil Mejorado con Escalabilidad y Consistencia
+// Database: MySQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum StudentStatus {
+  ACTIVO
+  INACTIVO
+  EGRESADO
+}
+
+enum Gender {
+  MASCULINO
+  FEMENINO
+  OTRO
+  PREFIERO_NO_DECIR
+}
+
+enum TipoIngreso {
+  NUEVO_INGRESO
+  REINGRESO
+  TRANSFERENCIA
+}
+
+enum GradoAcademico {
+  LICENCIATURA
+  MAESTRIA
+  DOCTORADO
+  POSTDOCTORADO
+}
+
+enum TipoContrato {
+  TIEMPO_COMPLETO
+  MEDIO_TIEMPO
+  HORAS_CLASE
+  CONSULTOR
+}
+
+enum TeacherStatus {
+  ACTIVO
+  INACTIVO
+  JUBILADO
+  LICENCIA
+}
+
+enum TipoMateria {
+  OBLIGATORIA
+  OPTATIVA
+  ELECTIVA
+  SERIACION
+}
+
+enum SubjectStatus {
+  ACTIVA
+  INACTIVA
+  DESCONTINUADA
+}
+
+enum Modalidad {
+  PRESENCIAL
+  VIRTUAL
+  HIBRIDO
+  SEMIPRESENCIAL
+}
+
+enum GroupStatus {
+  ABIERTO
+  CERRADO
+  CANCELADO
+  EN_CURSO
+  FINALIZADO
+}
+
+enum TipoPeriodo {
+  SEMESTRAL
+  TRIMESTRAL
+  CUATRIMESTRAL
+  ANUAL
+}
+
+enum PeriodStatus {
+  PLANEADO
+  INSCRIPCIONES
+  EN_CURSO
+  FINALIZADO
+  CERRADO
+}
+
+enum TipoInscripcion {
+  NORMAL
+  ESPECIAL
+  REPETICION
+  EQUIVALENCIA
+}
+
+enum EnrollmentStatus {
+  INSCRITO
+  EN_CURSO
+  BAJA
+  APROBADO
+  REPROBADO
+  CANCELADO
+}
+
+enum TipoDocumento {
+  ACTA_NACIMIENTO
+  CURP
+  CERTIFICADO_BACHILLERATO
+  FOTOGRAFIA
+  COMPROBANTE_DOMICILIO
+  OTRO
+}
+
+enum DocumentStatus {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+  VENCIDO
+}
+
+enum CareerStatus {
+  ACTIVA
+  INACTIVA
+  DESCONTINUADA
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+// User model - Enhanced with contact and security
+model User {
+  id               String   @id @default(uuid())
+  username         String   @unique @db.VarChar(50)
+  passwordHash     String   @db.VarChar(255)
+  role             UserRole
+  email            String?  @unique @db.VarChar(255)
+  emailVerified    Boolean  @default(false)
+  telefono         String?  @db.VarChar(20)
+  lastLoginAt      DateTime?
+  loginAttempts    Int      @default(0)
+  lockedUntil      DateTime?
+  passwordChangedAt DateTime?
+  deletedAt        DateTime?
+  createdBy        String?
+  updatedBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  student Student?
+  teacher Teacher?
+
+  @@index([username])
+  @@index([email])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+// Career model - Normalized careers
+model Career {
+  id            String   @id @default(uuid())
+  codigo        String   @unique @db.VarChar(20)
+  nombre        String   @db.VarChar(200)
+  nombreCorto   String?  @db.VarChar(50)
+  descripcion   String?  @db.Text
+  area          String?  @db.VarChar(100)
+  duracion      Int?     // Semestres
+  creditosTotales Int?   // Total de créditos requeridos
+  estatus       CareerStatus @default(ACTIVA)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  students Student[]
+  subjects Subject[]
+
+  @@index([codigo])
+  @@index([area])
+  @@index([estatus])
+  @@map("careers")
+}
+
+// Student model - Enhanced with academic tracking
+model Student {
+  id                String        @id @default(uuid())
+  userId            String        @unique
+  matricula         String        @unique @db.VarChar(20)
+  nombre            String        @db.VarChar(100)
+  apellidoPaterno   String        @db.VarChar(100)
+  apellidoMaterno   String        @db.VarChar(100)
+  carreraId         String?       // Relación con Career
+  carrera           String        @db.VarChar(100) // Mantener por compatibilidad
+  semestre          Int
+  estatus           StudentStatus
+  curp              String?       @unique @db.VarChar(18)
+  
+  // Información personal
+  fechaNacimiento   DateTime?
+  lugarNacimiento   String?       @db.VarChar(100)
+  genero            Gender?
+  nacionalidad      String?       @db.VarChar(50) @default("Mexicana")
+  
+  // Contacto
+  email             String?       @unique @db.VarChar(255)
+  telefono          String?       @db.VarChar(20)
+  telefonoEmergencia String?      @db.VarChar(20)
+  direccion         String?       @db.Text
+  
+  // Académico
+  promedioGeneral   Decimal?      @db.Decimal(5, 2)
+  creditosAprobados Int           @default(0)
+  creditosCursando  Int           @default(0)
+  fechaIngreso      DateTime?
+  fechaEgreso       DateTime?
+  
+  // Administrativo
+  tipoIngreso       TipoIngreso?
+  beca              Boolean        @default(false)
+  tipoBeca          String?       @db.VarChar(50)
+  
+  // Soft delete y auditoría
+  deletedAt         DateTime?
+  createdBy         String?
+  updatedBy         String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  career            Career?       @relation(fields: [carreraId], references: [id], onDelete: SetNull)
+  enrollments       Enrollment[]
+  academicHistory   AcademicHistory[]
+  documents         StudentDocument[]
+
+  @@index([matricula])
+  @@index([carrera])
+  @@index([carreraId])
+  @@index([semestre])
+  @@index([estatus])
+  @@index([curp])
+  @@index([email])
+  @@index([fechaIngreso])
+  @@index([fechaEgreso])
+  @@index([carrera, semestre, estatus])
+  @@index([deletedAt])
+  @@map("students")
+}
+
+// Teacher model - Enhanced with academic and work info
+model Teacher {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  nombre            String   @db.VarChar(100)
+  apellidoPaterno   String   @db.VarChar(100)
+  apellidoMaterno   String   @db.VarChar(100)
+  departamento      String   @db.VarChar(100)
+  
+  // Personal
+  fechaNacimiento   DateTime?
+  genero            Gender?
+  
+  // Contacto
+  email             String?  @unique @db.VarChar(255)
+  telefono          String?  @db.VarChar(20)
+  telefonoEmergencia String? @db.VarChar(20)
+  direccion         String?  @db.Text
+  
+  // Académico
+  gradoAcademico    GradoAcademico?
+  especialidad      String?  @db.VarChar(200)
+  cedulaProfesional String?  @unique @db.VarChar(50)
+  
+  // Laboral
+  fechaContratacion DateTime?
+  tipoContrato      TipoContrato?
+  estatus           TeacherStatus @default(ACTIVO)
+  
+  // Métricas
+  gruposAsignados   Int      @default(0)
+  estudiantesTotal  Int      @default(0)
+  
+  // Soft delete y auditoría
+  deletedAt         DateTime?
+  createdBy         String?
+  updatedBy         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groups  Group[]
+
+  @@index([email])
+  @@index([cedulaProfesional])
+  @@index([departamento])
+  @@index([departamento, estatus])
+  @@index([deletedAt])
+  @@map("teachers")
+}
+
+// Subject model - Enhanced with prerequisites and metadata
+model Subject {
+  id              String  @id @default(uuid())
+  clave           String  @unique @db.VarChar(20)
+  nombre          String  @db.VarChar(200)
+  creditos        Int
+  descripcion     String? @db.Text
+  tipo            TipoMateria @default(OBLIGATORIA)
+  areaAcademica   String? @db.VarChar(100)
+  nivel           Int?    // Nivel académico (1-12)
+  horasTeoria     Int     @default(0)
+  horasPractica   Int     @default(0)
+  horasLaboratorio Int    @default(0)
+  horasTotal      Int     // Calculado: teoria + practica + laboratorio
+  gruposActivos   Int     @default(0)
+  estudiantesInscritos Int @default(0)
+  estatus         SubjectStatus @default(ACTIVA)
+  carreraId       String? // Relación con Career
+  deletedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  career          Career? @relation(fields: [carreraId], references: [id], onDelete: SetNull)
+  groups          Group[]
+  prerequisites   Prerequisite[] @relation("SubjectPrerequisites")
+  esPrerequisitoDe Prerequisite[] @relation("SubjectRequirements")
+
+  @@index([clave])
+  @@index([tipo])
+  @@index([areaAcademica])
+  @@index([nivel])
+  @@index([estatus])
+  @@index([carreraId])
+  @@index([deletedAt])
+  @@map("subjects")
+}
+
+// Prerequisite model - Subject prerequisites
+model Prerequisite {
+  id             String  @id @default(uuid())
+  subjectId      String
+  prerequisiteId String
+  obligatorio    Boolean @default(true)
+  createdAt      DateTime @default(now())
+
+  subject       Subject @relation("SubjectPrerequisites", fields: [subjectId], references: [id], onDelete: Cascade)
+  prerequisite  Subject @relation("SubjectRequirements", fields: [prerequisiteId], references: [id], onDelete: Restrict)
+
+  @@unique([subjectId, prerequisiteId])
+  @@index([subjectId])
+  @@index([prerequisiteId])
+  @@map("prerequisites")
+}
+
+// AcademicPeriod model - Better period management
+model AcademicPeriod {
+  id                    String   @id @default(uuid())
+  codigo                String   @unique @db.VarChar(20)
+  nombre                String   @db.VarChar(100)
+  tipo                  TipoPeriodo
+  fechaInicio           DateTime
+  fechaFin              DateTime
+  fechaInscripcionInicio DateTime?
+  fechaInscripcionFin    DateTime?
+  estatus               PeriodStatus @default(PLANEADO)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  groups                Group[]
+
+  @@index([codigo])
+  @@index([estatus])
+  @@index([fechaInicio, fechaFin])
+  @@map("academic_periods")
+}
+
+// Group model - Enhanced with capacity and schedule
+model Group {
+  id            String   @id @default(uuid())
+  subjectId     String
+  teacherId     String
+  nombre        String   @db.VarChar(50)
+  codigo        String   @unique @db.VarChar(20)
+  seccion       String?  @db.VarChar(10)
+  periodo       String   @db.VarChar(10) // Mantener por compatibilidad
+  periodoId     String?  // Relación con AcademicPeriod
+  
+  // Cupos
+  cupoMaximo    Int      @default(30)
+  cupoMinimo    Int      @default(5)
+  cupoActual    Int      @default(0)
+  
+  // Horario y ubicación
+  horario       String?  @db.VarChar(200)
+  aula          String?  @db.VarChar(50)
+  edificio      String?  @db.VarChar(50)
+  modalidad     Modalidad @default(PRESENCIAL)
+  
+  // Fechas
+  fechaInicio   DateTime?
+  fechaFin      DateTime?
+  
+  // Estado
+  estatus       GroupStatus @default(ABIERTO)
+  
+  // Métricas
+  promedioGrupo Decimal?  @db.Decimal(5, 2)
+  tasaAprobacion Decimal?  @db.Decimal(5, 2)
+  
+  // Soft delete y auditoría
+  deletedAt     DateTime?
+  createdBy     String?
+  updatedBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  subject       Subject     @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  teacher       Teacher     @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  period        AcademicPeriod? @relation(fields: [periodoId], references: [id], onDelete: SetNull)
+  enrollments   Enrollment[]
+
+  @@index([codigo])
+  @@index([subjectId])
+  @@index([teacherId])
+  @@index([periodo])
+  @@index([periodoId])
+  @@index([estatus])
+  @@index([modalidad])
+  @@index([subjectId, periodoId, estatus])
+  @@index([teacherId, periodoId])
+  @@index([deletedAt])
+  @@map("groups")
+}
+
+// Enrollment model - Enhanced with detailed tracking
+model Enrollment {
+  id                  String   @id @default(uuid())
+  studentId           String
+  groupId             String
+  codigo              String   @unique @db.VarChar(30)
+  fechaInscripcion    DateTime @default(now())
+  fechaBaja           DateTime?
+  tipoInscripcion     TipoInscripcion @default(NORMAL)
+  estatus             EnrollmentStatus @default(INSCRITO)
+  
+  // Calificaciones
+  calificacion        Decimal? @db.Decimal(5, 2) // Mantener por compatibilidad
+  calificacionParcial1 Decimal? @db.Decimal(5, 2)
+  calificacionParcial2 Decimal? @db.Decimal(5, 2)
+  calificacionParcial3 Decimal? @db.Decimal(5, 2)
+  calificacionFinal   Decimal? @db.Decimal(5, 2)
+  calificacionExtra   Decimal? @db.Decimal(5, 2)
+  
+  // Asistencias
+  asistencias         Int      @default(0)
+  faltas              Int      @default(0)
+  retardos            Int      @default(0)
+  porcentajeAsistencia Decimal? @db.Decimal(5, 2)
+  
+  // Evaluación
+  aprobado            Boolean?
+  fechaAprobacion      DateTime?
+  observaciones       String?  @db.Text
+  
+  // Soft delete y auditoría
+  deletedAt           DateTime?
+  createdBy           String?
+  updatedBy           String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  student             Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  group               Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  historial           EnrollmentHistory[]
+
+  @@unique([studentId, groupId])
+  @@index([codigo])
+  @@index([estatus])
+  @@index([fechaInscripcion])
+  @@index([fechaBaja])
+  @@index([aprobado])
+  @@index([studentId])
+  @@index([groupId])
+  @@index([studentId, estatus])
+  @@index([groupId, estatus])
+  @@index([deletedAt])
+  @@map("enrollments")
+}
+
+// EnrollmentHistory model - Audit trail
+model EnrollmentHistory {
+  id          String   @id @default(uuid())
+  enrollmentId String
+  accion      String   @db.VarChar(50)
+  valorAnterior String? @db.Text
+  valorNuevo    String? @db.Text
+  observaciones String? @db.Text
+  realizadoPor  String?
+  createdAt     DateTime @default(now())
+
+  enrollment    Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([enrollmentId])
+  @@index([accion])
+  @@index([createdAt])
+  @@map("enrollment_history")
+}
+
+// AcademicHistory model - Student academic progress
+model AcademicHistory {
+  id              String   @id @default(uuid())
+  studentId       String
+  periodoId       String?
+  promedioPeriodo Decimal? @db.Decimal(5, 2)
+  creditosAprobados Int     @default(0)
+  creditosCursados  Int     @default(0)
+  materiasAprobadas Int     @default(0)
+  materiasReprobadas Int    @default(0)
+  observaciones     String? @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  student         Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  periodo         AcademicPeriod? @relation(fields: [periodoId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([periodoId])
+  @@index([studentId, periodoId])
+  @@map("academic_history")
+}
+
+// StudentDocument model - Document management
+model StudentDocument {
+  id            String   @id @default(uuid())
+  studentId     String
+  tipo          TipoDocumento
+  nombre        String   @db.VarChar(200)
+  rutaArchivo   String   @db.VarChar(500)
+  mimeType      String?  @db.VarChar(100)
+  tamano        Int?     // Tamaño en bytes
+  estatus       DocumentStatus @default(PENDIENTE)
+  observaciones String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([tipo])
+  @@index([estatus])
+  @@map("student_documents")
+}
+

@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { subjectsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { FormField } from '../../components/ui/FormField';
+import { FormField, PageLoader, ButtonLoader } from '../../components/ui';
 
 export const SubjectFormPage = () => {
   const navigate = useNavigate();
@@ -22,6 +22,14 @@ export const SubjectFormPage = () => {
     clave: '',
     nombre: '',
     creditos: 1,
+    // New fields (Phase 3)
+    tipo: 'OBLIGATORIA' as 'OBLIGATORIA' | 'OPTATIVA' | 'ELECTIVA' | 'SERVICIO_SOCIAL',
+    estatus: 'ACTIVA' as 'ACTIVA' | 'INACTIVA' | 'DESCONTINUADA' | 'EN_REVISION',
+    nivel: '',
+    horasTeoria: 0,
+    horasPractica: 0,
+    horasLaboratorio: 0,
+    descripcion: '',
   });
 
   useEffect(() => {
@@ -39,6 +47,14 @@ export const SubjectFormPage = () => {
         clave: subject.clave,
         nombre: subject.nombre,
         creditos: subject.creditos,
+        // New fields (Phase 3)
+        tipo: (subject.tipo || 'OBLIGATORIA') as 'OBLIGATORIA' | 'OPTATIVA' | 'ELECTIVA' | 'SERVICIO_SOCIAL',
+        estatus: (subject.estatus || 'ACTIVA') as 'ACTIVA' | 'INACTIVA' | 'DESCONTINUADA' | 'EN_REVISION',
+        nivel: subject.nivel?.toString() || '',
+        horasTeoria: subject.horasTeoria || 0,
+        horasPractica: subject.horasPractica || 0,
+        horasLaboratorio: subject.horasLaboratorio || 0,
+        descripcion: subject.descripcion || '',
       });
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Error al cargar la materia';
@@ -72,13 +88,45 @@ export const SubjectFormPage = () => {
       if (num < 1 || num > 20) return 'Los créditos deben estar entre 1 y 20';
       return null;
     },
+    horasTeoria: (value: string | number): string | null => {
+      const num = typeof value === 'number' ? value : parseInt(String(value), 10);
+      if (isNaN(num)) return 'Las horas de teoría deben ser un número válido';
+      if (num < 0) return 'Las horas no pueden ser negativas';
+      if (num > 40) return 'Las horas no pueden exceder 40';
+      return null;
+    },
+    horasPractica: (value: string | number): string | null => {
+      const num = typeof value === 'number' ? value : parseInt(String(value), 10);
+      if (isNaN(num)) return 'Las horas de práctica deben ser un número válido';
+      if (num < 0) return 'Las horas no pueden ser negativas';
+      if (num > 40) return 'Las horas no pueden exceder 40';
+      return null;
+    },
+    horasLaboratorio: (value: string | number): string | null => {
+      const num = typeof value === 'number' ? value : parseInt(String(value), 10);
+      if (isNaN(num)) return 'Las horas de laboratorio deben ser un número válido';
+      if (num < 0) return 'Las horas no pueden ser negativas';
+      if (num > 40) return 'Las horas no pueden exceder 40';
+      return null;
+    },
+    nivel: (value: string | number): string | null => {
+      const num = typeof value === 'number' ? value : parseInt(String(value), 10);
+      if (isNaN(num)) return 'El nivel debe ser un número válido';
+      if (num < 1 || num > 12) return 'El nivel debe estar entre 1 y 12';
+      return null;
+    },
   };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    const newValue = name === 'creditos' ? parseInt(value, 10) || 0 : value;
+    let newValue: string | number = value;
+    
+    // Handle number fields
+    if (name === 'creditos' || name === 'horasTeoria' || name === 'horasPractica' || name === 'horasLaboratorio') {
+      newValue = parseInt(value, 10) || 0;
+    }
     
     setFormData((prev) => ({
       ...prev,
@@ -140,6 +188,14 @@ export const SubjectFormPage = () => {
         await subjectsApi.update(id, {
           nombre: formData.nombre,
           creditos: formData.creditos,
+          // New fields (Phase 3)
+          tipo: formData.tipo,
+          estatus: formData.estatus,
+          nivel: formData.nivel ? parseInt(formData.nivel, 10) : undefined,
+          horasTeoria: formData.horasTeoria,
+          horasPractica: formData.horasPractica,
+          horasLaboratorio: formData.horasLaboratorio,
+          descripcion: formData.descripcion || undefined,
         });
         showToast('Materia actualizada correctamente', 'success');
         setTimeout(() => {
@@ -150,6 +206,14 @@ export const SubjectFormPage = () => {
           clave: formData.clave.toUpperCase(),
           nombre: formData.nombre,
           creditos: formData.creditos,
+          // New fields (Phase 3)
+          tipo: formData.tipo,
+          estatus: formData.estatus,
+          nivel: formData.nivel ? parseInt(formData.nivel, 10) : undefined,
+          horasTeoria: formData.horasTeoria,
+          horasPractica: formData.horasPractica,
+          horasLaboratorio: formData.horasLaboratorio,
+          descripcion: formData.descripcion || undefined,
         });
         showToast('Materia creada correctamente', 'success');
         setTimeout(() => {
@@ -169,11 +233,7 @@ export const SubjectFormPage = () => {
   if (fetching) {
     return (
       <Layout>
-        <div className="p-6">
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        </div>
+        <PageLoader text="Cargando materia..." />
       </Layout>
     );
   }
@@ -238,6 +298,114 @@ export const SubjectFormPage = () => {
               validate={validators.creditos}
               helpText="Entre 1 y 20"
             />
+
+            {/* Subject Information Section */}
+            <div className="md:col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                Información Adicional
+              </h2>
+            </div>
+
+            <FormField
+              label="Tipo"
+              name="tipo"
+              value={formData.tipo}
+              onChange={handleChange}
+              required
+              error={formErrors.tipo}
+              touched={touchedFields.tipo}
+              as="select"
+              options={[
+                { value: 'OBLIGATORIA', label: 'OBLIGATORIA' },
+                { value: 'OPTATIVA', label: 'OPTATIVA' },
+                { value: 'ELECTIVA', label: 'ELECTIVA' },
+                { value: 'SERVICIO_SOCIAL', label: 'SERVICIO SOCIAL' },
+              ]}
+            />
+
+            <FormField
+              label="Estatus"
+              name="estatus"
+              value={formData.estatus}
+              onChange={handleChange}
+              required
+              error={formErrors.estatus}
+              touched={touchedFields.estatus}
+              as="select"
+              options={[
+                { value: 'ACTIVA', label: 'ACTIVA' },
+                { value: 'INACTIVA', label: 'INACTIVA' },
+                { value: 'DESCONTINUADA', label: 'DESCONTINUADA' },
+                { value: 'EN_REVISION', label: 'EN REVISIÓN' },
+              ]}
+            />
+
+            <FormField
+              label="Nivel"
+              name="nivel"
+              type="number"
+              value={formData.nivel}
+              onChange={handleChange}
+              placeholder="Ej: 1 para primer semestre"
+              min={1}
+              max={12}
+              error={formErrors.nivel}
+              touched={touchedFields.nivel}
+            />
+
+            {/* Hours Section */}
+            <div className="md:col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                Horas de Clase
+              </h2>
+            </div>
+
+            <FormField
+              label="Horas de Teoría"
+              name="horasTeoria"
+              type="number"
+              value={formData.horasTeoria}
+              onChange={handleChange}
+              min={0}
+              error={formErrors.horasTeoria}
+              touched={touchedFields.horasTeoria}
+            />
+
+            <FormField
+              label="Horas de Práctica"
+              name="horasPractica"
+              type="number"
+              value={formData.horasPractica}
+              onChange={handleChange}
+              min={0}
+              error={formErrors.horasPractica}
+              touched={touchedFields.horasPractica}
+            />
+
+            <FormField
+              label="Horas de Laboratorio"
+              name="horasLaboratorio"
+              type="number"
+              value={formData.horasLaboratorio}
+              onChange={handleChange}
+              min={0}
+              error={formErrors.horasLaboratorio}
+              touched={touchedFields.horasLaboratorio}
+            />
+
+            <div className="md:col-span-2">
+              <FormField
+                label="Descripción"
+                name="descripcion"
+                value={formData.descripcion}
+                onChange={handleChange}
+                as="textarea"
+                rows={4}
+                placeholder="Descripción de la materia..."
+                error={formErrors.descripcion}
+                touched={touchedFields.descripcion}
+              />
+            </div>
           </div>
 
           <div className="mt-8 flex justify-end gap-4">
@@ -253,11 +421,16 @@ export const SubjectFormPage = () => {
               disabled={loading || hasErrors}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading
-                ? 'Guardando...'
-                : isEdit
-                  ? 'Actualizar Materia'
-                  : 'Crear Materia'}
+              {loading ? (
+                <>
+                  <ButtonLoader className="mr-2" />
+                  Guardando...
+                </>
+              ) : isEdit ? (
+                'Actualizar Materia'
+              ) : (
+                'Crear Materia'
+              )}
             </button>
           </div>
         </form>

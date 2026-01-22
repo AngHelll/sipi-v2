@@ -25,7 +25,7 @@ export const globalSearch = async (
 
   // Search students
   if (searchTypes.includes('student')) {
-    const students = await prisma.student.findMany({
+    const students = await prisma.students.findMany({
       where: {
         OR: [
           { matricula: { contains: searchTerm } },
@@ -64,7 +64,7 @@ export const globalSearch = async (
 
   // Search teachers
   if (searchTypes.includes('teacher')) {
-    const teachers = await prisma.teacher.findMany({
+    const teachers = await prisma.teachers.findMany({
       where: {
         OR: [
           { nombre: { contains: searchTerm } },
@@ -98,7 +98,7 @@ export const globalSearch = async (
 
   // Search subjects
   if (searchTypes.includes('subject')) {
-    const subjects = await prisma.subject.findMany({
+    const subjects = await prisma.subjects.findMany({
       where: {
         OR: [
           { clave: { contains: searchTerm.toUpperCase() } },
@@ -130,7 +130,7 @@ export const globalSearch = async (
 
   // Search groups
   if (searchTypes.includes('group')) {
-    const groups = await prisma.group.findMany({
+    const groups = await prisma.groups.findMany({
       where: {
         OR: [
           { nombre: { contains: searchTerm } },
@@ -139,13 +139,13 @@ export const globalSearch = async (
       },
       take: maxResults,
       include: {
-        subject: {
+        subjects: {
           select: {
             clave: true,
             nombre: true,
           },
         },
-        teacher: {
+        teachers: {
           select: {
             nombre: true,
             apellidoPaterno: true,
@@ -159,11 +159,11 @@ export const globalSearch = async (
       results.push({
         type: 'group',
         id: group.id,
-        title: `${group.nombre} - ${group.subject.clave}`,
-        subtitle: `${group.subject.nombre} | ${group.periodo} | ${group.teacher.nombre} ${group.teacher.apellidoPaterno}`,
+        title: `${group.nombre} - ${group.subjects.clave}`,
+        subtitle: `${group.subjects.nombre} | ${group.periodo} | ${group.teachers.nombre} ${group.teachers.apellidoPaterno}`,
         metadata: {
           periodo: group.periodo,
-          subjectClave: group.subject.clave,
+          subjectClave: group.subjects.clave,
         },
       });
     });

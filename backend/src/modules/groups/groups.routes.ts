@@ -22,6 +22,19 @@ router.get(
 );
 
 /**
+ * GET /api/groups/available/english-courses
+ * Get available English courses for students
+ * Returns courses that are open, within registration period, and have available capacity
+ * IMPORTANT: This route must be defined BEFORE /:id to avoid route conflicts
+ */
+router.get(
+  '/available/english-courses',
+  authenticate,
+  authorize(UserRole.STUDENT),
+  groupsController.getAvailableEnglishCourses
+);
+
+/**
  * GET /api/groups/:id
  * Get a single group by ID
  * All authenticated users can access

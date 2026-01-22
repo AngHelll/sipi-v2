@@ -1,4 +1,5 @@
 // Teachers service - Business logic for teacher management
+import { randomUUID } from 'crypto';
 import bcrypt from 'bcryptjs';
 import prisma from '../../config/database';
 import {
@@ -8,6 +9,47 @@ import {
   TeacherResponseDto,
   TeachersListResponseDto,
 } from './teachers.dtos';
+import { TeacherValidators } from './teachers.validators';
+
+/**
+ * Helper function to map Prisma teacher to response DTO
+ */
+const mapTeacherToResponseDto = (teacher: any): TeacherResponseDto => {
+  return {
+    id: teacher.id,
+    userId: teacher.userId,
+    nombre: teacher.nombre,
+    apellidoPaterno: teacher.apellidoPaterno,
+    apellidoMaterno: teacher.apellidoMaterno,
+    departamento: teacher.departamento,
+    // Contact information
+    email: teacher.email || undefined,
+    telefono: teacher.telefono || undefined,
+    // Personal information
+    fechaNacimiento: teacher.fechaNacimiento ? teacher.fechaNacimiento.toISOString() : undefined,
+    genero: teacher.genero || undefined,
+    nacionalidad: teacher.nacionalidad || undefined,
+    lugarNacimiento: teacher.lugarNacimiento || undefined,
+    direccion: teacher.direccion || undefined,
+    ciudad: teacher.ciudad || undefined,
+    estado: teacher.estado || undefined,
+    codigoPostal: teacher.codigoPostal || undefined,
+    pais: teacher.pais || undefined,
+    // Academic information
+    gradoAcademico: teacher.gradoAcademico || undefined,
+    especialidad: teacher.especialidad || undefined,
+    cedulaProfesional: teacher.cedulaProfesional || undefined,
+    universidad: teacher.universidad || undefined,
+    // Employment information
+    tipoContrato: teacher.tipoContrato || undefined,
+    fechaContratacion: teacher.fechaContratacion ? teacher.fechaContratacion.toISOString() : undefined,
+    estatus: teacher.estatus || undefined,
+    salario: teacher.salario ? Number(teacher.salario) : undefined,
+    gruposAsignados: teacher.gruposAsignados || undefined,
+    estudiantesTotal: teacher.estudiantesTotal || undefined,
+    observaciones: teacher.observaciones || undefined,
+  };
+};
 
 /**
  * Create a new teacher with associated user account
@@ -17,38 +59,66 @@ export const createTeacher = async (
 ): Promise<TeacherResponseDto> => {
   const { user: userData, teacher: teacherData } = data;
 
-  // Check if username already exists
-  const existingUser = await prisma.user.findUnique({
-    where: { username: userData.username },
-  });
-
-  if (existingUser) {
-    throw new Error('Username already exists');
-  }
+  // Apply business rule validations using validators
+  await TeacherValidators.validateUsernameUnique(userData.username);
 
   // Hash password
   const passwordHash = await bcrypt.hash(userData.password, 10);
 
+  // Generate UUIDs
+  const userId = randomUUID();
+  const teacherId = randomUUID();
+  const now = new Date();
+
   // Create user and teacher in a transaction
   const result = await prisma.$transaction(async (tx) => {
     // Create user
-    const user = await tx.user.create({
+    const user = await tx.users.create({
       data: {
+        id: userId,
         username: userData.username,
         passwordHash,
         role: 'TEACHER',
-      },
+        createdAt: now,
+        updatedAt: now,
+      } as any, // Type assertion needed for Prisma Client types
     });
 
-    // Create teacher
-    const teacher = await tx.teacher.create({
+    // Create teacher with optional fields
+    const teacher = await tx.teachers.create({
       data: {
+        id: teacherId,
         userId: user.id,
         nombre: teacherData.nombre,
         apellidoPaterno: teacherData.apellidoPaterno,
         apellidoMaterno: teacherData.apellidoMaterno,
         departamento: teacherData.departamento,
-      },
+        // Optional contact information
+        email: teacherData.email,
+        telefono: teacherData.telefono,
+        // Optional personal information
+        fechaNacimiento: teacherData.fechaNacimiento ? new Date(teacherData.fechaNacimiento) : undefined,
+        genero: teacherData.genero,
+        nacionalidad: teacherData.nacionalidad,
+        lugarNacimiento: teacherData.lugarNacimiento,
+        direccion: teacherData.direccion,
+        ciudad: teacherData.ciudad,
+        estado: teacherData.estado,
+        codigoPostal: teacherData.codigoPostal,
+        pais: teacherData.pais,
+        // Optional academic information
+        gradoAcademico: teacherData.gradoAcademico,
+        especialidad: teacherData.especialidad,
+        cedulaProfesional: teacherData.cedulaProfesional,
+        universidad: teacherData.universidad,
+        // Optional employment information
+        tipoContrato: teacherData.tipoContrato,
+        fechaContratacion: teacherData.fechaContratacion ? new Date(teacherData.fechaContratacion) : undefined,
+        estatus: teacherData.estatus,
+        salario: teacherData.salario,
+        createdAt: now,
+        updatedAt: now,
+      } as any, // Type assertion needed for Prisma Client types
     });
 
     return { user, teacher };
@@ -113,10 +183,10 @@ export const getAllTeachers = async (
   orderBy[sortBy] = sortOrder;
 
   // Get total count
-  const total = await prisma.teacher.count({ where });
+  const total = await prisma.teachers.count({ where });
 
   // Get teachers
-  const teachers = await prisma.teacher.findMany({
+  const teachers = await prisma.teachers.findMany({
     where,
     skip,
     take,
@@ -124,14 +194,7 @@ export const getAllTeachers = async (
   });
 
   return {
-    teachers: teachers.map((teacher) => ({
-      id: teacher.id,
-      userId: teacher.userId,
-      nombre: teacher.nombre,
-      apellidoPaterno: teacher.apellidoPaterno,
-      apellidoMaterno: teacher.apellidoMaterno,
-      departamento: teacher.departamento,
-    })),
+    teachers: teachers.map((teacher) => mapTeacherToResponseDto(teacher)),
     pagination: {
       page,
       limit: take,
@@ -147,22 +210,14 @@ export const getAllTeachers = async (
 export const getTeacherById = async (
   id: string
 ): Promise<TeacherResponseDto> => {
-  const teacher = await prisma.teacher.findUnique({
+  // Validate that teacher exists
+  await TeacherValidators.validateTeacherExists(id);
+
+  const teacher = await prisma.teachers.findUnique({
     where: { id },
   });
 
-  if (!teacher) {
-    throw new Error('Teacher not found');
-  }
-
-  return {
-    id: teacher.id,
-    userId: teacher.userId,
-    nombre: teacher.nombre,
-    apellidoPaterno: teacher.apellidoPaterno,
-    apellidoMaterno: teacher.apellidoMaterno,
-    departamento: teacher.departamento,
-  };
+  return mapTeacherToResponseDto(teacher!);
 };
 
 /**
@@ -172,16 +227,14 @@ export const updateTeacher = async (
   id: string,
   data: UpdateTeacherDto
 ): Promise<TeacherResponseDto> => {
-  // Check if teacher exists
-  const existingTeacher = await prisma.teacher.findUnique({
+  // Validate that teacher exists
+  await TeacherValidators.validateTeacherExists(id);
+
+  const existingTeacher = await prisma.teachers.findUnique({
     where: { id },
   });
 
-  if (!existingTeacher) {
-    throw new Error('Teacher not found');
-  }
-
-  // Build update data (only include provided fields)
+  // Build update data (only include provided fields that exist in DB schema)
   const updateData: Record<string, unknown> = {};
   if (data.nombre !== undefined) updateData.nombre = data.nombre;
   if (data.apellidoPaterno !== undefined)
@@ -189,20 +242,42 @@ export const updateTeacher = async (
   if (data.apellidoMaterno !== undefined)
     updateData.apellidoMaterno = data.apellidoMaterno;
   if (data.departamento !== undefined) updateData.departamento = data.departamento;
+  // Contact information
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.telefono !== undefined) updateData.telefono = data.telefono;
+  // Personal information
+  if (data.fechaNacimiento !== undefined) updateData.fechaNacimiento = data.fechaNacimiento ? new Date(data.fechaNacimiento) : null;
+  if (data.genero !== undefined) updateData.genero = data.genero;
+  if (data.nacionalidad !== undefined) updateData.nacionalidad = data.nacionalidad;
+  if (data.lugarNacimiento !== undefined) updateData.lugarNacimiento = data.lugarNacimiento;
+  if (data.direccion !== undefined) updateData.direccion = data.direccion;
+  if (data.ciudad !== undefined) updateData.ciudad = data.ciudad;
+  if (data.estado !== undefined) updateData.estado = data.estado;
+  if (data.codigoPostal !== undefined) updateData.codigoPostal = data.codigoPostal;
+  if (data.pais !== undefined) updateData.pais = data.pais;
+  // Academic information
+  if (data.gradoAcademico !== undefined) updateData.gradoAcademico = data.gradoAcademico;
+  if (data.especialidad !== undefined) updateData.especialidad = data.especialidad;
+  if (data.cedulaProfesional !== undefined) updateData.cedulaProfesional = data.cedulaProfesional;
+  if (data.universidad !== undefined) updateData.universidad = data.universidad;
+  // Employment information
+  if (data.tipoContrato !== undefined) updateData.tipoContrato = data.tipoContrato;
+  if (data.fechaContratacion !== undefined) updateData.fechaContratacion = data.fechaContratacion ? new Date(data.fechaContratacion) : null;
+  if (data.estatus !== undefined) updateData.estatus = data.estatus;
+  if (data.salario !== undefined) updateData.salario = data.salario;
+  if (data.observaciones !== undefined) updateData.observaciones = data.observaciones;
 
-  const teacher = await prisma.teacher.update({
+  // Si no hay cambios efectivos, regresar el teacher existente sin tocar la BD
+  if (Object.keys(updateData).length === 0) {
+    return mapTeacherToResponseDto(existingTeacher!);
+  }
+
+  const teacher = await prisma.teachers.update({
     where: { id },
     data: updateData,
   });
 
-  return {
-    id: teacher.id,
-    userId: teacher.userId,
-    nombre: teacher.nombre,
-    apellidoPaterno: teacher.apellidoPaterno,
-    apellidoMaterno: teacher.apellidoMaterno,
-    departamento: teacher.departamento,
-  };
+  return mapTeacherToResponseDto(teacher);
 };
 
 /**
@@ -211,29 +286,11 @@ export const updateTeacher = async (
  * ADMIN only
  */
 export const deleteTeacher = async (id: string): Promise<void> => {
-  // Check if teacher exists
-  const teacher = await prisma.teacher.findUnique({
-    where: { id },
-    include: {
-      groups: {
-        select: { id: true },
-      },
-    },
-  });
-
-  if (!teacher) {
-    throw new Error('Teacher not found');
-  }
-
-  // Check if teacher has groups assigned
-  if (teacher.groups.length > 0) {
-    throw new Error(
-      `Cannot delete teacher: ${teacher.nombre} ${teacher.apellidoPaterno}. Teacher has ${teacher.groups.length} group(s) assigned. Please reassign or delete groups first.`
-    );
-  }
+  // Validate that teacher can be deleted (exists and has no groups)
+  await TeacherValidators.validateTeacherCanBeDeleted(id);
 
   // Delete teacher (this will cascade delete user due to onDelete: Cascade)
-  await prisma.teacher.delete({
+  await prisma.teachers.delete({
     where: { id },
   });
 

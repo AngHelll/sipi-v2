@@ -195,3 +195,16 @@ export const deleteGroup = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/groups/available/english-courses
+ * Get available English courses for students
+ * Returns courses that are open, within registration period, and have available capacity
+ */
+export const getAvailableEnglishCourses = asyncHandler(async (req: Request, res: Response) => {
+  const courses = await groupsService.getAvailableEnglishCourses();
+
+  res.json({
+    courses,
+    total: courses.length,
+  });
+});

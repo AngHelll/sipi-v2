@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 export interface FormFieldProps {
   label: string;
   name: string;
-  type?: 'text' | 'password' | 'number' | 'email' | 'tel';
+  type?: 'text' | 'password' | 'number' | 'email' | 'tel' | 'date';
   value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   placeholder?: string;

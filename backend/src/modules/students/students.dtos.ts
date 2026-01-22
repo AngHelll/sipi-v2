@@ -1,6 +1,6 @@
 // DTOs (Data Transfer Objects) for Students module
 // Request and response type definitions
-import { StudentStatus } from '@prisma/client';
+import { students_estatus } from '@prisma/client';
 
 /**
  * User data for creating a new student
@@ -21,7 +21,7 @@ export interface CreateStudentDataDto {
   apellidoMaterno: string;
   carrera: string;
   semestre: number;
-  estatus: StudentStatus; // Enum: ACTIVO, INACTIVO, EGRESADO
+  estatus: students_estatus; // Enum: ACTIVO, INACTIVO, EGRESADO
   curp?: string; // Optional: Clave Única de Registro de Población
 }
 
@@ -44,8 +44,36 @@ export interface UpdateStudentDto {
   apellidoMaterno?: string;
   carrera?: string;
   semestre?: number;
-  estatus?: StudentStatus;
+  estatus?: students_estatus;
   curp?: string;
+  // Contact information
+  email?: string;
+  telefono?: string;
+  telefonoEmergencia?: string;
+  // Personal information
+  fechaNacimiento?: string; // ISO date string
+  genero?: 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'PREFIERO_NO_DECIR';
+  nacionalidad?: string;
+  lugarNacimiento?: string;
+  direccion?: string;
+  ciudad?: string;
+  estado?: string;
+  codigoPostal?: string;
+  pais?: string;
+  // Academic information
+  tipoIngreso?: 'NUEVO_INGRESO' | 'REINGRESO' | 'TRANSFERENCIA' | 'EQUIVALENCIA';
+  fechaIngreso?: string; // ISO date string
+  fechaEgreso?: string; // ISO date string
+  promedioGeneral?: number;
+  promedioIngles?: number; // RB-037: Promedio de inglés (independiente del promedio general)
+  creditosCursados?: number;
+  creditosAprobados?: number;
+  creditosTotales?: number;
+  // Administrative information
+  beca?: boolean;
+  tipoBeca?: string;
+  observaciones?: string;
+  carreraId?: string; // Normalized career relation
 }
 
 /**
@@ -56,7 +84,7 @@ export interface StudentQueryDto {
   matricula?: string;
   carrera?: string;
   semestre?: number;
-  estatus?: StudentStatus;
+  estatus?: students_estatus;
   nombre?: string; // Search by nombre (partial match)
   apellidoPaterno?: string;
   apellidoMaterno?: string;
@@ -92,9 +120,43 @@ export interface StudentResponseDto {
   apellidoPaterno: string;
   apellidoMaterno: string;
   carrera: string;
+  carreraId?: string;
   semestre: number;
-  estatus: StudentStatus;
+  estatus: students_estatus;
   curp?: string;
+  // Contact information
+  email?: string;
+  telefono?: string;
+  telefonoEmergencia?: string;
+  // Personal information
+  fechaNacimiento?: string;
+  genero?: 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'PREFIERO_NO_DECIR';
+  nacionalidad?: string;
+  lugarNacimiento?: string;
+  direccion?: string;
+  ciudad?: string;
+  estado?: string;
+  codigoPostal?: string;
+  pais?: string;
+  // Academic information
+  tipoIngreso?: 'NUEVO_INGRESO' | 'REINGRESO' | 'TRANSFERENCIA' | 'EQUIVALENCIA';
+  fechaIngreso?: string;
+  fechaEgreso?: string;
+  promedioGeneral?: number;
+  promedioIngles?: number; // RB-037: Promedio de inglés (independiente del promedio general)
+  creditosCursados?: number;
+  creditosAprobados?: number;
+  creditosTotales?: number;
+  // Administrative information
+  beca?: boolean;
+  tipoBeca?: string;
+  observaciones?: string;
+  // RB-038: Información de inglés del estudiante
+  nivelInglesActual?: number;
+  nivelInglesCertificado?: number;
+  fechaExamenDiagnostico?: string;
+  porcentajeIngles?: number;
+  cumpleRequisitoIngles?: boolean;
   user?: StudentUserDto; // Optional: included when needed
 }
 
@@ -112,7 +174,7 @@ export interface StudentMeResponseDto {
   apellidoMaterno: string;
   carrera: string;
   semestre: number;
-  estatus: StudentStatus;
+  estatus: students_estatus;
   curp?: string;
   user: StudentUserDto;
 }

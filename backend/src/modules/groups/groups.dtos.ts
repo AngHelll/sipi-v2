@@ -10,6 +10,11 @@ export interface CreateGroupDto {
   teacherId: string;
   nombre: string;
   periodo: string;
+  // Campos opcionales para cursos de inglés
+  nivelIngles?: number; // Nivel del curso (1-6) si es curso de inglés
+  fechaInscripcionInicio?: string; // ISO date string
+  fechaInscripcionFin?: string; // ISO date string
+  esCursoIngles?: boolean; // Flag para identificar cursos de inglés
 }
 
 /**
@@ -21,6 +26,18 @@ export interface UpdateGroupDto {
   periodo?: string;
   subjectId?: string;
   teacherId?: string;
+  cupoMaximo?: number;
+  cupoMinimo?: number;
+  horario?: string;
+  aula?: string;
+  edificio?: string;
+  modalidad?: 'PRESENCIAL' | 'VIRTUAL' | 'HIBRIDO' | 'SEMIPRESENCIAL';
+  estatus?: 'ABIERTO' | 'CERRADO' | 'CANCELADO' | 'EN_CURSO' | 'FINALIZADO';
+  // Campos para cursos de inglés
+  nivelIngles?: number;
+  fechaInscripcionInicio?: string; // ISO date string
+  fechaInscripcionFin?: string; // ISO date string
+  esCursoIngles?: boolean;
 }
 
 /**
@@ -30,6 +47,8 @@ export interface UpdateGroupDto {
 export interface GroupQueryDto {
   periodo?: string;
   subjectId?: string;
+  esCursoIngles?: boolean; // Filtrar por cursos de inglés
+  nivelIngles?: number; // Filtrar por nivel de inglés
   // Pagination
   page?: number;
   limit?: number;
@@ -69,6 +88,20 @@ export interface GroupResponseDto {
   teacherId: string;
   nombre: string;
   periodo: string;
+  codigo?: string; // Group unique code
+  cupoMaximo?: number;
+  cupoMinimo?: number;
+  cupoActual?: number;
+  horario?: string;
+  aula?: string;
+  edificio?: string;
+  modalidad?: 'PRESENCIAL' | 'VIRTUAL' | 'HIBRIDO' | 'SEMIPRESENCIAL';
+  estatus?: 'ABIERTO' | 'CERRADO' | 'CANCELADO' | 'EN_CURSO' | 'FINALIZADO';
+  // Campos para cursos de inglés
+  nivelIngles?: number;
+  fechaInscripcionInicio?: string; // ISO date string
+  fechaInscripcionFin?: string; // ISO date string
+  esCursoIngles?: boolean;
   subject?: GroupSubjectDto; // Optional: included when needed
   teacher?: GroupTeacherDto; // Optional: included when needed
 }

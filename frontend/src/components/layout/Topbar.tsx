@@ -1,4 +1,5 @@
 // Topbar component with user info, avatar dropdown, and improved design
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { GlobalSearch } from '../ui/GlobalSearch';
 import { AvatarDropdown } from '../ui/Avatar';
@@ -13,6 +14,7 @@ const roleLabels: Record<UserRole, string> = {
 
 export const Topbar = () => {
   const { user, logout } = useAuth();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
@@ -21,44 +23,56 @@ export const Topbar = () => {
   // Breadcrumbs based on current path
   const getBreadcrumbs = () => {
     if (!user) return [];
-    const path = window.location.pathname;
+    const path = location.pathname;
     const parts = path.split('/').filter(Boolean);
     
-    if (parts.length === 0 || parts[0] === 'dashboard') {
+    if (parts.length === 0 || (parts[0] === 'dashboard' && parts.length === 1)) {
       return [{ label: 'Dashboard', path: '/dashboard' }];
     }
 
     const breadcrumbs = [{ label: 'Dashboard', path: '/dashboard' }];
     
     if (parts[0] === 'admin') {
-      breadcrumbs.push({ label: 'Administración', path: '/admin' });
+      breadcrumbs.push({ label: 'Administración', path: '/dashboard/admin' });
+      
       if (parts[1] === 'students') {
         breadcrumbs.push({ label: 'Estudiantes', path: '/admin/students' });
-        if (parts[2] === 'new') breadcrumbs.push({ label: 'Nuevo', path: '' });
-        if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
-          breadcrumbs.push({ label: 'Editar', path: '' });
+        if (parts[2] === 'new') {
+          breadcrumbs.push({ label: 'Nuevo', path: null });
+        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
+          breadcrumbs.push({ label: 'Editar', path: null });
         }
       } else if (parts[1] === 'teachers') {
         breadcrumbs.push({ label: 'Maestros', path: '/admin/teachers' });
-        if (parts[2] === 'new') breadcrumbs.push({ label: 'Nuevo', path: '' });
-        if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
-          breadcrumbs.push({ label: 'Editar', path: '' });
+        if (parts[2] === 'new') {
+          breadcrumbs.push({ label: 'Nuevo', path: null });
+        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
+          breadcrumbs.push({ label: 'Editar', path: null });
         }
       } else if (parts[1] === 'subjects') {
         breadcrumbs.push({ label: 'Materias', path: '/admin/subjects' });
-        if (parts[2] === 'new') breadcrumbs.push({ label: 'Nuevo', path: '' });
-        if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
-          breadcrumbs.push({ label: 'Editar', path: '' });
+        if (parts[2] === 'new') {
+          breadcrumbs.push({ label: 'Nuevo', path: null });
+        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
+          breadcrumbs.push({ label: 'Editar', path: null });
         }
       } else if (parts[1] === 'groups') {
         breadcrumbs.push({ label: 'Grupos', path: '/admin/groups' });
-        if (parts[2] === 'new') breadcrumbs.push({ label: 'Nuevo', path: '' });
-        if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
-          breadcrumbs.push({ label: 'Editar', path: '' });
+        if (parts[2] === 'new') {
+          breadcrumbs.push({ label: 'Nuevo', path: null });
+        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
+          breadcrumbs.push({ label: 'Editar', path: null });
+        } else if (parts[2] && parts[2] !== 'new' && parts[3] !== 'edit') {
+          // Vista de detalle de grupo
+          breadcrumbs.push({ label: 'Detalle', path: null });
         }
       } else if (parts[1] === 'enrollments') {
         breadcrumbs.push({ label: 'Inscripciones', path: '/admin/enrollments' });
-        if (parts[2] === 'new') breadcrumbs.push({ label: 'Nueva', path: '' });
+        if (parts[2] === 'new') {
+          breadcrumbs.push({ label: 'Nueva', path: null });
+        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
+          breadcrumbs.push({ label: 'Editar', path: null });
+        }
       }
     } else if (parts[0] === 'student') {
       if (parts[1] === 'enrollments') {
@@ -86,12 +100,12 @@ export const Topbar = () => {
                 <Icon name="chevron-right" size={16} className="text-gray-400" />
               )}
               {crumb.path ? (
-                <a
-                  href={crumb.path}
+                <Link
+                  to={crumb.path}
                   className="hover:text-gray-900 transition-colors"
                 >
                   {crumb.label}
-                </a>
+                </Link>
               ) : (
                 <span className="text-gray-900 font-medium">
                   {crumb.label}

@@ -35,10 +35,21 @@ export const StudentsListPage = () => {
   const [carreraFilter, setCarreraFilter] = useState('');
   const [semestreFilter, setSemestreFilter] = useState<number | ''>('');
   const [estatusFilter, setEstatusFilter] = useState('');
+  const [tipoIngresoFilter, setTipoIngresoFilter] = useState('');
+  const [becaFilter, setBecaFilter] = useState('');
+  const [promedioMinFilter, setPromedioMinFilter] = useState('');
+  const [promedioMaxFilter, setPromedioMaxFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortBy, setSortBy] = useState<'matricula' | 'nombre' | 'carrera' | 'semestre' | 'estatus'>('nombre');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  
+  // Column visibility (for optional columns)
+  const [showEmail, setShowEmail] = useState(false);
+  const [showTelefono, setShowTelefono] = useState(false);
+  const [showPromedio, setShowPromedio] = useState(true);
+  const [showPromedioIngles, setShowPromedioIngles] = useState(true); // RB-037: Show English average
+  const [showCreditos, setShowCreditos] = useState(false);
 
   // Get unique carreras for filter dropdown
   const [uniqueCarreras, setUniqueCarreras] = useState<string[]>([]);
@@ -57,7 +68,7 @@ export const StudentsListPage = () => {
 
   useEffect(() => {
     fetchStudents();
-  }, [debouncedSearchTerm, carreraFilter, semestreFilter, estatusFilter, currentPage, pageSize, sortBy, sortOrder]);
+  }, [debouncedSearchTerm, carreraFilter, semestreFilter, estatusFilter, tipoIngresoFilter, becaFilter, promedioMinFilter, promedioMaxFilter, currentPage, pageSize, sortBy, sortOrder]);
 
   // Fetch unique carreras on mount
   useEffect(() => {
@@ -126,6 +137,13 @@ export const StudentsListPage = () => {
       if (estatusFilter) {
         params.estatus = estatusFilter;
       }
+      if (tipoIngresoFilter) {
+        params.tipoIngreso = tipoIngresoFilter;
+      }
+      if (becaFilter) {
+        params.beca = becaFilter === 'true';
+      }
+      // Note: promedioMin and promedioMax would need backend support
 
       const response = await studentsApi.getAll(params);
       setStudents(response.students);
@@ -205,6 +223,10 @@ export const StudentsListPage = () => {
     setCarreraFilter('');
     setSemestreFilter('');
     setEstatusFilter('');
+    setTipoIngresoFilter('');
+    setBecaFilter('');
+    setPromedioMinFilter('');
+    setPromedioMaxFilter('');
     setCurrentPage(1);
   };
 
@@ -230,6 +252,76 @@ export const StudentsListPage = () => {
     }
   };
 
+  const getEnglishStatusDisplay = (student: Student) => {
+    // Si cumple requisito de inglés (promedio >= 70% Y todos los niveles 1-6 completados)
+    if (student.cumpleRequisitoIngles === true) {
+      return {
+        badge: <Badge variant="success">✓ Completo</Badge>,
+        details: student.nivelInglesActual 
+          ? `Niveles 1-6 completados` 
+          : 'Requisito cumplido',
+        promedio: student.promedioIngles 
+          ? `Prom: ${student.promedioIngles.toFixed(2)}` 
+          : null,
+        subDetails: student.nivelInglesActual 
+          ? `Nivel actual: ${student.nivelInglesActual}` 
+          : null,
+      };
+    }
+    
+    // Si tiene nivel asignado pero no cumple requisito completo
+    // (puede tener buen promedio pero faltan niveles, o viceversa)
+    if (student.nivelInglesActual) {
+      const tienePromedioSuficiente = student.promedioIngles !== undefined && 
+                                      student.promedioIngles !== null && 
+                                      student.promedioIngles >= 70;
+      
+      if (tienePromedioSuficiente) {
+        // Tiene buen promedio pero faltan niveles
+        return {
+          badge: <Badge variant="warning">Faltan niveles</Badge>,
+          details: `Nivel ${student.nivelInglesActual} de 6`,
+          promedio: student.promedioIngles 
+            ? `Prom: ${student.promedioIngles.toFixed(2)}` 
+            : null,
+          subDetails: 'Promedio suficiente, faltan niveles',
+        };
+      } else {
+        // En progreso pero promedio insuficiente o faltan niveles
+        return {
+          badge: <Badge variant="warning">En progreso</Badge>,
+          details: `Nivel ${student.nivelInglesActual} de 6`,
+          promedio: student.promedioIngles 
+            ? `Prom: ${student.promedioIngles.toFixed(2)}` 
+            : null,
+          subDetails: student.promedioIngles !== undefined && student.promedioIngles !== null && student.promedioIngles < 70
+            ? 'Promedio < 70%'
+            : 'Faltan niveles',
+        };
+      }
+    }
+    
+    // Si tiene examen de diagnóstico pero no nivel asignado
+    if (student.fechaExamenDiagnostico) {
+      return {
+        badge: <Badge variant="info">Examen realizado</Badge>,
+        details: student.porcentajeIngles 
+          ? `${student.porcentajeIngles.toFixed(1)}%` 
+          : 'Pendiente evaluación',
+        promedio: null,
+        subDetails: 'Esperando asignación de nivel',
+      };
+    }
+    
+    // Sin información
+    return {
+      badge: <Badge variant="default">Sin información</Badge>,
+      details: 'No registrado',
+      promedio: null,
+      subDetails: null,
+    };
+  };
+
   const getSortIcon = (field: 'matricula' | 'nombre' | 'carrera' | 'semestre' | 'estatus') => {
     if (sortBy !== field) {
       return <Icon name="filter" size={16} className="text-gray-400" />;
@@ -241,7 +333,7 @@ export const StudentsListPage = () => {
     );
   };
 
-  const hasActiveFilters = searchTerm || carreraFilter || semestreFilter || estatusFilter;
+  const hasActiveFilters = searchTerm || carreraFilter || semestreFilter || estatusFilter || tipoIngresoFilter || becaFilter || promedioMinFilter || promedioMaxFilter;
 
   return (
     <Layout>
@@ -270,7 +362,7 @@ export const StudentsListPage = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Search */}
             <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -347,6 +439,143 @@ export const StudentsListPage = () => {
                 <option value="INACTIVO">INACTIVO</option>
                 <option value="EGRESADO">EGRESADO</option>
               </select>
+            </div>
+          </div>
+          
+          {/* Additional filters row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Tipo de Ingreso filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tipo de Ingreso
+              </label>
+              <select
+                value={tipoIngresoFilter}
+                onChange={(e) => {
+                  setTipoIngresoFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Todos</option>
+                <option value="NUEVO_INGRESO">NUEVO INGRESO</option>
+                <option value="REINGRESO">REINGRESO</option>
+                <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                <option value="EQUIVALENCIA">EQUIVALENCIA</option>
+              </select>
+            </div>
+
+            {/* Beca filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Beca
+              </label>
+              <select
+                value={becaFilter}
+                onChange={(e) => {
+                  setBecaFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Todos</option>
+                <option value="true">Con Beca</option>
+                <option value="false">Sin Beca</option>
+              </select>
+            </div>
+
+            {/* Promedio Min filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Promedio Mínimo
+              </label>
+              <input
+                type="number"
+                value={promedioMinFilter}
+                onChange={(e) => {
+                  setPromedioMinFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="0.00"
+                min={0}
+                max={100}
+                step="0.01"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Promedio Max filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Promedio Máximo
+              </label>
+              <input
+                type="number"
+                value={promedioMaxFilter}
+                onChange={(e) => {
+                  setPromedioMaxFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="100.00"
+                min={0}
+                max={100}
+                step="0.01"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          
+          {/* Column visibility toggle */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Columnas visibles:
+            </label>
+            <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showEmail}
+                  onChange={(e) => setShowEmail(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Email
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showTelefono}
+                  onChange={(e) => setShowTelefono(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Teléfono
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showPromedio}
+                  onChange={(e) => setShowPromedio(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Promedio General
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showPromedioIngles}
+                  onChange={(e) => setShowPromedioIngles(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Estatus Inglés
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showCreditos}
+                  onChange={(e) => setShowCreditos(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Créditos
+              </label>
             </div>
           </div>
 
@@ -444,6 +673,34 @@ export const StudentsListPage = () => {
                             {getSortIcon('estatus')}
                           </div>
                         </th>
+                        {showEmail && (
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                          </th>
+                        )}
+                        {showTelefono && (
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Teléfono
+                          </th>
+                        )}
+                        {showPromedio && (
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Promedio General
+                          </th>
+                        )}
+                        {showPromedioIngles && (
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Estatus Inglés
+                          </th>
+                        )}
+                        {showCreditos && (
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Créditos
+                          </th>
+                        )}
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Beca
+                        </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Acciones
                         </th>
@@ -472,6 +729,63 @@ export const StudentsListPage = () => {
                             <Badge variant={getStatusBadgeVariant(student.estatus)}>
                               {student.estatus}
                             </Badge>
+                          </td>
+                          {showEmail && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              {student.email || '-'}
+                            </td>
+                          )}
+                          {showTelefono && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              {student.telefono || '-'}
+                            </td>
+                          )}
+                          {showPromedio && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              {student.promedioGeneral !== undefined && student.promedioGeneral !== null
+                                ? `${student.promedioGeneral.toFixed(2)}`
+                                : '-'}
+                            </td>
+                          )}
+                          {showPromedioIngles && (
+                            <td className="px-6 py-4">
+                              {(() => {
+                                const englishStatus = getEnglishStatusDisplay(student);
+                                return (
+                                  <div className="flex flex-col gap-1 min-w-[140px]">
+                                    {englishStatus.badge}
+                                    <div className="text-xs text-gray-700 font-medium">
+                                      {englishStatus.details}
+                                    </div>
+                                    {englishStatus.promedio && (
+                                      <div className="text-xs text-gray-600">
+                                        {englishStatus.promedio}
+                                      </div>
+                                    )}
+                                    {englishStatus.subDetails && (
+                                      <div className="text-xs text-gray-500 italic">
+                                        {englishStatus.subDetails}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                            </td>
+                          )}
+                          {showCreditos && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              {student.creditosAprobados || 0} / {student.creditosTotales || '-'}
+                            </td>
+                          )}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {student.beca ? (
+                              <Badge variant="success">
+                                <Icon name="check" size={14} className="mr-1" />
+                                Sí
+                              </Badge>
+                            ) : (
+                              <span className="text-sm text-gray-400">No</span>
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-3">

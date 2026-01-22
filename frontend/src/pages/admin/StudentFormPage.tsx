@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { studentsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { FormField } from '../../components/ui/FormField';
+import { FormField, StatusSelector, CareerSelector, PageLoader, ButtonLoader } from '../../components/ui';
 
 export const StudentFormPage = () => {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ export const StudentFormPage = () => {
   const [fetching, setFetching] = useState(isEdit);
   const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [student, setStudent] = useState<any>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ export const StudentFormPage = () => {
     username: '',
     password: '',
     confirmPassword: '',
-    // Student fields
+    // Student basic fields
     matricula: '',
     nombre: '',
     apellidoPaterno: '',
@@ -32,6 +33,32 @@ export const StudentFormPage = () => {
     semestre: 1,
     estatus: 'ACTIVO' as 'ACTIVO' | 'INACTIVO' | 'EGRESADO',
     curp: '',
+    // Contact information
+    email: '',
+    telefono: '',
+    telefonoEmergencia: '',
+    // Personal information
+    fechaNacimiento: '',
+    genero: '' as '' | 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'PREFIERO_NO_DECIR',
+    nacionalidad: '',
+    lugarNacimiento: '',
+    direccion: '',
+    ciudad: '',
+    estado: '',
+    codigoPostal: '',
+    pais: 'México',
+    // Academic information
+    tipoIngreso: 'NUEVO_INGRESO' as 'NUEVO_INGRESO' | 'REINGRESO' | 'TRANSFERENCIA' | 'EQUIVALENCIA',
+    fechaIngreso: '',
+    fechaEgreso: '',
+    promedioGeneral: '',
+    creditosCursados: 0,
+    creditosAprobados: 0,
+    creditosTotales: '',
+    // Administrative information
+    beca: false,
+    tipoBeca: '',
+    observaciones: '',
   });
 
   // Fetch student data if editing
@@ -44,20 +71,47 @@ export const StudentFormPage = () => {
   const fetchStudent = async () => {
     try {
       setFetching(true);
-      const student = await studentsApi.getById(id!);
+      const studentData = await studentsApi.getById(id!);
+      setStudent(studentData);
       
       setFormData({
         username: '',
         password: '',
         confirmPassword: '',
-        matricula: student.matricula,
-        nombre: student.nombre,
-        apellidoPaterno: student.apellidoPaterno,
-        apellidoMaterno: student.apellidoMaterno,
-        carrera: student.carrera,
-        semestre: student.semestre,
-        estatus: student.estatus as 'ACTIVO' | 'INACTIVO' | 'EGRESADO',
-        curp: student.curp || '',
+        matricula: studentData.matricula,
+        nombre: studentData.nombre,
+        apellidoPaterno: studentData.apellidoPaterno,
+        apellidoMaterno: studentData.apellidoMaterno,
+        carrera: studentData.carrera,
+        semestre: studentData.semestre,
+        estatus: studentData.estatus as 'ACTIVO' | 'INACTIVO' | 'EGRESADO',
+        curp: studentData.curp || '',
+        // Contact information
+        email: studentData.email || '',
+        telefono: studentData.telefono || '',
+        telefonoEmergencia: studentData.telefonoEmergencia || '',
+        // Personal information
+        fechaNacimiento: studentData.fechaNacimiento ? studentData.fechaNacimiento.split('T')[0] : '',
+        genero: (studentData.genero || '') as '' | 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'PREFIERO_NO_DECIR',
+        nacionalidad: studentData.nacionalidad || '',
+        lugarNacimiento: studentData.lugarNacimiento || '',
+        direccion: studentData.direccion || '',
+        ciudad: studentData.ciudad || '',
+        estado: studentData.estado || '',
+        codigoPostal: studentData.codigoPostal || '',
+        pais: studentData.pais || 'México',
+        // Academic information
+        tipoIngreso: (studentData.tipoIngreso || 'NUEVO_INGRESO') as 'NUEVO_INGRESO' | 'REINGRESO' | 'TRANSFERENCIA' | 'EQUIVALENCIA',
+        fechaIngreso: studentData.fechaIngreso ? studentData.fechaIngreso.split('T')[0] : '',
+        fechaEgreso: studentData.fechaEgreso ? studentData.fechaEgreso.split('T')[0] : '',
+        promedioGeneral: studentData.promedioGeneral?.toString() || '',
+        creditosCursados: studentData.creditosCursados || 0,
+        creditosAprobados: studentData.creditosAprobados || 0,
+        creditosTotales: studentData.creditosTotales?.toString() || '',
+        // Administrative information
+        beca: studentData.beca || false,
+        tipoBeca: studentData.tipoBeca || '',
+        observaciones: studentData.observaciones || '',
       });
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Error al cargar el estudiante';
@@ -146,13 +200,129 @@ export const StudentFormPage = () => {
       }
       return null;
     },
+    email: (value: string | number): string | null => {
+      const str = String(value).trim();
+      if (str && str.length > 0) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(str)) return 'El formato del email no es válido';
+        if (str.length > 255) return 'El email no puede exceder 255 caracteres';
+      }
+      return null;
+    },
+    telefono: (value: string | number): string | null => {
+      const str = String(value).trim();
+      if (str && str.length > 0) {
+        // Validar formato mexicano: 10 dígitos, puede empezar con 55
+        const digitsOnly = str.replace(/[\s\-\(\)]/g, '');
+        if (digitsOnly.length < 10 || digitsOnly.length > 12) {
+          return 'El teléfono debe tener entre 10 y 12 dígitos';
+        }
+        if (!/^[\d\s\-\(\)\+]+$/.test(str)) {
+          return 'El teléfono solo puede contener números, espacios, guiones y paréntesis';
+        }
+      }
+      return null;
+    },
+    telefonoEmergencia: (value: string | number): string | null => {
+      const str = String(value).trim();
+      if (str && str.length > 0) {
+        const digitsOnly = str.replace(/[\s\-\(\)]/g, '');
+        if (digitsOnly.length < 10 || digitsOnly.length > 12) {
+          return 'El teléfono debe tener entre 10 y 12 dígitos';
+        }
+        if (!/^[\d\s\-\(\)\+]+$/.test(str)) {
+          return 'El teléfono solo puede contener números, espacios, guiones y paréntesis';
+        }
+      }
+      return null;
+    },
+    fechaNacimiento: (value: string | number): string | null => {
+      const str = String(value).trim();
+      if (str && str.length > 0) {
+        const date = new Date(str);
+        if (isNaN(date.getTime())) return 'La fecha de nacimiento no es válida';
+        const today = new Date();
+        const age = today.getFullYear() - date.getFullYear();
+        if (age < 15 || age > 100) return 'La fecha de nacimiento debe ser razonable (edad entre 15 y 100 años)';
+        if (date > today) return 'La fecha de nacimiento no puede ser futura';
+      }
+      return null;
+    },
+    fechaIngreso: (value: string | number): string | null => {
+      const str = String(value).trim();
+      if (str && str.length > 0) {
+        const date = new Date(str);
+        if (isNaN(date.getTime())) return 'La fecha de ingreso no es válida';
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() + 1, 11, 31);
+        if (date > maxDate) return 'La fecha de ingreso no puede ser más de un año en el futuro';
+        if (date < new Date(2000, 0, 1)) return 'La fecha de ingreso no puede ser anterior a 2000';
+      }
+      return null;
+    },
+    fechaEgreso: (value: string | number): string | null => {
+      const str = String(value).trim();
+      if (str && str.length > 0) {
+        const date = new Date(str);
+        if (isNaN(date.getTime())) return 'La fecha de egreso no es válida';
+        const fechaIngreso = formData.fechaIngreso ? new Date(formData.fechaIngreso) : null;
+        if (fechaIngreso && date < fechaIngreso) {
+          return 'La fecha de egreso no puede ser anterior a la fecha de ingreso';
+        }
+      }
+      return null;
+    },
+    promedioGeneral: (value: string | number): string | null => {
+      const str = String(value).trim();
+      if (str && str.length > 0) {
+        const num = parseFloat(str);
+        if (isNaN(num)) return 'El promedio debe ser un número válido';
+        if (num < 0 || num > 100) return 'El promedio debe estar entre 0 y 100';
+        const decimalPlaces = (str.split('.')[1] || '').length;
+        if (decimalPlaces > 2) return 'El promedio no puede tener más de 2 decimales';
+      }
+      return null;
+    },
+    creditosCursados: (value: string | number): string | null => {
+      const num = typeof value === 'number' ? value : parseInt(String(value), 10);
+      if (isNaN(num)) return 'Los créditos cursados deben ser un número válido';
+      if (num < 0) return 'Los créditos cursados no pueden ser negativos';
+      if (num > 1000) return 'Los créditos cursados no pueden exceder 1000';
+      return null;
+    },
+    creditosAprobados: (value: string | number): string | null => {
+      const num = typeof value === 'number' ? value : parseInt(String(value), 10);
+      if (isNaN(num)) return 'Los créditos aprobados deben ser un número válido';
+      if (num < 0) return 'Los créditos aprobados no pueden ser negativos';
+      const creditosCursados = typeof formData.creditosCursados === 'number' 
+        ? formData.creditosCursados 
+        : parseInt(String(formData.creditosCursados), 10) || 0;
+      if (num > creditosCursados) {
+        return 'Los créditos aprobados no pueden exceder los créditos cursados';
+      }
+      return null;
+    },
+    creditosTotales: (value: string | number): string | null => {
+      const num = typeof value === 'number' ? value : parseInt(String(value), 10);
+      if (isNaN(num)) return 'Los créditos totales deben ser un número válido';
+      if (num < 0) return 'Los créditos totales no pueden ser negativos';
+      if (num > 500) return 'Los créditos totales no pueden exceder 500';
+      return null;
+    },
   };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    const newValue = name === 'semestre' ? parseInt(value, 10) || 0 : value;
+    let newValue: string | number | boolean = value;
+    
+    // Handle number fields
+    if (name === 'semestre' || name === 'creditosCursados' || name === 'creditosAprobados' || name === 'creditosTotales') {
+      newValue = parseInt(value, 10) || 0;
+    } else if (name === 'promedioGeneral') {
+      newValue = value; // Keep as string for decimal input
+    }
     
     setFormData((prev) => ({
       ...prev,
@@ -192,7 +362,9 @@ export const StudentFormPage = () => {
     Object.keys(validators).forEach((key) => {
       const validator = validators[key as keyof typeof validators];
       const value = formData[key as keyof typeof formData];
-      const error = validator(value);
+      // Handle boolean values by converting to string for validation
+      const valueToValidate = typeof value === 'boolean' ? String(value) : value;
+      const error = validator(valueToValidate as string | number);
       if (error) {
         errors[key] = error;
         isValid = false;
@@ -230,6 +402,32 @@ export const StudentFormPage = () => {
           semestre: formData.semestre,
           estatus: formData.estatus,
           curp: formData.curp || undefined,
+          // Contact information
+          email: formData.email || undefined,
+          telefono: formData.telefono || undefined,
+          telefonoEmergencia: formData.telefonoEmergencia || undefined,
+          // Personal information
+          fechaNacimiento: formData.fechaNacimiento || undefined,
+          genero: formData.genero || undefined,
+          nacionalidad: formData.nacionalidad || undefined,
+          lugarNacimiento: formData.lugarNacimiento || undefined,
+          direccion: formData.direccion || undefined,
+          ciudad: formData.ciudad || undefined,
+          estado: formData.estado || undefined,
+          codigoPostal: formData.codigoPostal || undefined,
+          pais: formData.pais || undefined,
+          // Academic information
+          tipoIngreso: formData.tipoIngreso,
+          fechaIngreso: formData.fechaIngreso || undefined,
+          fechaEgreso: formData.fechaEgreso || undefined,
+          promedioGeneral: formData.promedioGeneral ? parseFloat(formData.promedioGeneral) : undefined,
+          creditosCursados: formData.creditosCursados,
+          creditosAprobados: formData.creditosAprobados,
+          creditosTotales: formData.creditosTotales ? parseInt(formData.creditosTotales, 10) : undefined,
+          // Administrative information
+          beca: formData.beca,
+          tipoBeca: formData.tipoBeca || undefined,
+          observaciones: formData.observaciones || undefined,
         });
         showToast('Estudiante actualizado correctamente', 'success');
         setTimeout(() => {
@@ -271,11 +469,7 @@ export const StudentFormPage = () => {
   if (fetching) {
     return (
       <Layout>
-        <div className="p-6">
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        </div>
+        <PageLoader text="Cargando estudiante..." />
       </Layout>
     );
   }
@@ -407,17 +601,16 @@ export const StudentFormPage = () => {
               validate={validators.apellidoMaterno}
             />
 
-            <FormField
-              label="Carrera"
-              name="carrera"
-              type="text"
+            <CareerSelector
               value={formData.carrera}
-              onChange={handleChange}
-              placeholder="Ingeniería Industrial"
+              onChange={(value) => {
+                handleChange({
+                  target: { name: 'carrera', value },
+                } as React.ChangeEvent<HTMLInputElement>);
+              }}
               required
               error={formErrors.carrera}
               touched={touchedFields.carrera}
-              validate={validators.carrera}
             />
 
             <FormField
@@ -435,20 +628,17 @@ export const StudentFormPage = () => {
               helpText="Entre 1 y 12"
             />
 
-            <FormField
-              label="Estatus"
-              name="estatus"
+            <StatusSelector
+              type="student"
               value={formData.estatus}
-              onChange={handleChange}
+              onChange={(value) => {
+                handleChange({
+                  target: { name: 'estatus', value },
+                } as React.ChangeEvent<HTMLInputElement>);
+              }}
               required
               error={formErrors.estatus}
               touched={touchedFields.estatus}
-              as="select"
-              options={[
-                { value: 'ACTIVO', label: 'ACTIVO' },
-                { value: 'INACTIVO', label: 'INACTIVO' },
-                { value: 'EGRESADO', label: 'EGRESADO' },
-              ]}
             />
 
             <FormField
@@ -464,6 +654,394 @@ export const StudentFormPage = () => {
               validate={validators.curp}
               helpText="18 caracteres. Formato: 4 letras, 6 números, 1 letra, 5 letras, 1 alfanumérico, 1 número"
             />
+
+            {/* Contact Information Section */}
+            <div className="md:col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                Información de Contacto
+              </h2>
+            </div>
+
+            <FormField
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="estudiante@ejemplo.com"
+              error={formErrors.email}
+              touched={touchedFields.email}
+            />
+
+            <FormField
+              label="Teléfono"
+              name="telefono"
+              type="tel"
+              value={formData.telefono}
+              onChange={handleChange}
+              placeholder="5551234567"
+              maxLength={20}
+              error={formErrors.telefono}
+              touched={touchedFields.telefono}
+            />
+
+            <FormField
+              label="Teléfono de Emergencia"
+              name="telefonoEmergencia"
+              type="tel"
+              value={formData.telefonoEmergencia}
+              onChange={handleChange}
+              placeholder="5551234567"
+              maxLength={20}
+              error={formErrors.telefonoEmergencia}
+              touched={touchedFields.telefonoEmergencia}
+            />
+
+            {/* Personal Information Section */}
+            <div className="md:col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                Información Personal
+              </h2>
+            </div>
+
+            <FormField
+              label="Fecha de Nacimiento"
+              name="fechaNacimiento"
+              type="date"
+              value={formData.fechaNacimiento}
+              onChange={handleChange}
+              error={formErrors.fechaNacimiento}
+              touched={touchedFields.fechaNacimiento}
+            />
+
+            <FormField
+              label="Género"
+              name="genero"
+              value={formData.genero}
+              onChange={handleChange}
+              error={formErrors.genero}
+              touched={touchedFields.genero}
+              as="select"
+              options={[
+                { value: '', label: 'Selecciona...' },
+                { value: 'MASCULINO', label: 'MASCULINO' },
+                { value: 'FEMENINO', label: 'FEMENINO' },
+                { value: 'OTRO', label: 'OTRO' },
+                { value: 'PREFIERO_NO_DECIR', label: 'PREFIERO NO DECIR' },
+              ]}
+            />
+
+            <FormField
+              label="Nacionalidad"
+              name="nacionalidad"
+              type="text"
+              value={formData.nacionalidad}
+              onChange={handleChange}
+              placeholder="Mexicana"
+              maxLength={50}
+              error={formErrors.nacionalidad}
+              touched={touchedFields.nacionalidad}
+            />
+
+            <FormField
+              label="Lugar de Nacimiento"
+              name="lugarNacimiento"
+              type="text"
+              value={formData.lugarNacimiento}
+              onChange={handleChange}
+              placeholder="Ciudad, Estado"
+              maxLength={200}
+              error={formErrors.lugarNacimiento}
+              touched={touchedFields.lugarNacimiento}
+            />
+
+            <FormField
+              label="Dirección"
+              name="direccion"
+              type="text"
+              value={formData.direccion}
+              onChange={handleChange}
+              placeholder="Calle y número"
+              maxLength={500}
+              error={formErrors.direccion}
+              touched={touchedFields.direccion}
+            />
+
+            <FormField
+              label="Ciudad"
+              name="ciudad"
+              type="text"
+              value={formData.ciudad}
+              onChange={handleChange}
+              placeholder="Ciudad"
+              maxLength={100}
+              error={formErrors.ciudad}
+              touched={touchedFields.ciudad}
+            />
+
+            <FormField
+              label="Estado"
+              name="estado"
+              type="text"
+              value={formData.estado}
+              onChange={handleChange}
+              placeholder="Estado"
+              maxLength={100}
+              error={formErrors.estado}
+              touched={touchedFields.estado}
+            />
+
+            <FormField
+              label="Código Postal"
+              name="codigoPostal"
+              type="text"
+              value={formData.codigoPostal}
+              onChange={handleChange}
+              placeholder="12345"
+              maxLength={10}
+              error={formErrors.codigoPostal}
+              touched={touchedFields.codigoPostal}
+            />
+
+            <FormField
+              label="País"
+              name="pais"
+              type="text"
+              value={formData.pais}
+              onChange={handleChange}
+              placeholder="México"
+              maxLength={50}
+              error={formErrors.pais}
+              touched={touchedFields.pais}
+            />
+
+            {/* Academic Information Section */}
+            <div className="md:col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                Información Académica
+              </h2>
+            </div>
+
+            <FormField
+              label="Tipo de Ingreso"
+              name="tipoIngreso"
+              value={formData.tipoIngreso}
+              onChange={handleChange}
+              required
+              error={formErrors.tipoIngreso}
+              touched={touchedFields.tipoIngreso}
+              as="select"
+              options={[
+                { value: 'NUEVO_INGRESO', label: 'NUEVO INGRESO' },
+                { value: 'REINGRESO', label: 'REINGRESO' },
+                { value: 'TRANSFERENCIA', label: 'TRANSFERENCIA' },
+                { value: 'EQUIVALENCIA', label: 'EQUIVALENCIA' },
+              ]}
+            />
+
+            <FormField
+              label="Fecha de Ingreso"
+              name="fechaIngreso"
+              type="date"
+              value={formData.fechaIngreso}
+              onChange={handleChange}
+              error={formErrors.fechaIngreso}
+              touched={touchedFields.fechaIngreso}
+            />
+
+            <FormField
+              label="Fecha de Egreso"
+              name="fechaEgreso"
+              type="date"
+              value={formData.fechaEgreso}
+              onChange={handleChange}
+              error={formErrors.fechaEgreso}
+              touched={touchedFields.fechaEgreso}
+            />
+
+            <FormField
+              label="Promedio General"
+              name="promedioGeneral"
+              type="number"
+              value={formData.promedioGeneral}
+              onChange={handleChange}
+              placeholder="0.00"
+              min={0}
+              max={100}
+              step="0.01"
+              error={formErrors.promedioGeneral}
+              touched={touchedFields.promedioGeneral}
+            />
+
+            <FormField
+              label="Créditos Cursados"
+              name="creditosCursados"
+              type="number"
+              value={formData.creditosCursados}
+              onChange={handleChange}
+              min={0}
+              error={formErrors.creditosCursados}
+              touched={touchedFields.creditosCursados}
+            />
+
+            <FormField
+              label="Créditos Aprobados"
+              name="creditosAprobados"
+              type="number"
+              value={formData.creditosAprobados}
+              onChange={handleChange}
+              min={0}
+              error={formErrors.creditosAprobados}
+              touched={touchedFields.creditosAprobados}
+            />
+
+            <FormField
+              label="Créditos Totales"
+              name="creditosTotales"
+              type="number"
+              value={formData.creditosTotales}
+              onChange={handleChange}
+              placeholder="Total de créditos de la carrera"
+              min={0}
+              error={formErrors.creditosTotales}
+              touched={touchedFields.creditosTotales}
+            />
+
+            {/* English Information Section (Read-only) */}
+            {isEdit && (
+              <>
+                <div className="md:col-span-2">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                    Información de Inglés
+                  </h2>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Esta información se actualiza automáticamente cuando se procesan exámenes de diagnóstico y cursos de inglés.
+                  </p>
+                </div>
+
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nivel Actual de Inglés
+                    </label>
+                    <p className="text-sm text-gray-900">
+                      {student?.nivelInglesActual ? `Nivel ${student.nivelInglesActual}` : 'No asignado'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Porcentaje de Inglés
+                    </label>
+                    <p className="text-sm text-gray-900">
+                      {student?.porcentajeIngles !== undefined && student.porcentajeIngles !== null
+                        ? `${student.porcentajeIngles.toFixed(1)}%`
+                        : 'No disponible'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Promedio de Inglés
+                    </label>
+                    <p className="text-sm text-gray-900">
+                      {student?.promedioIngles !== undefined && student.promedioIngles !== null
+                        ? `${student.promedioIngles.toFixed(2)}`
+                        : 'No disponible'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cumple Requisito de Inglés
+                    </label>
+                    <p className="text-sm text-gray-900">
+                      {student?.cumpleRequisitoIngles ? (
+                        <span className="text-green-600 font-semibold">✓ Sí</span>
+                      ) : (
+                        <span className="text-red-600 font-semibold">✗ No</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Requiere: Promedio ≥70% y niveles 1-6 completados
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fecha de Examen de Diagnóstico
+                    </label>
+                    <p className="text-sm text-gray-900">
+                      {student?.fechaExamenDiagnostico
+                        ? new Date(student.fechaExamenDiagnostico).toLocaleDateString('es-MX')
+                        : 'No realizado'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nivel Certificado
+                    </label>
+                    <p className="text-sm text-gray-900">
+                      {student?.nivelInglesCertificado
+                        ? `Nivel ${student.nivelInglesCertificado}`
+                        : 'No certificado'}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Administrative Information Section */}
+            <div className="md:col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                Información Administrativa
+              </h2>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="beca"
+                  checked={formData.beca}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, beca: e.target.checked }));
+                    setTouchedFields((prev) => ({ ...prev, beca: true }));
+                  }}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">¿Tiene beca?</span>
+              </label>
+            </div>
+
+            {formData.beca && (
+              <FormField
+                label="Tipo de Beca"
+                name="tipoBeca"
+                type="text"
+                value={formData.tipoBeca}
+                onChange={handleChange}
+                placeholder="Ej: Académica, Deportiva, etc."
+                maxLength={50}
+                error={formErrors.tipoBeca}
+                touched={touchedFields.tipoBeca}
+              />
+            )}
+
+            <div className="md:col-span-2">
+              <FormField
+                label="Observaciones"
+                name="observaciones"
+                value={formData.observaciones}
+                onChange={handleChange}
+                as="textarea"
+                rows={4}
+                placeholder="Observaciones adicionales..."
+                error={formErrors.observaciones}
+                touched={touchedFields.observaciones}
+              />
+            </div>
           </div>
 
           <div className="mt-8 flex justify-end gap-4">
@@ -479,11 +1057,16 @@ export const StudentFormPage = () => {
               disabled={loading || hasErrors}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading
-                ? 'Guardando...'
-                : isEdit
-                  ? 'Actualizar Estudiante'
-                  : 'Crear Estudiante'}
+              {loading ? (
+                <>
+                  <ButtonLoader className="mr-2" />
+                  Guardando...
+                </>
+              ) : isEdit ? (
+                'Actualizar Estudiante'
+              ) : (
+                'Crear Estudiante'
+              )}
             </button>
           </div>
         </form>

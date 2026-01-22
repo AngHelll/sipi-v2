@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { groupsApi, enrollmentsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
+import { PageLoader } from '../../components/ui';
 import type { Group, Enrollment } from '../../types';
 
 interface TeacherDashboardStats {
@@ -94,11 +95,7 @@ export const DashboardTeacher = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="p-6">
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        </div>
+        <PageLoader text="Cargando dashboard..." />
       </Layout>
     );
   }

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { studentsApi, teachersApi, subjectsApi, groupsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
+import { PageLoader } from '../../components/ui';
 import {
   BarChart,
   Bar,
@@ -299,11 +300,7 @@ export const DashboardAdmin = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="p-6">
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        </div>
+        <PageLoader text="Cargando dashboard..." />
       </Layout>
     );
   }
@@ -670,6 +667,59 @@ export const DashboardAdmin = () => {
               </svg>
               <span className="text-sm font-medium text-orange-600">Nuevo Grupo</span>
             </button>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Inglés</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <button
+                onClick={() => navigate('/admin/exam-periods')}
+                className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 text-left"
+              >
+                <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Períodos de Exámenes</p>
+                  <p className="text-xs text-gray-600">Gestionar períodos de diagnóstico</p>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate('/admin/exams')}
+                className="flex items-center gap-3 p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-200 text-left"
+              >
+                <svg className="w-6 h-6 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Exámenes de Diagnóstico</p>
+                  <p className="text-xs text-gray-600">Ver y procesar inscripciones</p>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate('/admin/english/payment-approvals')}
+                className="flex items-center gap-3 p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors border border-yellow-200 text-left"
+              >
+                <svg className="w-6 h-6 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Aprobaciones de Pago</p>
+                  <p className="text-xs text-gray-600">Revisar pagos de cursos de inglés</p>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate('/admin/special-courses')}
+                className="flex items-center gap-3 p-4 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors border border-teal-200 text-left"
+              >
+                <svg className="w-6 h-6 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Cursos Especiales</p>
+                  <p className="text-xs text-gray-600">Ver solicitudes de cursos especiales</p>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </div>

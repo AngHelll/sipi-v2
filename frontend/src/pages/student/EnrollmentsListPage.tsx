@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { enrollmentsApi } from '../../lib/api';
+import { Loader } from '../../components/ui';
 import type { Enrollment, EnrollmentsListResponse } from '../../types';
 
 export const EnrollmentsListPage = () => {
@@ -59,7 +60,7 @@ export const EnrollmentsListPage = () => {
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <Loader variant="spinner" size="lg" text="Cargando inscripciones..." />
           </div>
         ) : error ? (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">

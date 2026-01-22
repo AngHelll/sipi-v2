@@ -5,6 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { enrollmentsApi, studentsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { PageLoader } from '../../components/ui';
 import type { Enrollment, Student } from '../../types';
 
 interface StudentDashboardStats {
@@ -108,11 +109,7 @@ export const DashboardStudent = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="p-6">
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        </div>
+        <PageLoader text="Cargando dashboard..." />
       </Layout>
     );
   }
@@ -165,6 +162,25 @@ export const DashboardStudent = () => {
                 <p className="text-xl font-bold">{stats.student.estatus}</p>
               </div>
             </div>
+            {/* Academic Averages - RB-037 */}
+            {(stats.student.promedioGeneral !== undefined || stats.student.promedioIngles !== undefined) && (
+              <div className="mt-6 pt-6 border-t border-blue-400 border-opacity-30">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {stats.student.promedioGeneral !== undefined && (
+                    <div>
+                      <p className="text-sm opacity-90">Promedio General</p>
+                      <p className="text-2xl font-bold">{stats.student.promedioGeneral.toFixed(2)}</p>
+                    </div>
+                  )}
+                  {stats.student.promedioIngles !== undefined && (
+                    <div>
+                      <p className="text-sm opacity-90">Promedio Inglés</p>
+                      <p className="text-2xl font-bold">{stats.student.promedioIngles.toFixed(2)}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -296,6 +312,20 @@ export const DashboardStudent = () => {
               <div>
                 <p className="font-semibold text-gray-900">Ver Grupos Disponibles</p>
                 <p className="text-sm text-gray-600">Consulta los grupos disponibles</p>
+              </div>
+            </button>
+            <button
+              onClick={() => navigate('/student/english/status')}
+              className="flex items-center gap-4 p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors text-left"
+            >
+              <div className="bg-yellow-600 p-3 rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">Estado de Inglés</p>
+                <p className="text-sm text-gray-600">Consulta tu progreso y solicita cursos</p>
               </div>
             </button>
           </div>

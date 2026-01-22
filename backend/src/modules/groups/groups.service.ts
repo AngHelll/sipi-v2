@@ -1,5 +1,7 @@
 // Groups service - Business logic for group management
+import { randomUUID } from 'crypto';
 import prisma from '../../config/database';
+import { Prisma } from '@prisma/client';
 import {
   CreateGroupDto,
   UpdateGroupDto,
@@ -7,6 +9,7 @@ import {
   GroupResponseDto,
   GroupsListResponseDto,
 } from './groups.dtos';
+import { GroupValidators } from './groups.validators';
 
 /**
  * Get all groups with optional filters and pagination
@@ -23,6 +26,8 @@ export const getAllGroups = async (
   const {
     periodo,
     subjectId,
+    esCursoIngles,
+    nivelIngles,
     page = 1,
     limit = 20,
     sortBy = 'nombre',
@@ -35,7 +40,7 @@ export const getAllGroups = async (
   // Role-based filtering
   if (userRole === 'TEACHER' && userId) {
     // Find teacher record for this user
-    const teacher = await prisma.teacher.findUnique({
+    const teacher = await prisma.teachers.findUnique({
       where: { userId },
     });
 
@@ -56,7 +61,7 @@ export const getAllGroups = async (
     where.teacherId = teacher.id;
   } else if (userRole === 'STUDENT' && userId) {
     // Find student record for this user
-    const student = await prisma.student.findUnique({
+    const student = await prisma.students.findUnique({
       where: { userId },
     });
 
@@ -74,7 +79,7 @@ export const getAllGroups = async (
     }
 
     // Get enrollments for this student
-    const enrollments = await prisma.enrollment.findMany({
+    const enrollments = await prisma.enrollments.findMany({
       where: { studentId: student.id },
       select: { groupId: true },
     });
@@ -106,6 +111,12 @@ export const getAllGroups = async (
   if (subjectId) {
     where.subjectId = subjectId;
   }
+  if (esCursoIngles !== undefined) {
+    where.esCursoIngles = esCursoIngles;
+  }
+  if (nivelIngles !== undefined) {
+    where.nivelIngles = nivelIngles;
+  }
 
   // Calculate pagination
   const skip = (page - 1) * limit;
@@ -116,16 +127,16 @@ export const getAllGroups = async (
   orderBy[sortBy] = sortOrder;
 
   // Get total count
-  const total = await prisma.group.count({ where });
+  const total = await prisma.groups.count({ where });
 
   // Get groups with related data
-  const groups = await prisma.group.findMany({
+  const groups = await prisma.groups.findMany({
     where,
     skip,
     take,
     orderBy,
     include: {
-      subject: {
+      subjects: {
         select: {
           id: true,
           clave: true,
@@ -133,7 +144,7 @@ export const getAllGroups = async (
           creditos: true,
         },
       },
-      teacher: {
+      teachers: {
         select: {
           id: true,
           nombre: true,
@@ -152,18 +163,31 @@ export const getAllGroups = async (
       teacherId: group.teacherId,
       nombre: group.nombre,
       periodo: group.periodo,
+      codigo: group.codigo,
+      cupoMaximo: group.cupoMaximo,
+      cupoMinimo: group.cupoMinimo,
+      cupoActual: group.cupoActual,
+      horario: group.horario || undefined,
+      aula: group.aula || undefined,
+      edificio: group.edificio || undefined,
+      modalidad: group.modalidad || undefined,
+      estatus: group.estatus || undefined,
+      nivelIngles: group.nivelIngles ?? undefined,
+      fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
+      fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
+      esCursoIngles: group.esCursoIngles ?? false,
       subject: {
-        id: group.subject.id,
-        clave: group.subject.clave,
-        nombre: group.subject.nombre,
-        creditos: group.subject.creditos,
+        id: group.subjects.id,
+        clave: group.subjects.clave,
+        nombre: group.subjects.nombre,
+        creditos: group.subjects.creditos,
       },
       teacher: {
-        id: group.teacher.id,
-        nombre: group.teacher.nombre,
-        apellidoPaterno: group.teacher.apellidoPaterno,
-        apellidoMaterno: group.teacher.apellidoMaterno,
-        departamento: group.teacher.departamento,
+        id: group.teachers.id,
+        nombre: group.teachers.nombre,
+        apellidoPaterno: group.teachers.apellidoPaterno,
+        apellidoMaterno: group.teachers.apellidoMaterno,
+        departamento: group.teachers.departamento,
       },
     })),
     pagination: {
@@ -179,10 +203,10 @@ export const getAllGroups = async (
  * Get a single group by ID
  */
 export const getGroupById = async (id: string): Promise<GroupResponseDto | null> => {
-  const group = await prisma.group.findUnique({
+  const group = await prisma.groups.findUnique({
     where: { id },
     include: {
-      subject: {
+      subjects: {
         select: {
           id: true,
           clave: true,
@@ -190,7 +214,7 @@ export const getGroupById = async (id: string): Promise<GroupResponseDto | null>
           creditos: true,
         },
       },
-      teacher: {
+      teachers: {
         select: {
           id: true,
           nombre: true,
@@ -212,18 +236,31 @@ export const getGroupById = async (id: string): Promise<GroupResponseDto | null>
     teacherId: group.teacherId,
     nombre: group.nombre,
     periodo: group.periodo,
+    codigo: group.codigo,
+    cupoMaximo: group.cupoMaximo,
+    cupoMinimo: group.cupoMinimo,
+    cupoActual: group.cupoActual,
+    horario: group.horario || undefined,
+    aula: group.aula || undefined,
+    edificio: group.edificio || undefined,
+    modalidad: group.modalidad || undefined,
+    estatus: group.estatus || undefined,
+    nivelIngles: group.nivelIngles ?? undefined,
+    fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
+    fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
+    esCursoIngles: group.esCursoIngles ?? false,
     subject: {
-      id: group.subject.id,
-      clave: group.subject.clave,
-      nombre: group.subject.nombre,
-      creditos: group.subject.creditos,
+      id: group.subjects.id,
+      clave: group.subjects.clave,
+      nombre: group.subjects.nombre,
+      creditos: group.subjects.creditos,
     },
     teacher: {
-      id: group.teacher.id,
-      nombre: group.teacher.nombre,
-      apellidoPaterno: group.teacher.apellidoPaterno,
-      apellidoMaterno: group.teacher.apellidoMaterno,
-      departamento: group.teacher.departamento,
+      id: group.teachers.id,
+      nombre: group.teachers.nombre,
+      apellidoPaterno: group.teachers.apellidoPaterno,
+      apellidoMaterno: group.teachers.apellidoMaterno,
+      departamento: group.teachers.departamento,
     },
   };
 };
@@ -235,36 +272,31 @@ export const getGroupById = async (id: string): Promise<GroupResponseDto | null>
 export const createGroup = async (
   data: CreateGroupDto
 ): Promise<GroupResponseDto> => {
-  const { subjectId, teacherId, nombre, periodo } = data;
-
-  // Validate that subject exists
-  const subject = await prisma.subject.findUnique({
-    where: { id: subjectId },
-  });
-
-  if (!subject) {
-    throw new Error('Subject not found');
-  }
-
-  // Validate that teacher exists
-  const teacher = await prisma.teacher.findUnique({
-    where: { id: teacherId },
-  });
-
-  if (!teacher) {
-    throw new Error('Teacher not found');
-  }
-
-  // Create group
-  const group = await prisma.group.create({
-    data: {
+  const { 
       subjectId,
       teacherId,
       nombre,
       periodo,
-    },
-    include: {
-      subject: {
+    nivelIngles,
+    fechaInscripcionInicio,
+    fechaInscripcionFin,
+    esCursoIngles
+  } = data;
+
+  // Apply business rule validations using validators
+  await GroupValidators.validateSubjectExists(subjectId);
+  await GroupValidators.validateTeacherExists(teacherId);
+
+  // Generate UUID for group
+  const groupId = randomUUID();
+
+  // Generate unique code for group
+  const codeCount = await prisma.groups.count();
+  const codigo = `GRP-${String(codeCount + 1).padStart(6, '0')}`;
+
+  // Define the include type for better type safety
+  const groupInclude = {
+    subjects: {
         select: {
           id: true,
           clave: true,
@@ -272,7 +304,7 @@ export const createGroup = async (
           creditos: true,
         },
       },
-      teacher: {
+    teachers: {
         select: {
           id: true,
           nombre: true,
@@ -281,8 +313,43 @@ export const createGroup = async (
           departamento: true,
         },
       },
-    },
-  });
+  } as const;
+
+  // Prepare data for creation
+  const createData: Prisma.groupsUncheckedCreateInput = {
+    id: groupId,
+    subjectId,
+    teacherId,
+    nombre,
+    periodo,
+    codigo,
+    cupoMaximo: 30,
+    cupoMinimo: 5,
+    cupoActual: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  // Add optional fields for English courses
+  if (nivelIngles !== undefined) createData.nivelIngles = nivelIngles;
+  if (fechaInscripcionInicio) createData.fechaInscripcionInicio = new Date(fechaInscripcionInicio);
+  if (fechaInscripcionFin) createData.fechaInscripcionFin = new Date(fechaInscripcionFin);
+  if (esCursoIngles !== undefined) createData.esCursoIngles = esCursoIngles;
+
+  // Create group
+  const group = await prisma.groups.create({
+    data: createData,
+    include: groupInclude,
+  }) as Prisma.groupsGetPayload<{ include: typeof groupInclude }> & {
+    codigo: string;
+    cupoMaximo: number;
+    cupoMinimo: number;
+    cupoActual: number;
+    nivelIngles?: number | null;
+    fechaInscripcionInicio?: Date | null;
+    fechaInscripcionFin?: Date | null;
+    esCursoIngles?: boolean;
+  };
 
   return {
     id: group.id,
@@ -290,18 +357,31 @@ export const createGroup = async (
     teacherId: group.teacherId,
     nombre: group.nombre,
     periodo: group.periodo,
+    codigo: group.codigo,
+    cupoMaximo: group.cupoMaximo,
+    cupoMinimo: group.cupoMinimo,
+    cupoActual: group.cupoActual,
+    horario: group.horario || undefined,
+    aula: group.aula || undefined,
+    edificio: group.edificio || undefined,
+    modalidad: group.modalidad || undefined,
+    estatus: group.estatus || undefined,
+    nivelIngles: group.nivelIngles ?? undefined,
+    fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
+    fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
+    esCursoIngles: group.esCursoIngles ?? false,
     subject: {
-      id: group.subject.id,
-      clave: group.subject.clave,
-      nombre: group.subject.nombre,
-      creditos: group.subject.creditos,
+      id: group.subjects.id,
+      clave: group.subjects.clave,
+      nombre: group.subjects.nombre,
+      creditos: group.subjects.creditos,
     },
     teacher: {
-      id: group.teacher.id,
-      nombre: group.teacher.nombre,
-      apellidoPaterno: group.teacher.apellidoPaterno,
-      apellidoMaterno: group.teacher.apellidoMaterno,
-      departamento: group.teacher.departamento,
+      id: group.teachers.id,
+      nombre: group.teachers.nombre,
+      apellidoPaterno: group.teachers.apellidoPaterno,
+      apellidoMaterno: group.teachers.apellidoMaterno,
+      departamento: group.teachers.departamento,
     },
   };
 };
@@ -313,7 +393,7 @@ export const createGroup = async (
  */
 export const deleteGroup = async (id: string): Promise<void> => {
   // Check if group exists
-  const group = await prisma.group.findUnique({
+  const group = await prisma.groups.findUnique({
     where: { id },
     include: {
       enrollments: {
@@ -327,7 +407,7 @@ export const deleteGroup = async (id: string): Promise<void> => {
   }
 
   // Delete group (this will cascade delete enrollments due to onDelete: Cascade)
-  await prisma.group.delete({
+  await prisma.groups.delete({
     where: { id },
   });
 };
@@ -341,7 +421,7 @@ export const updateGroup = async (
   data: UpdateGroupDto
 ): Promise<GroupResponseDto> => {
   // Check if group exists
-  const existingGroup = await prisma.group.findUnique({
+  const existingGroup = await prisma.groups.findUnique({
     where: { id },
   });
 
@@ -351,7 +431,7 @@ export const updateGroup = async (
 
   // Validate subjectId if provided
   if (data.subjectId) {
-    const subject = await prisma.subject.findUnique({
+      const subject = await prisma.subjects.findUnique({
       where: { id: data.subjectId },
     });
 
@@ -362,7 +442,7 @@ export const updateGroup = async (
 
   // Validate teacherId if provided
   if (data.teacherId) {
-    const teacher = await prisma.teacher.findUnique({
+      const teacher = await prisma.teachers.findUnique({
       where: { id: data.teacherId },
     });
 
@@ -371,17 +451,35 @@ export const updateGroup = async (
     }
   }
 
+    // Build update data (only include provided fields)
+    const updateData: Record<string, unknown> = {};
+    if (data.nombre !== undefined) updateData.nombre = data.nombre;
+    if (data.periodo !== undefined) updateData.periodo = data.periodo;
+    if (data.subjectId !== undefined) updateData.subjectId = data.subjectId;
+    if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
+    if (data.cupoMaximo !== undefined) updateData.cupoMaximo = data.cupoMaximo;
+    if (data.cupoMinimo !== undefined) updateData.cupoMinimo = data.cupoMinimo;
+    if (data.horario !== undefined) updateData.horario = data.horario;
+    if (data.aula !== undefined) updateData.aula = data.aula;
+    if (data.edificio !== undefined) updateData.edificio = data.edificio;
+    if (data.modalidad !== undefined) updateData.modalidad = data.modalidad;
+    if (data.estatus !== undefined) updateData.estatus = data.estatus;
+    // Campos para cursos de inglés
+    if (data.nivelIngles !== undefined) updateData.nivelIngles = data.nivelIngles;
+    if (data.fechaInscripcionInicio !== undefined) {
+      updateData.fechaInscripcionInicio = data.fechaInscripcionInicio ? new Date(data.fechaInscripcionInicio) : null;
+    }
+    if (data.fechaInscripcionFin !== undefined) {
+      updateData.fechaInscripcionFin = data.fechaInscripcionFin ? new Date(data.fechaInscripcionFin) : null;
+    }
+    if (data.esCursoIngles !== undefined) updateData.esCursoIngles = data.esCursoIngles;
+
   // Update group
-  const group = await prisma.group.update({
+    const group = await prisma.groups.update({
     where: { id },
-    data: {
-      nombre: data.nombre,
-      periodo: data.periodo,
-      subjectId: data.subjectId,
-      teacherId: data.teacherId,
-    },
+      data: updateData,
     include: {
-      subject: {
+        subjects: {
         select: {
           id: true,
           clave: true,
@@ -389,7 +487,7 @@ export const updateGroup = async (
           creditos: true,
         },
       },
-      teacher: {
+        teachers: {
         select: {
           id: true,
           nombre: true,
@@ -407,19 +505,138 @@ export const updateGroup = async (
     teacherId: group.teacherId,
     nombre: group.nombre,
     periodo: group.periodo,
+    codigo: group.codigo,
+    cupoMaximo: group.cupoMaximo,
+    cupoMinimo: group.cupoMinimo,
+    cupoActual: group.cupoActual,
+    horario: group.horario || undefined,
+    aula: group.aula || undefined,
+    edificio: group.edificio || undefined,
+    modalidad: group.modalidad || undefined,
+    estatus: group.estatus || undefined,
+    nivelIngles: group.nivelIngles ?? undefined,
+    fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
+    fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
+    esCursoIngles: group.esCursoIngles ?? false,
     subject: {
-      id: group.subject.id,
-      clave: group.subject.clave,
-      nombre: group.subject.nombre,
-      creditos: group.subject.creditos,
+      id: group.subjects.id,
+      clave: group.subjects.clave,
+      nombre: group.subjects.nombre,
+      creditos: group.subjects.creditos,
     },
     teacher: {
-      id: group.teacher.id,
-      nombre: group.teacher.nombre,
-      apellidoPaterno: group.teacher.apellidoPaterno,
-      apellidoMaterno: group.teacher.apellidoMaterno,
-      departamento: group.teacher.departamento,
+      id: group.teachers.id,
+      nombre: group.teachers.nombre,
+      apellidoPaterno: group.teachers.apellidoPaterno,
+      apellidoMaterno: group.teachers.apellidoMaterno,
+      departamento: group.teachers.departamento,
     },
   };
+};
+
+/**
+ * Get available English courses for students
+ * Returns courses that are open, have available capacity, and are within registration period
+ */
+export const getAvailableEnglishCourses = async (): Promise<GroupResponseDto[]> => {
+  const now = new Date();
+
+  // Build where clause with optional date conditions
+  // If dates are not set (null), the course should still be available
+  // Logic: Course is available if:
+  // - fechaInscripcionInicio is null OR fechaInscripcionInicio <= now (inscriptions have started or no start date)
+  // - fechaInscripcionFin is null OR fechaInscripcionFin >= now (inscriptions haven't ended or no end date)
+  const whereClause: any = {
+    esCursoIngles: true,
+    estatus: 'ABIERTO',
+    deletedAt: null,
+    AND: [
+      {
+        OR: [
+          { fechaInscripcionInicio: null },
+          { fechaInscripcionInicio: { lte: now } },
+        ],
+      },
+      {
+        OR: [
+          { fechaInscripcionFin: null },
+          { fechaInscripcionFin: { gte: now } },
+        ],
+      },
+    ],
+  };
+
+  const groups = await prisma.groups.findMany({
+    where: whereClause,
+    include: {
+      subjects: {
+        select: {
+          id: true,
+          clave: true,
+          nombre: true,
+          creditos: true,
+        },
+      },
+      teachers: {
+        select: {
+          id: true,
+          nombre: true,
+          apellidoPaterno: true,
+          apellidoMaterno: true,
+          departamento: true,
+        },
+      },
+    },
+    orderBy: {
+      nivelIngles: 'asc',
+    },
+  });
+
+  // Filter groups with available capacity (Prisma doesn't support computed fields in where)
+  const availableGroups = groups.filter((group) => group.cupoActual < group.cupoMaximo);
+
+  return availableGroups.map((group) => {
+    // Ensure subjects and teachers relations exist
+    if (!group.subjects) {
+      throw new Error(`Group ${group.id} (${group.nombre}) is missing subject relation`);
+    }
+    if (!group.teachers) {
+      throw new Error(`Group ${group.id} (${group.nombre}) is missing teacher relation`);
+    }
+
+    return {
+      id: group.id,
+      subjectId: group.subjectId,
+      teacherId: group.teacherId,
+      nombre: group.nombre,
+      periodo: group.periodo,
+      codigo: group.codigo,
+      cupoMaximo: group.cupoMaximo,
+      cupoMinimo: group.cupoMinimo,
+      cupoActual: group.cupoActual,
+      horario: group.horario || undefined,
+      aula: group.aula || undefined,
+      edificio: group.edificio || undefined,
+      modalidad: group.modalidad || undefined,
+      estatus: group.estatus || undefined,
+      nivelIngles: group.nivelIngles ?? undefined,
+      fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
+      fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
+      esCursoIngles: group.esCursoIngles ?? false,
+      subject: {
+        id: group.subjects.id,
+        clave: group.subjects.clave,
+        nombre: group.subjects.nombre,
+        creditos: group.subjects.creditos,
+      },
+      teacher: {
+        id: group.teachers.id,
+        nombre: group.teachers.nombre,
+        apellidoPaterno: group.teachers.apellidoPaterno,
+        apellidoMaterno: group.teachers.apellidoMaterno,
+        departamento: group.teachers.departamento,
+      },
+    };
+  });
 };
 

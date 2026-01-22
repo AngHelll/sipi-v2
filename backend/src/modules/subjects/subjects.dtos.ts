@@ -8,6 +8,15 @@ export interface CreateSubjectDto {
   clave: string;
   nombre: string;
   creditos: number;
+  // New fields (Phase 3) - all optional with defaults
+  tipo?: 'OBLIGATORIA' | 'OPTATIVA' | 'ELECTIVA' | 'SERVICIO_SOCIAL';
+  estatus?: 'ACTIVA' | 'INACTIVA' | 'DESCONTINUADA' | 'EN_REVISION';
+  nivel?: number;
+  horasTeoria?: number;
+  horasPractica?: number;
+  horasLaboratorio?: number;
+  descripcion?: string;
+  carreraId?: string; // Normalized career relation
 }
 
 /**
@@ -17,6 +26,15 @@ export interface CreateSubjectDto {
 export interface UpdateSubjectDto {
   nombre?: string;
   creditos?: number;
+  // New fields (Phase 3)
+  tipo?: 'OBLIGATORIA' | 'OPTATIVA' | 'ELECTIVA' | 'SERVICIO_SOCIAL';
+  estatus?: 'ACTIVA' | 'INACTIVA' | 'DESCONTINUADA' | 'EN_REVISION';
+  nivel?: number;
+  horasTeoria?: number;
+  horasPractica?: number;
+  horasLaboratorio?: number;
+  descripcion?: string;
+  carreraId?: string; // Normalized career relation
   // Note: clave cannot be updated (unique identifier)
 }
 
@@ -45,6 +63,17 @@ export interface SubjectResponseDto {
   clave: string;
   nombre: string;
   creditos: number;
+  // New fields (Phase 3)
+  tipo?: 'OBLIGATORIA' | 'OPTATIVA' | 'ELECTIVA' | 'SERVICIO_SOCIAL';
+  estatus?: 'ACTIVA' | 'INACTIVA' | 'DESCONTINUADA' | 'EN_REVISION';
+  nivel?: number;
+  horasTeoria?: number;
+  horasPractica?: number;
+  horasLaboratorio?: number;
+  descripcion?: string;
+  carreraId?: string;
+  gruposActivos?: number;
+  estudiantesInscritos?: number;
 }
 
 /**

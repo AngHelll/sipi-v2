@@ -12,6 +12,7 @@ import teachersRoutes from './modules/teachers/teachers.routes';
 import subjectsRoutes from './modules/subjects/subjects.routes';
 import groupsRoutes from './modules/groups/groups.routes';
 import enrollmentsRoutes from './modules/enrollments/enrollments.routes';
+import academicActivitiesRoutes from './modules/academic-activities/academic-activities.routes';
 import searchRoutes from './modules/search/search.routes';
 import exportRoutes from './modules/export/export.routes';
 
@@ -66,6 +67,7 @@ app.use('/api/teachers', teachersRoutes);
 app.use('/api/subjects', subjectsRoutes);
 app.use('/api/groups', groupsRoutes);
 app.use('/api/enrollments', enrollmentsRoutes);
+app.use('/api/academic-activities', academicActivitiesRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/export', exportRoutes);
 

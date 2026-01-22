@@ -5,7 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { groupsApi, subjectsApi, exportApi } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { ConfirmDialog, CapacityIndicator, Loader } from '../../components/ui';
 import { UserRole } from '../../types';
 import type { Group, GroupsListResponse, Subject } from '../../types';
 
@@ -154,7 +154,14 @@ export const GroupsListPage = () => {
     }
   };
 
-  const handleEdit = (id: string) => {
+  const handleView = (id: string) => {
+    navigate(`/admin/groups/${id}`);
+  };
+
+  const handleEdit = (id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     navigate(`/admin/groups/${id}/edit`);
   };
 
@@ -392,7 +399,7 @@ export const GroupsListPage = () => {
         {/* Loading state */}
         {loading && (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <Loader variant="spinner" size="lg" text="Cargando grupos..." />
           </div>
         )}
 
@@ -433,6 +440,12 @@ export const GroupsListPage = () => {
                             {getSortIcon('periodo')}
                           </div>
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Cupos
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Modalidad
+                        </th>
                         {isAdmin && (
                           <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Acciones
@@ -442,7 +455,11 @@ export const GroupsListPage = () => {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {filteredGroups.map((group) => (
-                        <tr key={group.id} className="hover:bg-gray-50 transition-colors">
+                        <tr 
+                          key={group.id} 
+                          className="hover:bg-gray-50 transition-colors cursor-pointer"
+                          onClick={() => handleView(group.id)}
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {group.nombre}
                           </td>
@@ -464,11 +481,32 @@ export const GroupsListPage = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {group.periodo}
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div className="flex items-center gap-2">
+                              <CapacityIndicator
+                                current={group.cupoActual || 0}
+                                max={group.cupoMaximo || 30}
+                                min={group.cupoMinimo || 5}
+                                showDetails={false}
+                                size="sm"
+                              />
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                {group.modalidad || 'PRESENCIAL'}
+                              </span>
+                              {group.horario && (
+                                <div className="text-xs text-gray-400 mt-1">{group.horario}</div>
+                              )}
+                            </div>
+                          </td>
                           {isAdmin && (
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center justify-end gap-3">
                                 <button
-                                  onClick={() => handleEdit(group.id)}
+                                  onClick={(e) => handleEdit(group.id, e)}
                                   className="text-indigo-600 hover:text-indigo-900 transition-colors"
                                   title="Editar grupo"
                                 >
@@ -487,7 +525,10 @@ export const GroupsListPage = () => {
                                   </svg>
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteClick(group)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteClick(group);
+                                  }}
                                   className="text-red-600 hover:text-red-900 transition-colors"
                                   title="Eliminar grupo"
                                 >

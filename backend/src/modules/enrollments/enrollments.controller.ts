@@ -37,6 +37,78 @@ export const getEnrollmentsMe = asyncHandler(async (req: Request, res: Response)
 });
 
 /**
+ * GET /api/enrollments
+ * Get all enrollments (ADMIN only)
+ * Supports filtering by studentId, groupId, estatus, tipoInscripcion, aprobado
+ */
+export const getAllEnrollments = asyncHandler(async (req: Request, res: Response) => {
+  // Get pagination params
+  const page = req.query.page ? parseInt(String(req.query.page), 10) : 1;
+  const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 20;
+
+  // Validate pagination
+  if (page < 1) {
+    res.status(400).json({ error: 'Page must be greater than 0' });
+    return;
+  }
+
+  if (limit < 1 || limit > 100) {
+    res.status(400).json({ error: 'Limit must be between 1 and 100' });
+    return;
+  }
+
+  // Get filter params
+  const query: any = {
+    page,
+    limit,
+    sortBy: req.query.sortBy || 'fechaInscripcion',
+    sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'desc',
+  };
+
+  if (req.query.studentId) {
+    query.studentId = String(req.query.studentId);
+  }
+  if (req.query.groupId) {
+    query.groupId = String(req.query.groupId);
+  }
+  if (req.query.estatus) {
+    query.estatus = String(req.query.estatus);
+  }
+  if (req.query.tipoInscripcion) {
+    query.tipoInscripcion = String(req.query.tipoInscripcion);
+  }
+  if (req.query.aprobado !== undefined) {
+    const aprobadoValue = String(req.query.aprobado);
+    query.aprobado = aprobadoValue === 'true';
+  }
+
+  const result = await enrollmentsService.getAllEnrollments(query);
+  res.json(result);
+});
+
+/**
+ * GET /api/enrollments/:id
+ * Get a specific enrollment by ID
+ * ADMIN can access any enrollment
+ * TEACHER can only access enrollments for their own groups
+ * STUDENT can only access their own enrollments
+ */
+export const getEnrollmentById = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = req.user?.userId;
+  const userRole = req.user?.role;
+
+  const enrollment = await enrollmentsService.getEnrollmentById(id, userId, userRole);
+
+  if (!enrollment) {
+    res.status(404).json({ error: 'Enrollment not found' });
+    return;
+  }
+
+  res.json(enrollment);
+});
+
+/**
  * GET /api/enrollments/group/:groupId
  * Get all enrollments for a specific group
  * TEACHER can only access enrollments for their own groups

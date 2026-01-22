@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { subjectsApi, exportApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { ConfirmDialog, Badge, Icon, Loader } from '../../components/ui';
 import type { Subject, SubjectsListResponse } from '../../types';
 
 export const SubjectsListPage = () => {
@@ -28,10 +28,18 @@ export const SubjectsListPage = () => {
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
+  const [tipoFilter, setTipoFilter] = useState('');
+  const [estatusFilter, setEstatusFilter] = useState('');
+  const [nivelFilter, setNivelFilter] = useState<number | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortBy, setSortBy] = useState<'clave' | 'nombre' | 'creditos'>('nombre');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  
+  // Column visibility
+  const [showNivel, setShowNivel] = useState(false);
+  const [showHoras, setShowHoras] = useState(true);
+  const [showGrupos, setShowGrupos] = useState(true);
 
   // Debounced search
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -47,7 +55,7 @@ export const SubjectsListPage = () => {
 
   useEffect(() => {
     fetchSubjects();
-  }, [debouncedSearchTerm, currentPage, pageSize, sortBy, sortOrder]);
+  }, [debouncedSearchTerm, tipoFilter, estatusFilter, nivelFilter, currentPage, pageSize, sortBy, sortOrder]);
 
   const fetchSubjects = async () => {
     try {
@@ -64,6 +72,15 @@ export const SubjectsListPage = () => {
       // Add search filter
       if (debouncedSearchTerm.trim()) {
         params.nombre = debouncedSearchTerm.trim();
+      }
+      if (tipoFilter) {
+        params.tipo = tipoFilter;
+      }
+      if (estatusFilter) {
+        params.estatus = estatusFilter;
+      }
+      if (nivelFilter) {
+        params.nivel = nivelFilter;
       }
 
       const response = await subjectsApi.getAll(params);
@@ -133,7 +150,40 @@ export const SubjectsListPage = () => {
 
   const handleClearFilters = () => {
     setSearchTerm('');
+    setTipoFilter('');
+    setEstatusFilter('');
+    setNivelFilter('');
     setCurrentPage(1);
+  };
+  
+  const getTipoBadgeVariant = (tipo?: string): 'success' | 'warning' | 'info' | 'default' => {
+    switch (tipo) {
+      case 'OBLIGATORIA':
+        return 'success';
+      case 'OPTATIVA':
+        return 'info';
+      case 'ELECTIVA':
+        return 'warning';
+      case 'SERVICIO_SOCIAL':
+        return 'default';
+      default:
+        return 'default';
+    }
+  };
+  
+  const getEstatusBadgeVariant = (estatus?: string): 'success' | 'warning' | 'info' | 'default' => {
+    switch (estatus) {
+      case 'ACTIVA':
+        return 'success';
+      case 'INACTIVA':
+        return 'warning';
+      case 'DESCONTINUADA':
+        return 'default';
+      case 'EN_REVISION':
+        return 'info';
+      default:
+        return 'default';
+    }
   };
 
   const handleSort = (field: 'clave' | 'nombre' | 'creditos') => {
@@ -164,7 +214,7 @@ export const SubjectsListPage = () => {
     );
   };
 
-  const hasActiveFilters = searchTerm;
+  const hasActiveFilters = searchTerm || tipoFilter || estatusFilter || nivelFilter;
 
   return (
     <Layout>
@@ -197,7 +247,7 @@ export const SubjectsListPage = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Search */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -210,6 +260,106 @@ export const SubjectsListPage = () => {
                 placeholder="Buscar por nombre o clave..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+            
+            {/* Tipo filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tipo
+              </label>
+              <select
+                value={tipoFilter}
+                onChange={(e) => {
+                  setTipoFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Todos</option>
+                <option value="OBLIGATORIA">OBLIGATORIA</option>
+                <option value="OPTATIVA">OPTATIVA</option>
+                <option value="ELECTIVA">ELECTIVA</option>
+                <option value="SERVICIO_SOCIAL">SERVICIO SOCIAL</option>
+              </select>
+            </div>
+            
+            {/* Estatus filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estatus
+              </label>
+              <select
+                value={estatusFilter}
+                onChange={(e) => {
+                  setEstatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Todos</option>
+                <option value="ACTIVA">ACTIVA</option>
+                <option value="INACTIVA">INACTIVA</option>
+                <option value="DESCONTINUADA">DESCONTINUADA</option>
+                <option value="EN_REVISION">EN REVISIÓN</option>
+              </select>
+            </div>
+            
+            {/* Nivel filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nivel
+              </label>
+              <select
+                value={nivelFilter}
+                onChange={(e) => {
+                  setNivelFilter(e.target.value === '' ? '' : parseInt(e.target.value, 10));
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Todos</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((nivel) => (
+                  <option key={nivel} value={nivel}>
+                    {nivel}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          {/* Column visibility toggle */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Columnas visibles:
+            </label>
+            <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showNivel}
+                  onChange={(e) => setShowNivel(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Nivel
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showHoras}
+                  onChange={(e) => setShowHoras(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Horas
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={showGrupos}
+                  onChange={(e) => setShowGrupos(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                Grupos Activos
+              </label>
             </div>
           </div>
 
@@ -236,7 +386,7 @@ export const SubjectsListPage = () => {
         {/* Loading state */}
         {loading && (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <Loader variant="spinner" size="lg" text="Cargando materias..." />
           </div>
         )}
 
@@ -280,6 +430,27 @@ export const SubjectsListPage = () => {
                             {getSortIcon('creditos')}
                           </div>
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tipo
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estatus
+                        </th>
+                        {showNivel && (
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Nivel
+                          </th>
+                        )}
+                        {showHoras && (
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Horas
+                          </th>
+                        )}
+                        {showGrupos && (
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Grupos
+                          </th>
+                        )}
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Acciones
                         </th>
@@ -300,6 +471,46 @@ export const SubjectsListPage = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {subject.creditos}
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {subject.tipo ? (
+                              <Badge variant={getTipoBadgeVariant(subject.tipo)}>
+                                {subject.tipo.replace('_', ' ')}
+                              </Badge>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {subject.estatus ? (
+                              <Badge variant={getEstatusBadgeVariant(subject.estatus)}>
+                                {subject.estatus.replace('_', ' ')}
+                              </Badge>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
+                            )}
+                          </td>
+                          {showNivel && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              {subject.nivel || '-'}
+                            </td>
+                          )}
+                          {showHoras && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              <div className="flex flex-col">
+                                <span className="text-xs">
+                                  T: {subject.horasTeoria || 0} | P: {subject.horasPractica || 0} | L: {subject.horasLaboratorio || 0}
+                                </span>
+                                <span className="text-xs font-semibold text-gray-700">
+                                  Total: {(subject.horasTeoria || 0) + (subject.horasPractica || 0) + (subject.horasLaboratorio || 0)}
+                                </span>
+                              </div>
+                            </td>
+                          )}
+                          {showGrupos && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              {subject.gruposActivos || 0}
+                            </td>
+                          )}
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex items-center justify-end gap-3">
                               <button

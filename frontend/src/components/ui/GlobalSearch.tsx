@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchApi } from '../../lib/api';
 import type { SearchResultItem } from '../../types';
+import { InlineLoader } from './Loader';
 
 export const GlobalSearch = () => {
   const navigate = useNavigate();
@@ -174,7 +175,7 @@ export const GlobalSearch = () => {
         />
         {loading && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <InlineLoader size="sm" />
           </div>
         )}
       </div>

@@ -29,7 +29,7 @@ export const login = async (
   const { username, password } = credentials;
 
   // Find user by username
-  const user = await prisma.user.findUnique({
+  const user = await prisma.users.findUnique({
     where: { username },
   });
 
@@ -71,7 +71,7 @@ export const generateToken = (payload: JwtPayload): string => {
  * Get current user data by ID
  */
 export const getCurrentUser = async (userId: string) => {
-  const user = await prisma.user.findUnique({
+  const user = await prisma.users.findUnique({
     where: { id: userId },
     select: {
       id: true,

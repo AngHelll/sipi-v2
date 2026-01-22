@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { label: 'Maestros', path: '/admin/teachers', roles: [UserRole.ADMIN] },
   { label: 'Materias', path: '/admin/subjects', roles: [UserRole.ADMIN] },
   { label: 'Grupos', path: '/admin/groups', roles: [UserRole.ADMIN] },
+  { label: 'Inscripciones', path: '/admin/enrollments', roles: [UserRole.ADMIN] },
 ];
 
 export const Sidebar = () => {

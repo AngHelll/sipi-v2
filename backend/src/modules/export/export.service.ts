@@ -46,7 +46,7 @@ export const exportStudents = async (filters?: {
   }
 
   // Fetch all students (for export, we want all matching records)
-  const students = await prisma.student.findMany({
+  const students = await prisma.students.findMany({
     where,
     orderBy: { nombre: 'asc' },
   });
@@ -98,7 +98,7 @@ export const exportTeachers = async (filters?: {
     where.departamento = { contains: filters.departamento };
   }
 
-  const teachers = await prisma.teacher.findMany({
+  const teachers = await prisma.teachers.findMany({
     where,
     orderBy: { nombre: 'asc' },
   });
@@ -136,7 +136,7 @@ export const exportSubjects = async (): Promise<Buffer> => {
     fgColor: { argb: 'FFE0E0E0' },
   };
 
-  const subjects = await prisma.subject.findMany({
+  const subjects = await prisma.subjects.findMany({
     orderBy: { clave: 'asc' },
   });
 
@@ -186,16 +186,16 @@ export const exportGroups = async (filters?: {
     where.subjectId = filters.subjectId;
   }
 
-  const groups = await prisma.group.findMany({
+  const groups = await prisma.groups.findMany({
     where,
     include: {
-      subject: {
+      subjects: {
         select: {
           clave: true,
           nombre: true,
         },
       },
-      teacher: {
+      teachers: {
         select: {
           nombre: true,
           apellidoPaterno: true,
@@ -211,10 +211,10 @@ export const exportGroups = async (filters?: {
     worksheet.addRow({
       nombre: group.nombre,
       periodo: group.periodo,
-      subjectClave: group.subject.clave,
-      subjectNombre: group.subject.nombre,
-      teacherNombre: `${group.teacher.nombre} ${group.teacher.apellidoPaterno} ${group.teacher.apellidoMaterno}`,
-      departamento: group.teacher.departamento,
+      subjectClave: group.subjects.clave,
+      subjectNombre: group.subjects.nombre,
+      teacherNombre: `${group.teachers.nombre} ${group.teachers.apellidoPaterno} ${group.teachers.apellidoMaterno}`,
+      departamento: group.teachers.departamento,
     });
   });
 

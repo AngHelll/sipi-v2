@@ -1,4 +1,5 @@
 // Subjects service - Business logic for subject management
+import { randomUUID } from 'crypto';
 import prisma from '../../config/database';
 import {
   CreateSubjectDto,
@@ -7,6 +8,30 @@ import {
   SubjectResponseDto,
   SubjectsListResponseDto,
 } from './subjects.dtos';
+import { SubjectValidators } from './subjects.validators';
+
+/**
+ * Helper function to map Prisma subject to response DTO
+ */
+const mapSubjectToResponseDto = (subject: any): SubjectResponseDto => {
+  return {
+    id: subject.id,
+    clave: subject.clave,
+    nombre: subject.nombre,
+    creditos: subject.creditos,
+    // New fields (Phase 3)
+    tipo: subject.tipo || undefined,
+    estatus: subject.estatus || undefined,
+    nivel: subject.nivel || undefined,
+    horasTeoria: subject.horasTeoria || undefined,
+    horasPractica: subject.horasPractica || undefined,
+    horasLaboratorio: subject.horasLaboratorio || undefined,
+    descripcion: subject.descripcion || undefined,
+    carreraId: subject.carreraId || undefined,
+    gruposActivos: subject.gruposActivos || undefined,
+    estudiantesInscritos: subject.estudiantesInscritos || undefined,
+  };
+};
 
 /**
  * Create a new subject
@@ -14,29 +39,39 @@ import {
 export const createSubject = async (
   data: CreateSubjectDto
 ): Promise<SubjectResponseDto> => {
-  // Check if clave already exists
-  const existingSubject = await prisma.subject.findUnique({
-    where: { clave: data.clave },
-  });
+  // Apply business rule validations using validators
+  await SubjectValidators.validateClaveUnique(data.clave);
 
-  if (existingSubject) {
-    throw new Error('Clave already exists');
-  }
+  // Generate UUID for the subject
+  const subjectId = randomUUID();
 
-  const subject = await prisma.subject.create({
-    data: {
-      clave: data.clave,
-      nombre: data.nombre,
-      creditos: data.creditos,
-    },
-  });
-
-  return {
-    id: subject.id,
-    clave: subject.clave,
-    nombre: subject.nombre,
-    creditos: subject.creditos,
+  // Build data object with all fields, including new ones from Phase 3
+  const now = new Date();
+  const subjectData: any = {
+    id: subjectId,
+    clave: data.clave,
+    nombre: data.nombre,
+    creditos: data.creditos,
+    // New fields (Phase 3) - use defaults if not provided
+    tipo: data.tipo || 'OBLIGATORIA',
+    estatus: data.estatus || 'ACTIVA',
+    nivel: data.nivel ?? null,
+    horasTeoria: data.horasTeoria ?? 0,
+    horasPractica: data.horasPractica ?? 0,
+    horasLaboratorio: data.horasLaboratorio ?? 0,
+    descripcion: data.descripcion ?? null,
+    carreraId: data.carreraId ?? null,
+    gruposActivos: 0,
+    estudiantesInscritos: 0,
+    createdAt: now,
+    updatedAt: now,
   };
+
+  const subject = await prisma.subjects.create({
+    data: subjectData,
+  });
+
+  return mapSubjectToResponseDto(subject);
 };
 
 /**
@@ -77,10 +112,10 @@ export const getAllSubjects = async (
   orderBy[sortBy] = sortOrder;
 
   // Get total count
-  const total = await prisma.subject.count({ where });
+  const total = await prisma.subjects.count({ where });
 
   // Get subjects
-  const subjects = await prisma.subject.findMany({
+  const subjects = await prisma.subjects.findMany({
     where,
     skip,
     take,
@@ -88,12 +123,7 @@ export const getAllSubjects = async (
   });
 
   return {
-    subjects: subjects.map((subject) => ({
-      id: subject.id,
-      clave: subject.clave,
-      nombre: subject.nombre,
-      creditos: subject.creditos,
-    })),
+    subjects: subjects.map((subject) => mapSubjectToResponseDto(subject)),
     pagination: {
       page,
       limit: take,
@@ -109,20 +139,14 @@ export const getAllSubjects = async (
 export const getSubjectById = async (
   id: string
 ): Promise<SubjectResponseDto> => {
-  const subject = await prisma.subject.findUnique({
+  // Validate that subject exists
+  await SubjectValidators.validateSubjectExists(id);
+
+  const subject = await prisma.subjects.findUnique({
     where: { id },
   });
 
-  if (!subject) {
-    throw new Error('Subject not found');
-  }
-
-  return {
-    id: subject.id,
-    clave: subject.clave,
-    nombre: subject.nombre,
-    creditos: subject.creditos,
-  };
+  return mapSubjectToResponseDto(subject!);
 };
 
 /**
@@ -132,32 +156,34 @@ export const updateSubject = async (
   id: string,
   data: UpdateSubjectDto
 ): Promise<SubjectResponseDto> => {
-  // Check if subject exists
-  const existingSubject = await prisma.subject.findUnique({
+  // Validate that subject exists
+  await SubjectValidators.validateSubjectExists(id);
+
+  const existingSubject = await prisma.subjects.findUnique({
     where: { id },
   });
-
-  if (!existingSubject) {
-    throw new Error('Subject not found');
-  }
 
   // Build update data (only include provided fields)
   const updateData: Record<string, unknown> = {};
   if (data.nombre !== undefined) updateData.nombre = data.nombre;
   if (data.creditos !== undefined) updateData.creditos = data.creditos;
+  // New fields (Phase 3)
+  if (data.tipo !== undefined) updateData.tipo = data.tipo;
+  if (data.estatus !== undefined) updateData.estatus = data.estatus;
+  if (data.nivel !== undefined) updateData.nivel = data.nivel;
+  if (data.horasTeoria !== undefined) updateData.horasTeoria = data.horasTeoria;
+  if (data.horasPractica !== undefined) updateData.horasPractica = data.horasPractica;
+  if (data.horasLaboratorio !== undefined) updateData.horasLaboratorio = data.horasLaboratorio;
+  if (data.descripcion !== undefined) updateData.descripcion = data.descripcion;
+  if (data.carreraId !== undefined) updateData.carreraId = data.carreraId;
   // Note: clave cannot be updated
 
-  const subject = await prisma.subject.update({
+  const subject = await prisma.subjects.update({
     where: { id },
     data: updateData,
   });
 
-  return {
-    id: subject.id,
-    clave: subject.clave,
-    nombre: subject.nombre,
-    creditos: subject.creditos,
-  };
+  return mapSubjectToResponseDto(subject);
 };
 
 /**
@@ -166,29 +192,11 @@ export const updateSubject = async (
  * ADMIN only
  */
 export const deleteSubject = async (id: string): Promise<void> => {
-  // Check if subject exists
-  const subject = await prisma.subject.findUnique({
-    where: { id },
-    include: {
-      groups: {
-        select: { id: true },
-      },
-    },
-  });
-
-  if (!subject) {
-    throw new Error('Subject not found');
-  }
-
-  // Check if subject has groups
-  if (subject.groups.length > 0) {
-    throw new Error(
-      `Cannot delete subject: ${subject.nombre} (${subject.clave}). Subject has ${subject.groups.length} group(s). Please delete or reassign groups first.`
-    );
-  }
+  // Validate that subject can be deleted (exists and has no groups)
+  await SubjectValidators.validateSubjectCanBeDeleted(id);
 
   // Delete subject
-  await prisma.subject.delete({
+  await prisma.subjects.delete({
     where: { id },
   });
 };

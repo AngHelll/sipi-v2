@@ -17,8 +17,22 @@ import { SubjectsListPage } from './pages/admin/SubjectsListPage';
 import { SubjectFormPage } from './pages/admin/SubjectFormPage';
 import { GroupsListPage } from './pages/admin/GroupsListPage';
 import { GroupFormPage } from './pages/admin/GroupFormPage';
+import { GroupDetailPage } from './pages/admin/GroupDetailPage';
 import { EnrollmentFormPage } from './pages/admin/EnrollmentFormPage';
+import { EnrollmentsListPage as AdminEnrollmentsListPage } from './pages/admin/EnrollmentsListPage';
+import { EnglishPaymentApprovalsPage } from './pages/admin/EnglishPaymentApprovalsPage';
 import { EnrollmentsListPage } from './pages/student/EnrollmentsListPage';
+import { EnglishStatusPage } from './pages/student/EnglishStatusPage';
+import { RequestDiagnosticExamPage } from './pages/student/RequestDiagnosticExamPage';
+import { RequestEnglishCoursePage } from './pages/student/RequestEnglishCoursePage';
+import { AvailableExamPeriodsPage } from './pages/student/AvailableExamPeriodsPage';
+import { AvailableEnglishCoursesPage } from './pages/student/AvailableEnglishCoursesPage';
+import { ExamPeriodsListPage } from './pages/admin/ExamPeriodsListPage';
+import { ExamPeriodFormPage } from './pages/admin/ExamPeriodFormPage';
+import { DiagnosticExamsListPage } from './pages/admin/DiagnosticExamsListPage';
+import { ProcessExamResultPage } from './pages/admin/ProcessExamResultPage';
+import { SpecialCoursesListPage } from './pages/admin/SpecialCoursesListPage';
+import { SpecialCourseDetailPage } from './pages/admin/SpecialCourseDetailPage';
 import { GradesManagementPage } from './pages/teacher/GradesManagementPage';
 import { UserRole } from './types';
 
@@ -154,6 +168,14 @@ function App() {
             }
           />
           <Route
+            path="/admin/groups/:id"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <GroupDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/groups/new"
             element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
@@ -172,7 +194,23 @@ function App() {
 
           {/* Enrollment routes */}
           <Route
+            path="/admin/enrollments"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <AdminEnrollmentsListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/enrollments/new"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <EnrollmentFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/enrollments/:id/edit"
             element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                 <EnrollmentFormPage />
@@ -196,6 +234,118 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
                 <EnrollmentsListPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Student English routes (RB-038) */}
+          <Route
+            path="/student/english/status"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                <EnglishStatusPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/english/request-exam"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                <RequestDiagnosticExamPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/english/request-course"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                <RequestEnglishCoursePage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin English routes (RB-038) */}
+          <Route
+            path="/admin/english/payment-approvals"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <EnglishPaymentApprovalsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/special-courses"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <SpecialCoursesListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/special-courses/:id"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <SpecialCourseDetailPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Exam Periods routes (Admin) */}
+          <Route
+            path="/admin/exam-periods"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <ExamPeriodsListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/exam-periods/new"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <ExamPeriodFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/exam-periods/:id"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <ExamPeriodFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/exams"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <DiagnosticExamsListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/exams/:id/process-result"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                <ProcessExamResultPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Student Available routes */}
+          <Route
+            path="/student/english/available-exam-periods"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                <AvailableExamPeriodsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/english/available-courses"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                <AvailableEnglishCoursesPage />
               </ProtectedRoute>
             }
           />

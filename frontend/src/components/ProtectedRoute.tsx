@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
+import { PageLoader } from './ui/Loader';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -16,11 +17,7 @@ export const ProtectedRoute = ({
   const { isAuthenticated, user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Cargando...</div>
-      </div>
-    );
+    return <PageLoader text="Cargando..." />;
   }
 
   if (!isAuthenticated) {
