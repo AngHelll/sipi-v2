@@ -3,12 +3,10 @@ kind: pipeline
 type: docker
 name: sipi-ci-cd
 
-# CRÍTICO: Especificar arquitectura ARM64 para Raspberry Pi
 platform:
   os: linux
   arch: arm64
 
-# Clone manual para usar token de autenticación
 clone:
   disable: true
 
@@ -19,7 +17,6 @@ trigger:
     - push
 
 steps:
-  # Paso 1: Clone con autenticación
   - name: clone
     image: alpine/git
     environment:
@@ -30,7 +27,6 @@ steps:
       - git checkout $DRONE_COMMIT
       - echo "Cloned commit $DRONE_COMMIT"
 
-  # Paso 2: Instalar dependencias del backend
   - name: install-backend
     image: node:20-alpine
     commands:
@@ -38,7 +34,6 @@ steps:
       - npm ci --prefer-offline
       - echo "Backend dependencies installed"
 
-  # Paso 3: Build del backend (TypeScript → JavaScript)
   - name: build-backend
     image: node:20-alpine
     commands:
@@ -46,7 +41,6 @@ steps:
       - npm run build
       - echo "Backend build completed"
 
-  # Paso 4: Instalar y build del frontend
   - name: build-frontend
     image: node:20-alpine
     commands:
@@ -55,7 +49,6 @@ steps:
       - npx vite build
       - echo "Frontend build completed"
 
-  # Paso 5: Deploy a producción via SSH
   - name: deploy
     image: appleboy/drone-ssh
     settings:
@@ -73,7 +66,6 @@ steps:
         - sudo systemctl restart sipi
         - echo "Deployment completed!"
 
-  # Paso 6: Verificar que el servicio está corriendo
   - name: healthcheck
     image: alpine
     commands:
@@ -81,39 +73,3 @@ steps:
       - sleep 5
       - curl -f http://192.168.100.35:3001/health || exit 1
       - echo "Health check passed!"
-
----
-# Pipeline para Pull Requests (solo build, sin deploy)
-kind: pipeline
-type: docker
-name: sipi-pr-check
-
-platform:
-  os: linux
-  arch: arm64
-
-clone:
-  disable: true
-
-trigger:
-  event:
-    - pull_request
-
-steps:
-  - name: clone
-    image: alpine/git
-    environment:
-      GITEA_TOKEN:
-        from_secret: gitea_token
-    commands:
-      - git clone http://ajjimenezr:$GITEA_TOKEN@gitea:3000/ajjimenezr/sipi.git .
-      - git fetch origin +refs/pull/${DRONE_PULL_REQUEST}/head:
-      - git checkout FETCH_HEAD
-      - echo "Cloned PR #$DRONE_PULL_REQUEST"
-
-  - name: install-and-build
-    image: node:20-alpine
-    commands:
-      - cd backend && npm ci && npm run build
-      - cd ../frontend && npm ci && npx vite build
-      - echo "PR build check passed!"
