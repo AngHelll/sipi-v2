@@ -20,34 +20,26 @@ steps:
   - name: clone
     image: alpine/git
     environment:
-      GITEA_TOKEN:
+      TOKEN:
         from_secret: gitea_token
     commands:
-      - git clone http://ajjimenezr:$GITEA_TOKEN@gitea:3000/ajjimenezr/sipi.git .
+      - git clone http://ajjimenezr:$TOKEN@gitea:3000/ajjimenezr/sipi.git .
       - git checkout $DRONE_COMMIT
-      - echo "Cloned commit $DRONE_COMMIT"
 
   - name: install-backend
     image: node:20-alpine
     commands:
-      - cd backend
-      - npm ci --prefer-offline
-      - echo "Backend dependencies installed"
+      - cd backend && npm ci --prefer-offline
 
   - name: build-backend
     image: node:20-alpine
     commands:
-      - cd backend
-      - npm run build
-      - echo "Backend build completed"
+      - cd backend && npm run build
 
   - name: build-frontend
     image: node:20-alpine
     commands:
-      - cd frontend
-      - npm ci --prefer-offline
-      - npx vite build
-      - echo "Frontend build completed"
+      - cd frontend && npm ci --prefer-offline && npx vite build
 
   - name: deploy
     image: appleboy/drone-ssh
@@ -58,18 +50,7 @@ steps:
         from_secret: ssh_key
       port: 22
       script:
-        - echo "Starting deployment..."
         - cd ~/raspylab/production/sipi/app
         - git pull origin main
         - cd backend && npm ci --production && npm run build
-        - cp -r ../frontend/dist ./public 2>/dev/null || true
         - sudo systemctl restart sipi
-        - echo "Deployment completed!"
-
-  - name: healthcheck
-    image: alpine
-    commands:
-      - apk add --no-cache curl
-      - sleep 5
-      - curl -f http://192.168.100.35:3001/health || exit 1
-      - echo "Health check passed!"
