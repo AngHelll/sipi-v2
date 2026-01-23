@@ -66,7 +66,7 @@ export const createSpecialCourseHandler = async (req: Request, res: Response): P
  */
 export const receiveAndApprovePaymentHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { montoPago, observaciones, fechaInicio } = req.body;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -100,7 +100,7 @@ export const receiveAndApprovePaymentHandler = async (req: Request, res: Respons
  */
 export const rejectPaymentHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { motivo } = req.body;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -134,7 +134,7 @@ export const rejectPaymentHandler = async (req: Request, res: Response): Promise
  */
 export const completeSpecialCourseHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { calificacion } = req.body;
     const userId = req.user?.userId;
 
@@ -198,7 +198,7 @@ export const getAllSpecialCoursesHandler = async (req: Request, res: Response): 
  */
 export const getSpecialCourseByIdHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const userId = req.user?.userId;
     const userRole = req.user?.role;
 
