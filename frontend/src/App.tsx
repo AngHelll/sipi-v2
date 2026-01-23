@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { InactivityTimeoutHandler } from './components/InactivityTimeoutHandler';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/errors/NotFoundPage';
 import { DashboardStudent } from './pages/dashboards/DashboardStudent';
@@ -41,6 +42,7 @@ function App() {
     <ErrorBoundary>
       <ToastProvider>
         <AuthProvider>
+          <InactivityTimeoutHandler />
           <BrowserRouter>
             <Routes>
           {/* Public route */}

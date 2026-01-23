@@ -63,7 +63,18 @@ git check-ignore backend/.env frontend/.env
 - [ ] Revisar permisos de archivos del servidor
 - [ ] Mantener dependencias actualizadas
 
-### 5. Rate Limiting
+### 5. Timeout de Inactividad
+
+El sistema incluye timeout automático de inactividad para mayor seguridad:
+- **Timeout**: 30 minutos de inactividad
+- **Advertencia**: Se muestra 5 minutos antes del cierre automático
+- **Implementación**: Frontend-only (sin costo de servidor)
+- **Eventos detectados**: Mouse, teclado, scroll, touch
+- **Backup**: JWT expira en 7 días (seguridad adicional)
+
+El usuario recibe una advertencia visual con countdown y puede continuar su sesión haciendo clic en "Continuar Sesión" o realizando cualquier acción en la página.
+
+### 6. Rate Limiting
 
 El sistema incluye rate limiting configurado:
 - Login: 5 intentos por 15 minutos
@@ -71,7 +82,7 @@ El sistema incluye rate limiting configurado:
 
 Ajusta estos valores en `backend/src/middleware/rateLimiter.ts` según tus necesidades.
 
-### 6. Contraseñas
+### 7. Contraseñas
 
 - Las contraseñas se hashean con bcrypt (10 salt rounds)
 - Nunca almacenes contraseñas en texto plano

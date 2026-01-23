@@ -7,6 +7,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Seguridad
+- Timeout de inactividad implementado (30 minutos)
+- Modal de advertencia 5 minutos antes del cierre automático
+- Detección de actividad del usuario (mouse, teclado, scroll, touch)
+- Implementación frontend-only (cero costo de servidor)
+- JWT expiration (7 días) como backup de seguridad
+
 ### Mejoras de Producción
 - Título del sitio actualizado: "SIPI Modern - Sistema de Registro Estudiantil"
 - Meta tags SEO profesionales agregados (description, keywords, Open Graph, Twitter Cards)
