@@ -1,5 +1,5 @@
 // Exam Periods Service - Business logic for diagnostic exam periods
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import prisma from '../../../config/database';
 import {
   CreateExamPeriodDto,

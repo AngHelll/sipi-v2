@@ -1,5 +1,5 @@
 // Enrollments service - Business logic for enrollment management
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import prisma from '../../config/database';
 import { recalculateStudentAverages } from '../students/students.service';
 import { Prisma } from '@prisma/client';

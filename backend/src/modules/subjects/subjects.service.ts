@@ -1,5 +1,5 @@
 // Subjects service - Business logic for subject management
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import prisma from '../../config/database';
 import {
   CreateSubjectDto,

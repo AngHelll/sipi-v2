@@ -1,6 +1,6 @@
 // English enrollments service - Business logic for English enrollments
 // RB-038: Servicio específico para inscripciones de inglés
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import prisma from '../../../config/database';
 import { EnglishEnrollmentsValidators } from './english-enrollments.validators';
 import { recalculateStudentAverages } from '../../students/students.service';

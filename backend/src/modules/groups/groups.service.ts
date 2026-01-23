@@ -1,5 +1,5 @@
 // Groups service - Business logic for group management
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import prisma from '../../config/database';
 import { Prisma } from '@prisma/client';
 import {

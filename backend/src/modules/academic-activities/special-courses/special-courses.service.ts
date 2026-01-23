@@ -1,6 +1,6 @@
 // Special Courses Service - Business logic for special course activities
 // V2: Servicio para cursos especiales (grupo opcional)
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import prisma from '../../../config/database';
 import { generateActivityCode, updateActivityStatus } from '../academic-activities.service';
 import { recalculateStudentAverages } from '../../students/students.service';

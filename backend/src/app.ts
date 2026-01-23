@@ -19,6 +19,10 @@ import exportRoutes from './modules/export/export.routes';
 
 const app = express();
 
+// Trust proxy - Required for rate limiting behind reverse proxy (Cloudflare Tunnel)
+// This allows Express to correctly identify client IPs from X-Forwarded-For headers
+app.set('trust proxy', true);
+
 // Middleware
 // CORS configuration - in development, allow any localhost port
 const corsOptions = {

@@ -1,6 +1,6 @@
 // Academic Activities Service - Base service for all academic activities
 // V2: Servicio base para todas las actividades académicas
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import prisma from '../../config/database';
 import { EntityValidators } from '../../shared/validators/entity.validators';
 
