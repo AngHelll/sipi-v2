@@ -7,6 +7,23 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Mejoras de Producción
+- Título del sitio actualizado: "SIPI Modern - Sistema de Registro Estudiantil"
+- Meta tags SEO profesionales agregados (description, keywords, Open Graph, Twitter Cards)
+- Idioma del sitio cambiado a español (`lang="es"`)
+- Favicon personalizado creado (icono de libro/educación)
+- Manifest.json para PWA (Progressive Web App)
+- robots.txt configurado para SEO
+- Theme color configurado para mejor integración móvil
+- Branding consistente en Sidebar y LoginPage
+
+### Dependencias
+- Agregados npm overrides para corregir dependencias deprecadas de exceljs
+- Actualizado `inflight` a `@isaacs/inflight` (versión mantenida)
+- Actualizado `rimraf` a v5.0.5 (versión soportada)
+- Actualizado `glob` a v10.3.10 (versión soportada)
+- Reducidos warnings de deprecación de 5 a 2 (solo fstream y lodash.isequal, sin vulnerabilidades)
+
 ### Configuración
 - Script de inicio `start-dev.sh` para desarrollo local (Mac/Linux)
 - Script de verificación de entorno actualizado para aceptar URLs MySQL con y sin contraseña

@@ -40,9 +40,9 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex lg:flex-shrink-0">
         <div className="w-64 bg-gray-800 text-white min-h-screen flex flex-col">
-          <div className="p-6">
+          <div className="p-6 border-b border-gray-700">
             <h2 className="text-xl font-bold">SIPI Modern</h2>
-            <p className="text-sm text-gray-400 mt-1">Sistema de Registro</p>
+            <p className="text-sm text-gray-400 mt-1">Sistema de Registro Estudiantil</p>
           </div>
           <nav className="mt-6 flex-1">
             <ul className="space-y-2 px-4">
@@ -78,7 +78,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           <div className="flex items-center justify-between p-6 border-b border-gray-700">
             <div>
               <h2 className="text-xl font-bold">SIPI Modern</h2>
-              <p className="text-sm text-gray-400 mt-1">Sistema de Registro</p>
+              <p className="text-sm text-gray-400 mt-1">Sistema de Registro Estudiantil</p>
             </div>
             <button
               onClick={onClose}

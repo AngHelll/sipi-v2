@@ -30,10 +30,13 @@ export const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 transition-colors duration-200">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-gray-200">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
-          SIPI Modern
-        </h1>
-        <h2 className="text-xl font-semibold text-center mb-6 text-gray-600">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2 text-gray-800">
+            SIPI Modern
+          </h1>
+          <p className="text-sm text-gray-500">Sistema de Registro Estudiantil</p>
+        </div>
+        <h2 className="text-xl font-semibold text-center mb-6 text-gray-700">
           Iniciar Sesión
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -1,0 +1,9 @@
+# robots.txt para SIPI Modern
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+
+# Sitemap (ajustar URL cuando esté en producción)
+# Sitemap: https://tu-dominio.com/sitemap.xml

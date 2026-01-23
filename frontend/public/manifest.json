@@ -1,0 +1,20 @@
+{
+  "name": "SIPI Modern - Sistema de Registro Estudiantil",
+  "short_name": "SIPI Modern",
+  "description": "Sistema moderno de gestión académica para instituciones educativas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "es"
+}
