@@ -56,7 +56,7 @@ export const getAllGroups = asyncHandler(async (req: Request, res: Response) => 
  * Get a single group by ID
  */
 export const getGroupById = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   const group = await groupsService.getGroupById(id);
 
@@ -121,7 +121,7 @@ export const createGroup = asyncHandler(async (req: Request, res: Response) => {
  * Only ADMIN can update groups
  */
 export const updateGroup = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const data = req.body as UpdateGroupDto;
 
   // Validate that at least one field is provided
@@ -178,7 +178,7 @@ export const updateGroup = asyncHandler(async (req: Request, res: Response) => {
  * ADMIN only
  */
 export const deleteGroup = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   try {
     await groupsService.deleteGroup(id);

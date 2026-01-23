@@ -114,7 +114,7 @@ export const createStudent = asyncHandler(async (req: Request, res: Response) =>
  * ADMIN only
  */
 export const getStudentById = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   try {
     const student = await studentsService.getStudentById(id);
@@ -134,7 +134,7 @@ export const getStudentById = asyncHandler(async (req: Request, res: Response) =
  * ADMIN only
  */
 export const updateStudent = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const data = req.body as UpdateStudentDto;
 
   // Validate semestre if provided
@@ -203,7 +203,7 @@ export const getMe = asyncHandler(async (req: Request, res: Response) => {
  * ADMIN only
  */
 export const deleteStudent = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   try {
     await studentsService.deleteStudent(id);

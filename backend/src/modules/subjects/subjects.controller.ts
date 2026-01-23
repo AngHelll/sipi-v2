@@ -81,7 +81,7 @@ export const createSubject = asyncHandler(async (req: Request, res: Response) =>
  * ADMIN only
  */
 export const getSubjectById = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   try {
     const subject = await subjectsService.getSubjectById(id);
