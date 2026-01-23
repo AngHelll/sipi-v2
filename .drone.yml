@@ -45,8 +45,10 @@ steps:
       script:
         - cd ~/raspylab/production/sipi/app
         - git pull origin main
-        - echo "=== Installing Backend Dependencies ==="
-        - cd backend && npm ci --production && npm run build
+        - echo "=== Installing Backend Dependencies (with devDependencies for build) ==="
+        - cd backend && npm ci && npm run build
+        - echo "=== Installing Production Dependencies Only ==="
+        - npm ci --omit=dev
         - echo "=== Building Frontend ==="
         - cd ../frontend && npm ci && npx vite build
         - echo "=== Copying Frontend to Public ==="
