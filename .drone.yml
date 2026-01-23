@@ -23,25 +23,18 @@ steps:
       TOKEN:
         from_secret: gitea_token
     commands:
-      - pwd
       - git clone http://ajjimenezr:$TOKEN@gitea:3000/ajjimenezr/sipi.git .
       - git checkout $DRONE_COMMIT
-      - ls -la
-      - ls -la backend/ || echo "No backend dir"
-
-  - name: debug-workspace
-    image: alpine
-    commands:
-      - pwd
-      - ls -la
-      - ls -la backend/ || echo "No backend dir after clone"
 
   - name: install-backend
     image: node:20-alpine
     commands:
-      - pwd
-      - ls -la
-      - cd backend && npm ci --prefer-offline
+      - node --version
+      - npm --version
+      - ls -la backend/
+      - cat backend/package.json | head -20
+      - cd backend
+      - npm ci 2>&1 || (echo "npm ci failed" && cat npm-debug.log 2>/dev/null || true && exit 1)
 
   - name: build-backend
     image: node:20-alpine
@@ -51,7 +44,7 @@ steps:
   - name: build-frontend
     image: node:20-alpine
     commands:
-      - cd frontend && npm ci --prefer-offline && npx vite build
+      - cd frontend && npm ci && npx vite build
 
   - name: deploy
     image: appleboy/drone-ssh
