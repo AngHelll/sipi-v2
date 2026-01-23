@@ -23,12 +23,24 @@ steps:
       TOKEN:
         from_secret: gitea_token
     commands:
+      - pwd
       - git clone http://ajjimenezr:$TOKEN@gitea:3000/ajjimenezr/sipi.git .
       - git checkout $DRONE_COMMIT
+      - ls -la
+      - ls -la backend/ || echo "No backend dir"
+
+  - name: debug-workspace
+    image: alpine
+    commands:
+      - pwd
+      - ls -la
+      - ls -la backend/ || echo "No backend dir after clone"
 
   - name: install-backend
     image: node:20-alpine
     commands:
+      - pwd
+      - ls -la
       - cd backend && npm ci --prefer-offline
 
   - name: build-backend
