@@ -55,7 +55,7 @@ export const getAvailableExamPeriodsHandler = async (req: Request, res: Response
  */
 export const getExamPeriodByIdHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const period = await getExamPeriodById(id);
 
     if (!period) {
@@ -105,7 +105,7 @@ export const createExamPeriodHandler = async (req: Request, res: Response): Prom
  */
 export const updateExamPeriodHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const data = req.body as UpdateExamPeriodDto;
     const userId = req.user?.userId;
 
@@ -131,7 +131,7 @@ export const updateExamPeriodHandler = async (req: Request, res: Response): Prom
  */
 export const openExamPeriodHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const userId = req.user?.userId;
 
     const period = await openExamPeriod(id, userId);
@@ -156,7 +156,7 @@ export const openExamPeriodHandler = async (req: Request, res: Response): Promis
  */
 export const closeExamPeriodHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const userId = req.user?.userId;
 
     const period = await closeExamPeriod(id, userId);
