@@ -7,6 +7,17 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Seguridad
+- Corregidas 5 vulnerabilidades en backend (2 high, 2 moderate, 1 low)
+- Corregidas 2 vulnerabilidades en frontend (1 high, 1 moderate)
+- Actualizado `react-router-dom` a 7.12.0 para corregir vulnerabilidades CSRF y XSS
+- Todas las dependencias ahora sin vulnerabilidades conocidas
+
+### Dependencias
+- Backend: Actualizadas dependencias menores y parches (express, prisma, eslint, etc.)
+- Frontend: Actualizadas dependencias menores y parches (react, vite, tailwindcss, etc.)
+- Mantenidas versiones actuales de Prisma 6.x (evaluar migración a 7.x en el futuro)
+
 ### Documentación
 - Consolidación de documentación: eliminados archivos duplicados y de sesiones de trabajo
 - Creado `docs/ESTADO-SISTEMA.md` - Estado centralizado del sistema
