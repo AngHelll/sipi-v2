@@ -25,36 +25,32 @@ steps:
     commands:
       - git clone http://ajjimenezr:$TOKEN@gitea:3000/ajjimenezr/sipi.git .
       - git checkout $DRONE_COMMIT
-      - ls -la
-      - ls -la backend/ | head -10
 
   - name: install-backend
     image: node:20-alpine
     commands:
       - pwd
       - ls -la
-      - echo "Node version:"
-      - node --version
-      - echo "NPM version:"
-      - npm --version
-      - echo "Checking backend directory:"
-      - ls -la backend/
-      - echo "Checking package.json:"
-      - test -f backend/package.json && echo "package.json exists" || echo "package.json NOT FOUND"
-      - test -f backend/package-lock.json && echo "package-lock.json exists" || echo "package-lock.json NOT FOUND"
-      - echo "Starting npm ci..."
       - cd backend
-      - npm ci --verbose 2>&1 | head -100 || (echo "=== npm ci FAILED ===" && cat npm-debug.log 2>/dev/null || cat .npm/_logs/*-debug.log 2>/dev/null || echo "No debug logs found" && exit 1)
+      - npm ci
 
   - name: build-backend
     image: node:20-alpine
     commands:
-      - cd backend && npm run build
+      - pwd
+      - ls -la
+      - test -d backend && echo "backend dir exists" || echo "backend dir NOT FOUND"
+      - cd backend
+      - npm run build
 
   - name: build-frontend
     image: node:20-alpine
     commands:
-      - cd frontend && npm ci && npx vite build
+      - pwd
+      - ls -la
+      - cd frontend
+      - npm ci
+      - npx vite build
 
   - name: deploy
     image: appleboy/drone-ssh
