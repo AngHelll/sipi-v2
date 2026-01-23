@@ -25,16 +25,26 @@ steps:
     commands:
       - git clone http://ajjimenezr:$TOKEN@gitea:3000/ajjimenezr/sipi.git .
       - git checkout $DRONE_COMMIT
+      - ls -la
+      - ls -la backend/ | head -10
 
   - name: install-backend
     image: node:20-alpine
     commands:
+      - pwd
+      - ls -la
+      - echo "Node version:"
       - node --version
+      - echo "NPM version:"
       - npm --version
+      - echo "Checking backend directory:"
       - ls -la backend/
-      - cat backend/package.json | head -20
+      - echo "Checking package.json:"
+      - test -f backend/package.json && echo "package.json exists" || echo "package.json NOT FOUND"
+      - test -f backend/package-lock.json && echo "package-lock.json exists" || echo "package-lock.json NOT FOUND"
+      - echo "Starting npm ci..."
       - cd backend
-      - npm ci 2>&1 || (echo "npm ci failed" && cat npm-debug.log 2>/dev/null || true && exit 1)
+      - npm ci --verbose 2>&1 | head -100 || (echo "=== npm ci FAILED ===" && cat npm-debug.log 2>/dev/null || cat .npm/_logs/*-debug.log 2>/dev/null || echo "No debug logs found" && exit 1)
 
   - name: build-backend
     image: node:20-alpine
