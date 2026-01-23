@@ -25,7 +25,7 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
   };
 
   // Breadcrumbs based on current path
-  const getBreadcrumbs = () => {
+  const getBreadcrumbs = (): Array<{ label: string; path: string | null }> => {
     if (!user) return [];
     const path = location.pathname;
     const parts = path.split('/').filter(Boolean);
@@ -34,7 +34,7 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
       return [{ label: 'Dashboard', path: '/dashboard' }];
     }
 
-    const breadcrumbs = [{ label: 'Dashboard', path: '/dashboard' }];
+    const breadcrumbs: Array<{ label: string; path: string | null }> = [{ label: 'Dashboard', path: '/dashboard' }];
     
     if (parts[0] === 'admin') {
       breadcrumbs.push({ label: 'Administración', path: '/dashboard/admin' });
@@ -115,17 +115,17 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
                   <Icon name="chevron-right" size={16} className="text-gray-400 flex-shrink-0" />
                 )}
                 {crumb.path ? (
-                  <Link
-                    to={crumb.path}
-                    className="hover:text-gray-900 transition-colors truncate"
-                  >
-                    {crumb.label}
-                  </Link>
-                ) : (
-                  <span className="text-gray-900 font-medium truncate">
-                    {crumb.label}
-                  </span>
-                )}
+                <Link
+                  to={crumb.path}
+                  className="hover:text-gray-900 transition-colors truncate"
+                >
+                  {crumb.label}
+                </Link>
+              ) : (
+                <span className="text-gray-900 font-medium truncate">
+                  {crumb.label}
+                </span>
+              )}
               </div>
             ))}
           </div>

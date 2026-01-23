@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { specialCoursesApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { Badge, Icon, SkeletonTable, EmptyState, FormField, ButtonLoader } from '../../components/ui';
+import { Badge, SkeletonTable, EmptyState, FormField } from '../../components/ui';
 
 interface SpecialCourse {
   id: string;
@@ -51,7 +51,6 @@ interface SpecialCoursesListResponse {
 
 export const SpecialCoursesListPage = () => {
   const navigate = useNavigate();
-  const { showToast } = useToast();
   const [courses, setCourses] = useState<SpecialCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +62,9 @@ export const SpecialCoursesListPage = () => {
   const [estatusFilter, setEstatusFilter] = useState('');
   const [requierePagoFilter, setRequierePagoFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [sortBy, setSortBy] = useState<string>('fechaInscripcion');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [pageSize] = useState(20);
+  const [sortBy] = useState<string>('fechaInscripcion');
+  const [sortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Debounced search
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -164,7 +163,7 @@ export const SpecialCoursesListPage = () => {
   if (loading && courses.length === 0) {
     return (
       <Layout>
-        <SkeletonTable rows={10} columns={8} />
+        <SkeletonTable rows={10} />
       </Layout>
     );
   }
@@ -193,6 +192,7 @@ export const SpecialCoursesListPage = () => {
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <FormField
+              name="search"
               label="Buscar"
               type="text"
               value={searchTerm}
@@ -201,6 +201,7 @@ export const SpecialCoursesListPage = () => {
             />
 
             <FormField
+              name="courseType"
               label="Tipo de Curso"
               value={courseTypeFilter}
               onChange={(e) => setCourseTypeFilter(e.target.value)}
@@ -218,6 +219,7 @@ export const SpecialCoursesListPage = () => {
             />
 
             <FormField
+              name="estatus"
               label="Estatus"
               value={estatusFilter}
               onChange={(e) => setEstatusFilter(e.target.value)}
@@ -236,6 +238,7 @@ export const SpecialCoursesListPage = () => {
             />
 
             <FormField
+              name="requierePago"
               label="Requiere Pago"
               value={requierePagoFilter}
               onChange={(e) => setRequierePagoFilter(e.target.value)}

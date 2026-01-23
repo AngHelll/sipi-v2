@@ -7,6 +7,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Configuración
+- Script de inicio `start-dev.sh` para desarrollo local (Mac/Linux)
+- Script de verificación de entorno actualizado para aceptar URLs MySQL con y sin contraseña
+- Directorio `backend/public/` creado para servir archivos estáticos del frontend en producción
+- Pipeline de CI/CD configurado para despliegue automático en push a main
+
 ### Seguridad
 - Corregidas 5 vulnerabilidades en backend (2 high, 2 moderate, 1 low)
 - Corregidas 2 vulnerabilidades en frontend (1 high, 1 moderate)

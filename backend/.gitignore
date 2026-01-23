@@ -3,4 +3,7 @@ dist/
 .env
 *.log
 .DS_Store
+# Public directory contains built frontend (generated in production)
+public/*
+!public/.gitkeep
 

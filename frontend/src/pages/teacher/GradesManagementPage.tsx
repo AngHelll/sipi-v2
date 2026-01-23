@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { groupsApi, enrollmentsApi, specialCoursesApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { Loader, ButtonLoader } from '../../components/ui';
+import { Loader } from '../../components/ui';
 import type { Group, Enrollment } from '../../types';
 
 export const GradesManagementPage = () => {

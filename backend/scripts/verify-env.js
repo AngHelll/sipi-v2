@@ -9,8 +9,8 @@ require('dotenv').config();
 const requiredEnvVars = {
   DATABASE_URL: {
     required: true,
-    pattern: /^mysql:\/\/.+:.+@.+:\d+\/.+$/,
-    description: 'MySQL connection string in format: mysql://user:password@host:port/database',
+    pattern: /^mysql:\/\/(?:.+:.+@|.+@).+:\d+\/.+$/,
+    description: 'MySQL connection string in format: mysql://user:password@host:port/database or mysql://user@host:port/database (sin contraseña)',
   },
   JWT_SECRET: {
     required: true,

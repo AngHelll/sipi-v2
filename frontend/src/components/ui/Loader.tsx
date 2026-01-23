@@ -191,8 +191,8 @@ export const PageLoader = ({ text = 'Cargando...' }: { text?: string }) => {
 /**
  * Button loader - Small spinner for buttons
  */
-export const ButtonLoader = ({ className = '' }: { className?: string }) => {
-  return <InlineLoader size="sm" className={className} />;
+export const ButtonLoader = ({ className = '', size = 'sm' }: { className?: string; size?: LoaderSize }) => {
+  return <InlineLoader size={size} className={className} />;
 };
 
 /**

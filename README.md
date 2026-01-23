@@ -254,19 +254,27 @@ VITE_API_URL=http://localhost:3001/api
 
 ### Desarrollo
 
-**Terminal 1 - Backend:**
+**Opción 1: Script automatizado (Recomendado)**
 ```bash
+./start-dev.sh
+```
+Este script:
+- Verifica prerrequisitos y dependencias
+- Genera cliente de Prisma si es necesario
+- Inicia backend y frontend automáticamente
+- Backend: `http://localhost:3001`
+- Frontend: `http://localhost:5173`
+
+**Opción 2: Manual**
+```bash
+# Terminal 1 - Backend
 cd backend
 npm run dev
-```
-Backend corriendo en `http://localhost:3001`
 
-**Terminal 2 - Frontend:**
-```bash
+# Terminal 2 - Frontend
 cd frontend
 npm run dev
 ```
-Frontend corriendo en `http://localhost:5173`
 
 ### Producción
 

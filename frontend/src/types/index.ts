@@ -524,6 +524,8 @@ export type Subject = {
   horasPractica?: number;
   horasLaboratorio?: number;
   carreraId?: string;
+  descripcion?: string;
+  gruposActivos?: number;
 };
 
 export type StudentDocument = {

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { teachersApi, exportApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { ConfirmDialog, Badge, Icon, Loader } from '../../components/ui';
+import { ConfirmDialog, Badge, Loader } from '../../components/ui';
 import type { Teacher, TeachersListResponse } from '../../types';
 
 export const TeachersListPage = () => {
