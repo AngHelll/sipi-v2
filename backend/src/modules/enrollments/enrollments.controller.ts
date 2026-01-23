@@ -94,7 +94,7 @@ export const getAllEnrollments = asyncHandler(async (req: Request, res: Response
  * STUDENT can only access their own enrollments
  */
 export const getEnrollmentById = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const userId = req.user?.userId;
   const userRole = req.user?.role;
 
@@ -190,7 +190,7 @@ export const createEnrollment = asyncHandler(async (req: Request, res: Response)
  * ADMIN can update all fields
  */
 export const updateEnrollment = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const data = req.body as UpdateEnrollmentDto;
 
   const userId = req.user?.userId;
@@ -269,7 +269,7 @@ export const updateEnrollment = asyncHandler(async (req: Request, res: Response)
  * ADMIN only
  */
 export const deleteEnrollment = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   try {
     await enrollmentsService.deleteEnrollment(id);
