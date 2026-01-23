@@ -5,6 +5,25 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [Unreleased]
+
+### Documentación
+- Consolidación de documentación: eliminados archivos duplicados y de sesiones de trabajo
+- Creado `docs/ESTADO-SISTEMA.md` - Estado centralizado del sistema
+- Creado `docs/FLUJOS-NEGOCIO.md` - Flujos de negocio consolidados
+- Creado `docs/ESTRATEGIAS.md` - Estrategias y decisiones de diseño
+- Consolidada documentación de Windows en `docs/setup/windows-installation.md`
+- Actualizado `docs/README.md` con estructura clara de documentación
+- Eliminados archivos obsoletos: resúmenes ejecutivos duplicados, changelogs por fase, archivos de cambios implementados
+- Eliminada información sensible (IPs internas, URLs privadas)
+
+### Frontend
+- Diseño responsivo implementado: sidebar móvil, tablas adaptativas, formularios responsivos
+- Vista de cards para móvil en listados de estudiantes
+- Optimización de dashboards para pantallas pequeñas
+
+---
+
 ## [1.0.0] - 2024-11-16
 
 ### Agregado

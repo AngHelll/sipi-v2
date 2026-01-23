@@ -1,6 +1,8 @@
-# Guía de Instalación para Windows
+# 🪟 Guía de Instalación para Windows - SIPI-V2
 
-Esta guía te ayudará a configurar el proyecto SIPI Modern en Windows paso a paso.
+**Última actualización:** 2025-01-23
+
+Esta guía centraliza toda la información necesaria para configurar SIPI-V2 en Windows, incluyendo soluciones a problemas comunes.
 
 ## 📋 Prerrequisitos
 

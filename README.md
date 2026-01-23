@@ -503,21 +503,21 @@ Las contribuciones son bienvenidas. Por favor:
 
 Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 
-## 📚 Documentación Adicional
+## 📚 Documentación
 
-### Guías de Instalación
-- [Instalación en Windows](docs/setup/windows-installation.md) - Guía completa para Windows
-- [Instalación en macOS/Linux](README.md#-instalación) - Instrucciones en el README principal
-- [Solución de Problemas](docs/setup/troubleshooting.md) - Problemas comunes y soluciones
+### Guías Principales
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Guía de contribución
+- [SECURITY.md](SECURITY.md) - Políticas de seguridad
+- [CHANGELOG.md](CHANGELOG.md) - Historial de cambios
 
 ### Documentación Técnica
-- [ESTATUS_EJECUTIVO.md](ESTATUS_EJECUTIVO.md) - Análisis completo del estado del proyecto
-- [SUGERENCIAS_MEJORA.md](SUGERENCIAS_MEJORA.md) - Plan de mejoras priorizado
-- [RECOMENDACIONES.md](RECOMENDACIONES.md) - Recomendaciones técnicas y roadmap
-- [PROJECT_STATUS.md](PROJECT_STATUS.md) - Estado detallado del proyecto
-- [SECURITY.md](SECURITY.md) - Guía de seguridad
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Guía de contribución
-- [CHANGELOG.md](CHANGELOG.md) - Historial de cambios
+- [docs/ESTADO-SISTEMA.md](docs/ESTADO-SISTEMA.md) - Estado actual del sistema
+- [docs/architecture/](docs/architecture/) - Arquitectura y diseño del sistema
+- [docs/development/](docs/development/) - Guías de desarrollo
+
+### Guías de Instalación
+- [docs/setup/windows-installation.md](docs/setup/windows-installation.md) - Instalación en Windows
+- [docs/setup/troubleshooting.md](docs/setup/troubleshooting.md) - Solución de problemas comunes
 
 ## 🙏 Agradecimientos
 

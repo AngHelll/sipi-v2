@@ -337,32 +337,34 @@ export const StudentsListPage = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Lista de Estudiantes</h1>
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Lista de Estudiantes</h1>
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handleExport}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg"
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 sm:px-4 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg text-sm sm:text-base"
               title="Exportar a Excel"
             >
-              <Icon name="export" size={20} />
-              Exportar Excel
+              <Icon name="export" size={18} className="sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Exportar Excel</span>
+              <span className="sm:hidden">Exportar</span>
             </button>
             <button
               onClick={handleNewStudent}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 sm:px-4 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg text-sm sm:text-base"
             >
-              <Icon name="plus" size={20} />
-              Nuevo Estudiante
+              <Icon name="plus" size={18} className="sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Nuevo Estudiante</span>
+              <span className="sm:hidden">Nuevo</span>
             </button>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
             {/* Search */}
             <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -443,7 +445,7 @@ export const StudentsListPage = () => {
           </div>
           
           {/* Additional filters row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Tipo de Ingreso filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -624,7 +626,8 @@ export const StudentsListPage = () => {
               />
             ) : (
               <>
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -811,12 +814,104 @@ export const StudentsListPage = () => {
                   </table>
                 </div>
 
+                {/* Mobile Card View */}
+                <div className="lg:hidden divide-y divide-gray-200">
+                  {students.map((student) => {
+                    const englishStatus = getEnglishStatusDisplay(student);
+                    return (
+                      <div
+                        key={student.id}
+                        className="p-4 hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0"
+                        onClick={() => navigate(`/admin/students/${student.id}/edit`)}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-semibold text-gray-900 truncate">
+                              {student.nombre} {student.apellidoPaterno} {student.apellidoMaterno}
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">Matrícula: {student.matricula}</p>
+                          </div>
+                          <div className="flex items-center gap-2 ml-2" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => handleEdit(student.id)}
+                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Editar estudiante"
+                            >
+                              <Icon name="edit" size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(student)}
+                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Eliminar estudiante"
+                            >
+                              <Icon name="delete" size={18} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="text-gray-500">Carrera:</span>
+                            <p className="text-gray-900 font-medium">{student.carrera}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Semestre:</span>
+                            <p className="text-gray-900 font-medium">{student.semestre}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Estatus:</span>
+                            <div className="mt-1">
+                              <Badge variant={getStatusBadgeVariant(student.estatus)}>
+                                {student.estatus}
+                              </Badge>
+                            </div>
+                          </div>
+                          {showPromedio && (
+                            <div>
+                              <span className="text-gray-500">Promedio:</span>
+                              <p className="text-gray-900 font-medium">
+                                {student.promedioGeneral !== undefined && student.promedioGeneral !== null
+                                  ? `${student.promedioGeneral.toFixed(2)}`
+                                  : '-'}
+                              </p>
+                            </div>
+                          )}
+                          {showPromedioIngles && (
+                            <div className="col-span-2">
+                              <span className="text-gray-500">Estatus Inglés:</span>
+                              <div className="mt-1 space-y-1">
+                                {englishStatus.badge}
+                                <p className="text-xs text-gray-700">{englishStatus.details}</p>
+                                {englishStatus.promedio && (
+                                  <p className="text-xs text-gray-600">{englishStatus.promedio}</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-gray-500">Beca:</span>
+                            <div className="mt-1">
+                              {student.beca ? (
+                                <Badge variant="success">
+                                  <Icon name="check" size={14} className="mr-1" />
+                                  Sí
+                                </Badge>
+                              ) : (
+                                <span className="text-sm text-gray-400">No</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
                 {/* Pagination */}
                 {pagination && pagination.totalPages > 1 && (
-                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-700">
+                  <div className="bg-gray-50 px-4 sm:px-6 py-4 border-t border-gray-200">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                        <span className="text-sm text-gray-700 text-center sm:text-left">
                           Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, pagination.total)} de {pagination.total} estudiantes
                         </span>
                         <select
@@ -825,7 +920,7 @@ export const StudentsListPage = () => {
                             setPageSize(parseInt(e.target.value, 10));
                             setCurrentPage(1);
                           }}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                           <option value={10}>10 por página</option>
                           <option value={20}>20 por página</option>
@@ -833,37 +928,41 @@ export const StudentsListPage = () => {
                           <option value={100}>100 por página</option>
                         </select>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
                         <button
                           onClick={() => setCurrentPage(1)}
                           disabled={currentPage === 1}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                         >
-                          Primera
+                          <span className="hidden sm:inline">Primera</span>
+                          <span className="sm:hidden">«</span>
                         </button>
                         <button
                           onClick={() => setCurrentPage(currentPage - 1)}
                           disabled={currentPage === 1}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                         >
-                          Anterior
+                          <span className="hidden sm:inline">Anterior</span>
+                          <span className="sm:hidden">‹</span>
                         </button>
-                        <span className="px-3 py-1 text-sm text-gray-700">
+                        <span className="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">
                           Página {currentPage} de {pagination.totalPages}
                         </span>
                         <button
                           onClick={() => setCurrentPage(currentPage + 1)}
                           disabled={currentPage === pagination.totalPages}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                         >
-                          Siguiente
+                          <span className="hidden sm:inline">Siguiente</span>
+                          <span className="sm:hidden">›</span>
                         </button>
                         <button
                           onClick={() => setCurrentPage(pagination.totalPages)}
                           disabled={currentPage === pagination.totalPages}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                         >
-                          Última
+                          <span className="hidden sm:inline">Última</span>
+                          <span className="sm:hidden">»</span>
                         </button>
                       </div>
                     </div>

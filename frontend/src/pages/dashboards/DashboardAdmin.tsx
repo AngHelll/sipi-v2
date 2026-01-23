@@ -339,15 +339,15 @@ export const DashboardAdmin = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Panel del Administrador</h1>
-          <p className="text-gray-600 mt-2">Resumen general del sistema</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Panel del Administrador</h1>
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Resumen general del sistema</p>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <StatCard
             title="Total Estudiantes"
             value={stats.totalStudents}
@@ -403,9 +403,9 @@ export const DashboardAdmin = () => {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Students by Status - Pie Chart */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Estudiantes por Estatus</h2>
               <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
@@ -415,7 +415,7 @@ export const DashboardAdmin = () => {
               </div>
             </div>
             {statusPieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <defs>
                     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -466,14 +466,14 @@ export const DashboardAdmin = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[320px]">
+              <div className="flex items-center justify-center h-[280px]">
                 <p className="text-gray-500">No hay datos disponibles</p>
               </div>
             )}
           </div>
 
           {/* Students by Carrera - Bar Chart */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Estudiantes por Carrera</h2>
               <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
@@ -483,7 +483,7 @@ export const DashboardAdmin = () => {
               </div>
             </div>
             {carreraChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={carreraChartData} margin={{ top: 10, right: 10, left: 0, bottom: 60 }}>
                   <defs>
                     <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -517,7 +517,7 @@ export const DashboardAdmin = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[320px]">
+              <div className="flex items-center justify-center h-[280px]">
                 <p className="text-gray-500">No hay datos disponibles</p>
               </div>
             )}
@@ -525,9 +525,9 @@ export const DashboardAdmin = () => {
         </div>
 
         {/* More Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Students by Semestre - Bar Chart */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Estudiantes por Semestre</h2>
               <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
@@ -537,7 +537,7 @@ export const DashboardAdmin = () => {
               </div>
             </div>
             {semestreChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={semestreChartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
                   <defs>
                     <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
@@ -568,14 +568,14 @@ export const DashboardAdmin = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[320px]">
+              <div className="flex items-center justify-center h-[280px]">
                 <p className="text-gray-500">No hay datos disponibles</p>
               </div>
             )}
           </div>
 
           {/* Groups by Periodo - Line Chart */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Grupos por Período</h2>
               <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
@@ -585,7 +585,7 @@ export const DashboardAdmin = () => {
               </div>
             </div>
             {periodoLineData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={periodoLineData} margin={{ top: 10, right: 10, left: 0, bottom: 60 }}>
                   <defs>
                     <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
@@ -620,7 +620,7 @@ export const DashboardAdmin = () => {
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[320px]">
+              <div className="flex items-center justify-center h-[280px]">
                 <p className="text-gray-500">No hay grupos registrados</p>
               </div>
             )}
@@ -628,9 +628,9 @@ export const DashboardAdmin = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Accesos Rápidos</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border border-gray-200">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">Accesos Rápidos</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <button
               onClick={() => navigate('/admin/students/new')}
               className="flex flex-col items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
@@ -670,7 +670,7 @@ export const DashboardAdmin = () => {
           </div>
           <div className="mt-4 pt-4 border-t border-gray-200">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Inglés</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <button
                 onClick={() => navigate('/admin/exam-periods')}
                 className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 text-left"

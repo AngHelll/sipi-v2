@@ -201,9 +201,7 @@ export const deleteGroup = asyncHandler(async (req: Request, res: Response) => {
  * Returns courses that are open, within registration period, and have available capacity
  */
 export const getAvailableEnglishCourses = asyncHandler(async (req: Request, res: Response) => {
-  const courses = await groupsService.getAvailableEnglishCourses();
-
-  res.json({
+  const courses = await groupsService.getAvailableEnglishCourses();  res.json({
     courses,
     total: courses.length,
   });

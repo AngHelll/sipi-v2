@@ -392,9 +392,7 @@ export const recalculateStudentAverages = async (studentId: string): Promise<voi
         },
       },
     },
-  });
-
-  // Prepare enrollments data for calculators
+  });  // Prepare enrollments data for calculators
   const enrollmentsData = enrollments.map((enrollment) => ({
     calificacionFinal: enrollment.calificacionFinal ? Number(enrollment.calificacionFinal) : null,
     calificacion: enrollment.calificacion ? Number(enrollment.calificacion) : null,

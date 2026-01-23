@@ -12,7 +12,11 @@ const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: 'Administrador',
 };
 
-export const Topbar = () => {
+interface TopbarProps {
+  onMenuClick: () => void;
+}
+
+export const Topbar = ({ onMenuClick }: TopbarProps) => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
@@ -91,47 +95,69 @@ export const Topbar = () => {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-      <div className="flex items-center justify-between px-6 py-3 gap-4">
-        {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 shrink-0">
-          {breadcrumbs.map((crumb, index) => (
-            <div key={index} className="flex items-center gap-2">
-              {index > 0 && (
-                <Icon name="chevron-right" size={16} className="text-gray-400" />
-              )}
-              {crumb.path ? (
-                <Link
-                  to={crumb.path}
-                  className="hover:text-gray-900 transition-colors"
-                >
-                  {crumb.label}
-                </Link>
-              ) : (
-                <span className="text-gray-900 font-medium">
-                  {crumb.label}
-                </span>
-              )}
-            </div>
-          ))}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 gap-2 sm:gap-4">
+        {/* Mobile menu button and breadcrumbs */}
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+          {/* Mobile menu button */}
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0"
+            aria-label="Abrir menú"
+          >
+            <Icon name="menu" size={24} />
+          </button>
+
+          {/* Breadcrumbs - hidden on very small screens, shown on sm+ */}
+          <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600 min-w-0">
+            {breadcrumbs.map((crumb, index) => (
+              <div key={index} className="flex items-center gap-2 flex-shrink-0">
+                {index > 0 && (
+                  <Icon name="chevron-right" size={16} className="text-gray-400 flex-shrink-0" />
+                )}
+                {crumb.path ? (
+                  <Link
+                    to={crumb.path}
+                    className="hover:text-gray-900 transition-colors truncate"
+                  >
+                    {crumb.label}
+                  </Link>
+                ) : (
+                  <span className="text-gray-900 font-medium truncate">
+                    {crumb.label}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Search */}
-        <div className="flex-1 max-w-md mx-4">
+        {/* Search - hidden on small screens, shown on md+ */}
+        <div className="hidden md:flex flex-1 max-w-md mx-2 lg:mx-4">
           {user && <GlobalSearch />}
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {user && (
-            <AvatarDropdown name={user.username} role={roleLabels[user.role]}>
+            <>
+              {/* Mobile search button */}
               <button
-                onClick={handleLogout}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label="Buscar"
+                title="Buscar"
               >
-                <Icon name="logout" size={16} />
-                Cerrar Sesión
+                <Icon name="search" size={20} />
               </button>
-            </AvatarDropdown>
+              <AvatarDropdown name={user.username} role={roleLabels[user.role]}>
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                >
+                  <Icon name="logout" size={16} />
+                  Cerrar Sesión
+                </button>
+              </AvatarDropdown>
+            </>
           )}
         </div>
       </div>
