@@ -37,7 +37,8 @@ steps:
     settings:
       host:
         from_secret: deploy_host
-      username: ajjimenezr
+      username:
+        from_secret: deploy_username
       key:
         from_secret: ssh_key
       port: 22
