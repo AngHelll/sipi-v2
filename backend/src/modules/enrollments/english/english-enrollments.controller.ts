@@ -124,7 +124,7 @@ export const requestEnglishCourseHandler = async (req: Request, res: Response): 
  */
 export const submitPaymentProofHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { montoPago, comprobantePago } = req.body;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -193,7 +193,7 @@ export const submitPaymentProofHandler = async (req: Request, res: Response): Pr
  */
 export const approvePaymentHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const userId = req.user?.userId;
 
     if (!userId) {
@@ -229,7 +229,7 @@ export const approvePaymentHandler = async (req: Request, res: Response): Promis
  */
 export const rejectPaymentHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { motivo } = req.body;
     const userId = req.user?.userId;
 
@@ -266,7 +266,7 @@ export const rejectPaymentHandler = async (req: Request, res: Response): Promise
  */
 export const processDiagnosticExamResultHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { examGrade } = req.body;
     const userId = req.user?.userId;
 
@@ -308,7 +308,7 @@ export const processDiagnosticExamResultHandler = async (req: Request, res: Resp
  */
 export const processEnglishCourseCompletionHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { finalGrade } = req.body;
     const userId = req.user?.userId;
 
