@@ -115,7 +115,7 @@ export const getEnrollmentById = asyncHandler(async (req: Request, res: Response
  * ADMIN can access enrollments for any group
  */
 export const getEnrollmentsByGroup = asyncHandler(async (req: Request, res: Response) => {
-  const { groupId } = req.params;
+  const groupId = String(req.params.groupId);
   const userId = req.user?.userId;
   const userRole = req.user?.role;
 
