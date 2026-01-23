@@ -43,5 +43,13 @@ steps:
       script:
         - cd ~/raspylab/production/sipi/app
         - git pull origin main
+        - echo "=== Installing Backend Dependencies ==="
         - cd backend && npm ci --production && npm run build
+        - echo "=== Building Frontend ==="
+        - cd ../frontend && npm ci && npx vite build
+        - echo "=== Copying Frontend to Public ==="
+        - cd ../backend && rm -rf public/* public/.* 2>/dev/null || true
+        - cp -r ../frontend/dist/* public/
+        - echo "=== Restarting Service ==="
         - sudo systemctl restart sipi
+        - echo "✅ Deploy completed successfully!"

@@ -1,5 +1,6 @@
 // Main Express application entry point
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { config } from './config/env';
@@ -71,7 +72,38 @@ app.use('/api/academic-activities', academicActivitiesRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/export', exportRoutes);
 
-// 404 handler
+// Serve static frontend files with optimized cache headers
+const publicPath = path.join(__dirname, '../public');
+app.use(express.static(publicPath, {
+  maxAge: '1y', // Cache assets for 1 year
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    // Don't cache HTML files (always get fresh version)
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+    // Assets (JS, CSS, images) cached for 1 year (immutable)
+    else if (filePath.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
+
+// SPA fallback middleware (runs after static files, before 404)
+// Serves index.html for all non-API routes (React Router handles routing)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Only handle non-API routes
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(publicPath, 'index.html'));
+  } else {
+    next();
+  }
+});
+
+// 404 handler for API routes
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: 'Route not found' });
 });
