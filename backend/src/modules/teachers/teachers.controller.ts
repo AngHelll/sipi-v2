@@ -92,7 +92,7 @@ export const createTeacher = asyncHandler(async (req: Request, res: Response) =>
  * ADMIN only
  */
 export const getTeacherById = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   try {
     const teacher = await teachersService.getTeacherById(id);
@@ -112,7 +112,7 @@ export const getTeacherById = asyncHandler(async (req: Request, res: Response) =
  * ADMIN only
  */
 export const updateTeacher = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const data = req.body as UpdateTeacherDto;
 
   try {
@@ -134,7 +134,7 @@ export const updateTeacher = asyncHandler(async (req: Request, res: Response) =>
  * ADMIN only
  */
 export const deleteTeacher = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   try {
     await teachersService.deleteTeacher(id);

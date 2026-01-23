@@ -101,7 +101,7 @@ export const getSubjectById = asyncHandler(async (req: Request, res: Response) =
  * ADMIN only
  */
 export const updateSubject = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const data = req.body as UpdateSubjectDto;
 
   // Validate creditos if provided
@@ -129,7 +129,7 @@ export const updateSubject = asyncHandler(async (req: Request, res: Response) =>
  * ADMIN only
  */
 export const deleteSubject = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   try {
     await subjectsService.deleteSubject(id);
