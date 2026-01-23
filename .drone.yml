@@ -17,40 +17,20 @@ trigger:
     - push
 
 steps:
-  - name: clone
-    image: alpine/git
+  - name: clone-and-build
+    image: node:20-alpine
     environment:
       TOKEN:
         from_secret: gitea_token
     commands:
+      - apk add --no-cache git
       - git clone http://ajjimenezr:$TOKEN@gitea:3000/ajjimenezr/sipi.git .
       - git checkout $DRONE_COMMIT
-
-  - name: install-backend
-    image: node:20-alpine
-    commands:
-      - pwd
-      - ls -la
-      - cd backend
-      - npm ci
-
-  - name: build-backend
-    image: node:20-alpine
-    commands:
-      - pwd
-      - ls -la
-      - test -d backend && echo "backend dir exists" || echo "backend dir NOT FOUND"
-      - cd backend
-      - npm run build
-
-  - name: build-frontend
-    image: node:20-alpine
-    commands:
-      - pwd
-      - ls -la
-      - cd frontend
-      - npm ci
-      - npx vite build
+      - echo "=== Building Backend ==="
+      - cd backend && npm ci && npm run build
+      - echo "=== Building Frontend ==="
+      - cd ../frontend && npm ci && npx vite build
+      - echo "=== Build Complete ==="
 
   - name: deploy
     image: appleboy/drone-ssh
