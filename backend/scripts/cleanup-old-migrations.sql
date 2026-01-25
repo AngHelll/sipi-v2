@@ -2,7 +2,9 @@
 -- Estas migraciones ya están aplicadas en la BD pero fueron eliminadas del sistema de archivos
 -- porque tenían versiones más recientes que las reemplazan
 
--- Eliminar migraciones antiguas de fase (20250121*)
+-- IMPORTANTE: Este script debe ejecutarse en producción para limpiar migraciones fallidas o duplicadas
+
+-- Eliminar migraciones antiguas de fase (20250121*) - incluye las que están como "failed"
 DELETE FROM `_prisma_migrations` 
 WHERE migration_name IN (
   '20250121200000_phase1_contact_security_softdelete',
@@ -17,6 +19,6 @@ DELETE FROM `_prisma_migrations`
 WHERE migration_name = '20251121235731_test';
 
 -- Verificar que se eliminaron
-SELECT migration_name, finished_at 
+SELECT migration_name, finished_at, applied_steps_count 
 FROM `_prisma_migrations` 
 ORDER BY finished_at;
