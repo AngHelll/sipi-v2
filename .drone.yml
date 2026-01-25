@@ -48,7 +48,13 @@ steps:
         - echo "=== Installing Backend Dependencies (with devDependencies for build) ==="
         - cd backend && npm ci
         - echo "=== Cleaning Failed Migrations (if any) ==="
-        - mysql -u root sipi_db -e "DELETE FROM _prisma_migrations WHERE migration_name IN ('20250121200000_phase1_contact_security_softdelete', '20250121210000_phase2_academic_periods_capacity_enrollments', '20250121220000_phase3_careers_subjects', '20250121230000_phase4_personal_academic_info', '20250121240000_phase5_history_documents', '20251121235731_test');" || true
+        - |
+          MYSQL_CMD=$(which mysql || echo "/usr/bin/mysql")
+          if [ -x "$MYSQL_CMD" ] || [ -x "/usr/bin/mysql" ]; then
+            $MYSQL_CMD -u root sipi_db -e "DELETE FROM _prisma_migrations WHERE migration_name IN ('20250121200000_phase1_contact_security_softdelete', '20250121210000_phase2_academic_periods_capacity_enrollments', '20250121220000_phase3_careers_subjects', '20250121230000_phase4_personal_academic_info', '20250121240000_phase5_history_documents', '20251121235731_test');" 2>/dev/null || echo "⚠️  MySQL command not found or failed, skipping cleanup (migrations will be handled by Prisma)"
+          else
+            echo "⚠️  MySQL command not found, skipping cleanup (migrations will be handled by Prisma)"
+          fi
         - echo "=== Applying Database Migrations ==="
         - npx prisma migrate deploy
         - npx prisma generate
