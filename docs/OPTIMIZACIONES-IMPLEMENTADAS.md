@@ -286,6 +286,120 @@ Para verificar que las optimizaciones funcionan:
 
 ---
 
+## 🧪 Verificación y Pruebas
+
+### Verificar Ambiente Local
+
+#### 1. Verificar Servidores
+
+```bash
+# Verificar puertos
+lsof -i:3001  # Backend
+lsof -i:5173  # Frontend
+
+# O probar endpoints
+curl http://localhost:3001/health
+curl http://localhost:5173
+```
+
+#### 2. Levantar Ambiente
+
+```bash
+# Opción A: Script automático
+./start-dev.sh
+
+# Opción B: Manual
+# Terminal 1 - Backend
+cd backend && npm run dev
+
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+```
+
+### Probar Optimizaciones
+
+#### 1. Verificar Migraciones Aplicadas
+
+```bash
+cd backend
+npx prisma migrate status
+```
+
+**Resultado esperado**: "Database schema is up to date!"
+
+#### 2. Verificar Índices en BD
+
+```sql
+-- Conectar a MySQL
+mysql -u root sipi_db
+
+-- Ver índices de enrollments
+SHOW INDEXES FROM enrollments WHERE Key_name LIKE '%deletedAt%';
+
+-- Ver índices de students
+SHOW INDEXES FROM students WHERE Key_name LIKE '%deletedAt%';
+```
+
+**Índices esperados**:
+- `enrollments_studentId_deletedAt_idx`
+- `enrollments_estatus_deletedAt_idx`
+- `students_estatus_deletedAt_idx`
+- `students_carrera_estatus_deletedAt_idx`
+
+#### 3. Probar Compresión HTTP
+
+```bash
+# Probar endpoint con compresión
+curl -H "Accept-Encoding: gzip" -v http://localhost:3001/api/students 2>&1 | grep -i "content-encoding"
+```
+
+**Resultado esperado**: `content-encoding: gzip`
+
+#### 4. Probar Caché en Memoria
+
+```bash
+# Primera request (cache miss - más lenta)
+time curl http://localhost:3001/api/students
+
+# Segunda request (cache hit - más rápida)
+time curl http://localhost:3001/api/students
+```
+
+**Resultado esperado**: La segunda request debería ser 50-70% más rápida.
+
+#### 5. Verificar Lazy Loading Frontend
+
+1. Abrir navegador: http://localhost:5173
+2. Abrir DevTools → Network tab
+3. Navegar a diferentes rutas (dashboard, estudiantes, etc.)
+4. Verificar que se cargan chunks separados bajo demanda
+
+**Resultado esperado**: Chunks separados cargados bajo demanda, bundle inicial más pequeño.
+
+### Troubleshooting
+
+#### Error: Migración ya aplicada
+
+```bash
+npx prisma migrate resolve --applied nombre_migracion
+```
+
+#### Error: Índice ya existe
+
+Los índices deberían crearse automáticamente. Si hay conflicto, verificar que la migración se aplicó correctamente.
+
+#### Error: Caché no funciona
+
+Verificar que el código está actualizado:
+
+```bash
+cd backend
+npm run build
+npm run dev
+```
+
+---
+
 ## ✅ Conclusión
 
 Las optimizaciones implementadas proporcionan:

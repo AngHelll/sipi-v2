@@ -497,6 +497,24 @@ npx prisma migrate resolve --applied nombre_migracion
 npx prisma migrate deploy
 ```
 
+### Error: P3009 - "migrate found failed migrations"
+
+**Causa**: Hay migraciones marcadas como "failed" en la tabla `_prisma_migrations` que bloquean nuevas migraciones.
+
+**Solución**:
+```bash
+# Limpiar migraciones fallidas en producción
+mysql -u root sipi_db -e "DELETE FROM _prisma_migrations WHERE migration_name IN ('20250121200000_phase1_contact_security_softdelete', '20250121210000_phase2_academic_periods_capacity_enrollments', '20250121220000_phase3_careers_subjects', '20250121230000_phase4_personal_academic_info', '20250121240000_phase5_history_documents', '20251121235731_test');"
+
+# O usar el script de limpieza
+mysql -u root sipi_db < backend/scripts/cleanup-old-migrations.sql
+
+# Luego aplicar migraciones pendientes
+npx prisma migrate deploy
+```
+
+**Nota**: El pipeline ahora limpia automáticamente estas migraciones antes de aplicar nuevas.
+
 ### Error: "Shadow database error"
 
 **Causa**: Prisma no puede crear/limpiar la shadow database.
@@ -505,6 +523,35 @@ npx prisma migrate deploy
 - Verificar permisos de MySQL
 - Verificar que `DATABASE_URL` es correcta
 - Limpiar migraciones problemáticas
+
+---
+
+## 📊 Estado Actual de Migraciones
+
+### Migraciones Principales (En Orden Cronológico)
+
+1. ✅ `20251115103558_init` - Estructura base
+2. ✅ `20251117110000_add_schema_improvements` - Mejoras (timestamps, índices básicos, ENUMs)
+3. ✅ `20251125020647_add_promedio_ingles` - Agrega `promedioIngles` a `students`
+4. ✅ `20251125025746_add_english_enrollment_fields` - Campos de inglés (RB-038)
+5. ✅ `20260123000000_add_optimization_indexes` - Índices de optimización
+
+### Migraciones Eliminadas (Ya Aplicadas o Duplicadas)
+
+Las siguientes migraciones fueron eliminadas del sistema de archivos porque:
+- Eran duplicadas de migraciones más recientes
+- Sus cambios ya están en el schema actual
+- Estaban causando conflictos de orden cronológico
+
+- ❌ `20250121200000_phase1_contact_security_softdelete` - Eliminada (duplicada)
+- ❌ `20250121210000_phase2_academic_periods_capacity_enrollments` - Eliminada (duplicada)
+- ❌ `20250121220000_phase3_careers_subjects` - Eliminada (duplicada)
+- ❌ `20250121230000_phase4_personal_academic_info` - Eliminada (duplicada)
+- ❌ `20250121240000_phase5_history_documents` - Eliminada (duplicada)
+- ❌ `20251121235731_test` - Eliminada (migración de prueba)
+- ❌ `20251125020554_add_promedio_ingles` - Eliminada (duplicada de `20251125020647`)
+
+**Nota**: Si estas migraciones están en la BD de producción, deben limpiarse manualmente usando el script `backend/scripts/cleanup-old-migrations.sql`.
 
 ---
 
@@ -559,9 +606,10 @@ npx prisma migrate deploy
 
 - [Prisma Migrations Guide](https://www.prisma.io/docs/concepts/components/prisma-migrate)
 - [Prisma Migrate Best Practices](https://www.prisma.io/docs/guides/migrate/production-troubleshooting)
-- Documentación de alineación: `docs/MIGRACIONES-ALINEACION.md`
-- Guía de limpieza: `docs/MIGRACIONES-LIMPIEZA.md`
+- Integración CI/CD: `docs/CI-CD-MIGRACIONES.md`
+- Script de limpieza: `backend/scripts/cleanup-old-migrations.sql`
+- README de migraciones: `backend/prisma/migrations/README.md`
 
 ---
 
-**Última actualización**: 2026-01-23
+**Última actualización**: 2026-01-24
