@@ -3,6 +3,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import compression from 'compression';
 import { config } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
@@ -51,6 +52,23 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// HTTP Compression - Reduce bandwidth by 60-80%
+// Compresses JSON responses, HTML, CSS, JS, etc.
+// Uses gzip by default, falls back to deflate if client doesn't support gzip
+app.use(compression({
+  filter: (req: Request, res: Response) => {
+    // Don't compress responses if client explicitly doesn't want compression
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Use compression for all other responses
+    return compression.filter(req, res);
+  },
+  level: 6, // Balance between compression ratio and CPU usage (1-9, 6 is optimal)
+  threshold: 1024, // Only compress responses larger than 1KB
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

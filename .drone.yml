@@ -46,7 +46,12 @@ steps:
         - cd ~/raspylab/production/sipi/app
         - git pull origin main
         - echo "=== Installing Backend Dependencies (with devDependencies for build) ==="
-        - cd backend && npm ci && npm run build
+        - cd backend && npm ci
+        - echo "=== Applying Database Migrations ==="
+        - npx prisma migrate deploy
+        - npx prisma generate
+        - echo "=== Building Backend ==="
+        - npm run build
         - echo "=== Installing Production Dependencies Only ==="
         - npm ci --omit=dev
         - echo "=== Building Frontend ==="

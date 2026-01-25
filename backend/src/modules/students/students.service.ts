@@ -2,6 +2,7 @@
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import prisma from '../../config/database';
+import { cache, generateCacheKey } from '../../utils/cache';
 import {
   CreateStudentDto,
   UpdateStudentDto,
@@ -140,6 +141,7 @@ export const createStudent = async (
 
 /**
  * Get all students with optional filters and pagination
+ * Cached for 2 minutes to reduce database load
  */
 export const getAllStudents = async (
   query: StudentQueryDto
@@ -158,6 +160,28 @@ export const getAllStudents = async (
     sortBy = 'nombre',
     sortOrder = 'asc',
   } = query;
+
+  // Generate cache key from query parameters
+  const cacheKey = generateCacheKey('students:list', {
+    matricula,
+    carrera,
+    semestre,
+    estatus,
+    nombre,
+    apellidoPaterno,
+    apellidoMaterno,
+    curp,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+  });
+
+  // Try to get from cache first
+  const cached = cache.get<StudentsListResponseDto>(cacheKey);
+  if (cached !== null) {
+    return cached; // Cache hit - return immediately without DB query
+  }
 
   // Build where clause
   const where: Record<string, unknown> = {};
@@ -206,7 +230,7 @@ export const getAllStudents = async (
     orderBy,
   });
 
-  return {
+  const result: StudentsListResponseDto = {
     students: students.map((student) => mapStudentToResponseDto(student)),
     pagination: {
       page,
@@ -215,6 +239,14 @@ export const getAllStudents = async (
       totalPages: Math.ceil(total / take),
     },
   };
+
+  // Store in cache for 2 minutes (120000 ms)
+  // Only cache if result is not too large (avoid caching huge result sets)
+  if (students.length <= 100) {
+    cache.set(cacheKey, result);
+  }
+
+  return result;
 };
 
 /**

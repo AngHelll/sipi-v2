@@ -1,6 +1,7 @@
 // Groups service - Business logic for group management
 import { randomUUID } from 'node:crypto';
 import prisma from '../../config/database';
+import { cache, generateCacheKey } from '../../utils/cache';
 import { Prisma } from '@prisma/client';
 import {
   CreateGroupDto,
@@ -17,6 +18,7 @@ import { GroupValidators } from './groups.validators';
  * - ADMIN: sees all groups
  * - TEACHER: sees only groups where teacherId = current user's Teacher record
  * - STUDENT: sees groups where they are enrolled (via Enrollment)
+ * Cached for 2 minutes to reduce database load
  */
 export const getAllGroups = async (
   query: GroupQueryDto,
@@ -33,6 +35,26 @@ export const getAllGroups = async (
     sortBy = 'nombre',
     sortOrder = 'asc',
   } = query;
+
+  // Generate cache key (include user role for role-based filtering)
+  const cacheKey = generateCacheKey('groups:list', {
+    periodo,
+    subjectId,
+    esCursoIngles,
+    nivelIngles,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    userId,
+    userRole,
+  });
+
+  // Try to get from cache first
+  const cached = cache.get<GroupsListResponseDto>(cacheKey);
+  if (cached !== null) {
+    return cached; // Cache hit - return immediately without DB query
+  }
 
   // Build where clause
   const where: Record<string, unknown> = {};
@@ -156,7 +178,7 @@ export const getAllGroups = async (
     },
   });
 
-  return {
+  const result: GroupsListResponseDto = {
     groups: groups.map((group) => ({
       id: group.id,
       subjectId: group.subjectId,
@@ -197,6 +219,13 @@ export const getAllGroups = async (
       totalPages: Math.ceil(total / take),
     },
   };
+
+  // Store in cache for 2 minutes (only if result is not too large)
+  if (groups.length <= 100) {
+    cache.set(cacheKey, result);
+  }
+
+  return result;
 };
 
 /**

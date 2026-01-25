@@ -1,6 +1,7 @@
 // Subjects service - Business logic for subject management
 import { randomUUID } from 'node:crypto';
 import prisma from '../../config/database';
+import { cache, generateCacheKey } from '../../utils/cache';
 import {
   CreateSubjectDto,
   UpdateSubjectDto,
@@ -71,11 +72,15 @@ export const createSubject = async (
     data: subjectData,
   });
 
+  // Invalidate cache for subjects list (clear all subject list caches)
+  cache.invalidatePrefix('subjects:list:');
+
   return mapSubjectToResponseDto(subject);
 };
 
 /**
  * Get all subjects with optional filters and pagination
+ * Cached for 2 minutes to reduce database load
  */
 export const getAllSubjects = async (
   query: SubjectQueryDto
@@ -89,6 +94,23 @@ export const getAllSubjects = async (
     sortBy = 'nombre',
     sortOrder = 'asc',
   } = query;
+
+  // Generate cache key from query parameters
+  const cacheKey = generateCacheKey('subjects:list', {
+    clave,
+    nombre,
+    creditos,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+  });
+
+  // Try to get from cache first
+  const cached = cache.get<SubjectsListResponseDto>(cacheKey);
+  if (cached !== null) {
+    return cached; // Cache hit - return immediately without DB query
+  }
 
   // Build where clause
   const where: Record<string, unknown> = {};
@@ -122,7 +144,7 @@ export const getAllSubjects = async (
     orderBy,
   });
 
-  return {
+  const result: SubjectsListResponseDto = {
     subjects: subjects.map((subject) => mapSubjectToResponseDto(subject)),
     pagination: {
       page,
@@ -131,6 +153,13 @@ export const getAllSubjects = async (
       totalPages: Math.ceil(total / take),
     },
   };
+
+  // Store in cache for 2 minutes (only if result is not too large)
+  if (subjects.length <= 100) {
+    cache.set(cacheKey, result);
+  }
+
+  return result;
 };
 
 /**

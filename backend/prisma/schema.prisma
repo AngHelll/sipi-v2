@@ -153,9 +153,11 @@ model enrollments {
   @@index([fechaInscripcion])
   @@index([groupId])
   @@index([groupId, estatus], map: "enrollments_group_estatus_idx")
-  @@index([studentId, groupId])
   @@index([studentId])
+  @@index([studentId, groupId])
   @@index([studentId, estatus], map: "enrollments_student_estatus_idx")
+  @@index([studentId, deletedAt]) // Optimización: búsquedas frecuentes de inscripciones por estudiante
+  @@index([estatus, deletedAt]) // Optimización: listados con filtro de estatus
 }
 
 model groups {
@@ -333,6 +335,8 @@ model students {
   @@index([matricula])
   @@index([semestre])
   @@index([tipoIngreso])
+  @@index([estatus, deletedAt]) // Optimización: listados con filtro de estatus
+  @@index([carrera, estatus, deletedAt]) // Optimización: búsquedas por carrera y estatus
 }
 
 model subjects {
