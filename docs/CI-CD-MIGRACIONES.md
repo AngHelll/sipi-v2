@@ -254,18 +254,29 @@ npx prisma migrate dev --name descripcion
 
 ---
 
-## 🔧 Limpieza Automática de Migraciones Fallidas
+## 🔧 Manejo de Migraciones Fallidas
 
-El pipeline ahora incluye limpieza automática de migraciones fallidas antes de aplicar nuevas:
+Si en el futuro hay migraciones marcadas como "failed" en la BD (error P3009), se pueden resolver manualmente:
 
-```yaml
-- echo "=== Cleaning Failed Migrations (if any) ==="
-- mysql -u root sipi_db -e "DELETE FROM _prisma_migrations WHERE migration_name IN (...);" || true
-- echo "=== Applying Database Migrations ==="
-- npx prisma migrate deploy
+```bash
+# En el servidor de producción
+cd ~/raspylab/production/sipi/app/backend
+
+# Opción 1: Usar script de limpieza
+mysql -u root sipi_db < scripts/cleanup-old-migrations.sql
+
+# Opción 2: Limpieza manual específica
+mysql -u root sipi_db -e "DELETE FROM _prisma_migrations WHERE migration_name = 'nombre_migracion_fallida';"
+
+# Luego aplicar migraciones
+npx prisma migrate deploy
 ```
 
-Esto resuelve el error P3009 que ocurre cuando hay migraciones marcadas como "failed" en la BD.
+**Nota**: El pipeline no incluye limpieza automática porque:
+- Prisma maneja las migraciones automáticamente
+- Los problemas de migraciones fallidas son casos excepcionales
+- Es mejor resolverlos manualmente cuando ocurren
+- Mantener comandos que pueden fallar no es buena práctica
 
 ---
 
