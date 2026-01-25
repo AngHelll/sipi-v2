@@ -39,10 +39,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex lg:flex-shrink-0">
-        <div className="w-64 bg-gray-800 text-white min-h-screen flex flex-col">
-          <div className="p-6 border-b border-gray-700">
-            <h2 className="text-xl font-bold">SIPI Modern</h2>
-            <p className="text-sm text-gray-400 mt-1">Sistema de Registro Estudiantil</p>
+        <div className="w-64 bg-gradient-to-b from-primary-800 to-primary-900 text-white min-h-screen flex flex-col shadow-strong">
+          <div className="p-6 border-b border-primary-700/50">
+            <h2 className="text-xl font-bold font-display tracking-tight">SIPI Modern</h2>
+            <p className="text-sm text-primary-200 mt-1">Sistema de Registro Estudiantil</p>
           </div>
           <nav className="mt-6 flex-1">
             <ul className="space-y-2 px-4">
@@ -52,10 +52,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                   <li key={item.path}>
                     <Link
                       to={item.path}
-                      className={`block px-4 py-2 rounded-lg transition-colors ${
+                      className={`block px-4 py-2.5 rounded-lg transition-all duration-200 font-medium ${
                         isActive
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-700'
+                          ? 'bg-white text-primary-700 shadow-accent'
+                          : 'text-primary-100 hover:bg-primary-700/50 hover:text-white'
                       }`}
                     >
                       {item.label}
@@ -70,19 +70,19 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-primary-800 to-primary-900 text-white transform transition-transform duration-300 ease-in-out lg:hidden shadow-strong ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <div className="flex items-center justify-between p-6 border-b border-primary-700/50">
             <div>
-              <h2 className="text-xl font-bold">SIPI Modern</h2>
-              <p className="text-sm text-gray-400 mt-1">Sistema de Registro Estudiantil</p>
+              <h2 className="text-xl font-bold font-display tracking-tight">SIPI Modern</h2>
+              <p className="text-sm text-primary-200 mt-1">Sistema de Registro Estudiantil</p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg text-primary-200 hover:bg-primary-700/50 transition-colors"
               aria-label="Cerrar menú"
             >
               <Icon name="close" size={24} />
@@ -97,10 +97,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                     <Link
                       to={item.path}
                       onClick={onClose}
-                      className={`block px-4 py-2 rounded-lg transition-colors ${
+                      className={`block px-4 py-2.5 rounded-lg transition-all duration-200 font-medium ${
                         isActive
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-700'
+                          ? 'bg-white text-primary-700 shadow-accent'
+                          : 'text-primary-100 hover:bg-primary-700/50 hover:text-white'
                       }`}
                     >
                       {item.label}

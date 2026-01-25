@@ -28,15 +28,18 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 transition-colors duration-200">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-gray-200">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-soft transition-colors duration-200">
+      <div className="bg-white p-8 rounded-2xl shadow-strong w-full max-w-md border border-gray-100 animate-fade-in">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-gray-800">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-academic mb-4 shadow-accent">
+            <span className="text-2xl font-bold text-white font-display">S</span>
+          </div>
+          <h1 className="text-3xl font-bold mb-2 text-gray-900 font-display">
             SIPI Modern
           </h1>
-          <p className="text-sm text-gray-500">Sistema de Registro Estudiantil</p>
+          <p className="text-sm text-gray-600">Sistema de Registro Estudiantil</p>
         </div>
-        <h2 className="text-xl font-semibold text-center mb-6 text-gray-700">
+        <h2 className="text-xl font-semibold text-center mb-6 text-gray-800">
           Iniciar Sesión
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -55,7 +58,7 @@ export const LoginPage = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
               placeholder="Ingresa tu usuario"
             />
           </div>
@@ -76,7 +79,7 @@ export const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-academic text-white py-3 rounded-xl hover:shadow-accent-strong transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-medium"
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>

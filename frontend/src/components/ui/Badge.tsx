@@ -10,18 +10,18 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: 'bg-gray-100 text-gray-800',
-  success: 'bg-green-100 text-green-800',
-  warning: 'bg-yellow-100 text-yellow-800',
-  error: 'bg-red-100 text-red-800',
-  info: 'bg-blue-100 text-blue-800',
-  danger: 'bg-red-100 text-red-800', // Alias for error
+  default: 'bg-gray-100 text-gray-700 border border-gray-200',
+  success: 'bg-academic-success/10 text-academic-success border border-academic-success/20 font-medium',
+  warning: 'bg-academic-warning/10 text-academic-warning border border-academic-warning/20 font-medium',
+  error: 'bg-academic-danger/10 text-academic-danger border border-academic-danger/20 font-medium',
+  info: 'bg-primary-50 text-primary-700 border border-primary-200 font-medium',
+  danger: 'bg-academic-danger/10 text-academic-danger border border-academic-danger/20 font-medium', // Alias for error
 };
 
 export const Badge = ({ children, variant = 'default', className = '' }: BadgeProps) => {
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variantClasses[variant]} ${className}`}
+      className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold shadow-soft ${variantClasses[variant]} ${className}`}
     >
       {children}
     </span>
