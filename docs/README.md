@@ -39,8 +39,13 @@ Este directorio contiene toda la documentación del proyecto organizada por cate
 ### Documentación Técnica Específica
 - `ARQUITECTURA-ACTIVIDADES-ACADEMICAS.md` - Arquitectura de actividades académicas
 - `DISENO-BASE-DATOS-V2.md` - Diseño de base de datos
-- `PLAN-IMPLEMENTACION-V2.md` - Plan de implementación V2
 - `REGLAS-NEGOCIO-ENROLLMENTS.md` - Reglas de negocio de inscripciones
+- `OPTIMIZACIONES-IMPLEMENTADAS.md` - Optimizaciones de rendimiento
+- `GUIA-MIGRACIONES-PRISMA.md` - Guía completa de migraciones
+- `CI-CD-MIGRACIONES.md` - Integración de migraciones en CI/CD
+- `ANALISIS-RECURSOS-SERVIDOR.md` - Análisis de recursos del servidor
+- `ANALISIS-COSTOS-OPERATIVOS.md` - Análisis de costos operativos
+- `ANALISIS-PIPELINE-CI-CD.md` - Análisis y mejoras del pipeline
 
 ---
 

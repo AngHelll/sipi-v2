@@ -537,6 +537,6 @@ Sistema desarrollado como una solución moderna y escalable para la gestión aca
 
 **Hecho con ❤️ para instituciones educativas**
 
-⭐ Si te gusta este proyecto, considera darle una estrella
+⭐ Si te gusta este proyecto, considera darle una estrella.
 
 </div>
