@@ -48,7 +48,8 @@ steps:
         - set -e  # Fallar rápido en cualquier error
         - set -o pipefail  # Capturar errores en pipes
         - cd ~/raspylab/production/sipi/app
-        - git pull origin main || { echo "❌ Error en git pull"; exit 1; }
+        - git fetch origin main
+        - git reset --hard origin/main
         - echo "=== Installing Backend Dependencies (with devDependencies for build) ==="
         - cd backend && npm ci
         - echo "=== Applying Database Migrations ==="
