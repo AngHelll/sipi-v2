@@ -1,7 +1,8 @@
-// Main layout component with Sidebar and Topbar
+// Main layout component with TopAppBar, BottomNavBar and Drawer (Sidebar)
 import { useState, type ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { BottomNav } from './BottomNav';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,23 +12,28 @@ export const Layout = ({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-white">
-      {/* Mobile sidebar overlay */}
+    <div className="bg-surface text-on-surface min-h-screen transition-colors duration-300">
+      {/* Top Navigation AppBar (Desktop & Mobile header) */}
+      <Topbar onMenuClick={() => setSidebarOpen(true)} />
+
+      {/* Main content area */}
+      <main className="pt-24 pb-32 px-6 md:px-20 max-w-7xl mx-auto">
+        {children}
+      </main>
+
+      {/* Bottom Navigation Bar (Mobile only) */}
+      <BottomNav onMenuClick={() => setSidebarOpen(true)} />
+
+      {/* Drawer Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Off-canvas Sidebar / Drawer Menu for remaining items */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden w-0 min-w-0">
-        <Topbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white">{children}</main>
-      </div>
     </div>
   );
 };

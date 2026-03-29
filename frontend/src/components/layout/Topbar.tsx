@@ -1,10 +1,10 @@
-// Topbar component with user info, avatar dropdown, and improved design
+// TopAppBar component with inline navigation, user info, and avatar
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { GlobalSearch } from '../ui/GlobalSearch';
 import { AvatarDropdown } from '../ui/Avatar';
-import { Icon } from '../ui/Icon';
 import { UserRole } from '../../types';
+import { navItems } from '../../lib/navigation';
 
 const roleLabels: Record<UserRole, string> = {
   [UserRole.STUDENT]: 'Estudiante',
@@ -20,145 +20,88 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  const handleLogout = async () => {
-    await logout();
-  };
+  if (!user) return null;
 
-  // Breadcrumbs based on current path
-  const getBreadcrumbs = (): Array<{ label: string; path: string | null }> => {
-    if (!user) return [];
-    const path = location.pathname;
-    const parts = path.split('/').filter(Boolean);
-    
-    if (parts.length === 0 || (parts[0] === 'dashboard' && parts.length === 1)) {
-      return [{ label: 'Dashboard', path: '/dashboard' }];
-    }
+  // Render navigation links based on user role and visibility (isMain)
+  const renderNavLinks = () => {
+    const mainItems = navItems.filter(
+      (item) => item.roles.includes(user.role as UserRole) && item.isMain
+    );
+    const hasSubItems = navItems.filter(
+      (item) => item.roles.includes(user.role as UserRole) && !item.isMain
+    ).length > 0;
 
-    const breadcrumbs: Array<{ label: string; path: string | null }> = [{ label: 'Dashboard', path: '/dashboard' }];
-    
-    if (parts[0] === 'admin') {
-      breadcrumbs.push({ label: 'Administración', path: '/dashboard/admin' });
-      
-      if (parts[1] === 'students') {
-        breadcrumbs.push({ label: 'Estudiantes', path: '/admin/students' });
-        if (parts[2] === 'new') {
-          breadcrumbs.push({ label: 'Nuevo', path: null });
-        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
-          breadcrumbs.push({ label: 'Editar', path: null });
-        }
-      } else if (parts[1] === 'teachers') {
-        breadcrumbs.push({ label: 'Maestros', path: '/admin/teachers' });
-        if (parts[2] === 'new') {
-          breadcrumbs.push({ label: 'Nuevo', path: null });
-        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
-          breadcrumbs.push({ label: 'Editar', path: null });
-        }
-      } else if (parts[1] === 'subjects') {
-        breadcrumbs.push({ label: 'Materias', path: '/admin/subjects' });
-        if (parts[2] === 'new') {
-          breadcrumbs.push({ label: 'Nuevo', path: null });
-        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
-          breadcrumbs.push({ label: 'Editar', path: null });
-        }
-      } else if (parts[1] === 'groups') {
-        breadcrumbs.push({ label: 'Grupos', path: '/admin/groups' });
-        if (parts[2] === 'new') {
-          breadcrumbs.push({ label: 'Nuevo', path: null });
-        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
-          breadcrumbs.push({ label: 'Editar', path: null });
-        } else if (parts[2] && parts[2] !== 'new' && parts[3] !== 'edit') {
-          // Vista de detalle de grupo
-          breadcrumbs.push({ label: 'Detalle', path: null });
-        }
-      } else if (parts[1] === 'enrollments') {
-        breadcrumbs.push({ label: 'Inscripciones', path: '/admin/enrollments' });
-        if (parts[2] === 'new') {
-          breadcrumbs.push({ label: 'Nueva', path: null });
-        } else if (parts[2] && parts[2] !== 'new' && parts[3] === 'edit') {
-          breadcrumbs.push({ label: 'Editar', path: null });
-        }
-      }
-    } else if (parts[0] === 'student') {
-      if (parts[1] === 'enrollments') {
-        breadcrumbs.push({ label: 'Mis Calificaciones', path: '/student/enrollments' });
-      }
-    } else if (parts[0] === 'teacher') {
-      if (parts[1] === 'grades') {
-        breadcrumbs.push({ label: 'Gestión de Calificaciones', path: '/teacher/grades' });
-      }
-    }
-
-    return breadcrumbs;
-  };
-
-  const breadcrumbs = getBreadcrumbs();
-
-  return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 gap-2 sm:gap-4">
-        {/* Mobile menu button and breadcrumbs */}
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-          {/* Mobile menu button */}
+    return (
+      <nav className="hidden md:flex gap-8 items-center h-full">
+        {mainItems.map((item) => {
+          const isActive = location.pathname.startsWith(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`font-label tracking-tight text-lg transition-all px-2 rounded-lg py-1 ${
+                isActive
+                  ? 'text-primary dark:text-[#f2f2f2] font-bold'
+                  : 'text-primary-container/60 dark:text-[#f2f2f2]/60 hover:bg-surface-container-low dark:hover:bg-[#1a1a1a]'
+              }`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+        {/* Draw a menu button if user has extra options (e.g. Admin) */}
+        {hasSubItems && (
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0"
-            aria-label="Abrir menú"
+            className="flex items-center gap-1 font-label tracking-tight text-lg text-primary-container/60 dark:text-[#f2f2f2]/60 hover:bg-surface-container-low dark:hover:bg-[#1a1a1a] transition-all px-2 rounded-lg py-1"
           >
-            <Icon name="menu" size={24} />
+            Administración <span className="material-symbols-outlined text-[20px]">arrow_drop_down</span>
           </button>
+        )}
+      </nav>
+    );
+  };
 
-          {/* Breadcrumbs - hidden on very small screens, shown on sm+ */}
-          <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600 min-w-0">
-            {breadcrumbs.map((crumb, index) => (
-              <div key={index} className="flex items-center gap-2 flex-shrink-0">
-                {index > 0 && (
-                  <Icon name="chevron-right" size={16} className="text-gray-400 flex-shrink-0" />
-                )}
-                {crumb.path ? (
-                <Link
-                  to={crumb.path}
-                  className="hover:text-gray-900 transition-colors truncate"
-                >
-                  {crumb.label}
-                </Link>
-              ) : (
-                <span className="text-gray-900 font-medium truncate">
-                  {crumb.label}
-                </span>
-              )}
-              </div>
-            ))}
-          </div>
+  return (
+    <header className="flex justify-between items-center w-full px-6 py-4 bg-surface/80 dark:bg-[#121212]/80 backdrop-blur-xl fixed top-0 z-30 transition-colors duration-300 border-b border-outline-variant/20">
+      {/* Left section: Logo */}
+      <div className="flex items-center gap-4">
+        {/* Mobile menu trigger explicitly placed here for accessibility or if preferred, though it's inside BottomNav too */}
+        <button
+          onClick={onMenuClick}
+          className="md:hidden p-1 rounded-lg text-primary hover:bg-surface-container-low transition-colors"
+          aria-label="Abrir menú"
+        >
+          <span className="material-symbols-outlined text-[24px]">menu</span>
+        </button>
+
+        <Link to="/dashboard" className="flex items-center gap-4 text-primary dark:text-[#f2f2f2]">
+          <span className="material-symbols-outlined text-3xl">account_balance</span>
+          <h1 className="text-2xl font-black tracking-[-0.02em] font-headline">SIPI</h1>
+        </Link>
+      </div>
+
+      {/* Center/Right section: Search & Navigation */}
+      <div className="flex items-center gap-6">
+        {/* Only Admins/Teachers get global search visible on desktop to save space */}
+        <div className="hidden lg:flex w-64 mr-4">
+          <GlobalSearch />
         </div>
 
-        {/* Search - hidden on small screens, shown on md+ */}
-        <div className="hidden md:flex flex-1 max-w-md mx-2 lg:mx-4">
-          {user && <GlobalSearch />}
-        </div>
+        {/* Dynamic Nav Links */}
+        {renderNavLinks()}
 
-        {/* Actions */}
+        {/* User profile actions */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {user && (
-            <>
-              {/* Mobile search button */}
-              <button
-                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                aria-label="Buscar"
-                title="Buscar"
-              >
-                <Icon name="search" size={20} />
-              </button>
-              <AvatarDropdown name={user.username} role={roleLabels[user.role]}>
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
-                >
-                  <Icon name="logout" size={16} />
-                  Cerrar Sesión
-                </button>
-              </AvatarDropdown>
-            </>
-          )}
+          <AvatarDropdown name={user.username} role={roleLabels[user.role]}>
+            <button
+              onClick={logout}
+              className="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container transition-colors font-sans flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              Cerrar Sesión
+            </button>
+          </AvatarDropdown>
         </div>
       </div>
     </header>

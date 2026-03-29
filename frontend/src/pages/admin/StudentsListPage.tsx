@@ -5,9 +5,9 @@ import { Layout } from '../../components/layout/Layout';
 import { studentsApi, exportApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { Badge } from '../../components/ui/Badge';
 import { Icon } from '../../components/ui/Icon';
-import { SkeletonTable } from '../../components/ui/Skeleton';
+import { Loader } from '../../components/ui/Loader';
+import { StudentCard } from '../../components/ui/StudentCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import type { Student, StudentsListResponse } from '../../types';
 
@@ -41,15 +41,7 @@ export const StudentsListPage = () => {
   const [promedioMaxFilter, setPromedioMaxFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortBy, setSortBy] = useState<'matricula' | 'nombre' | 'carrera' | 'semestre' | 'estatus'>('nombre');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  
-  // Column visibility (for optional columns)
-  const [showEmail, setShowEmail] = useState(false);
-  const [showTelefono, setShowTelefono] = useState(false);
-  const [showPromedio, setShowPromedio] = useState(true);
-  const [showPromedioIngles, setShowPromedioIngles] = useState(true); // RB-037: Show English average
-  const [showCreditos, setShowCreditos] = useState(false);
+
 
   // Get unique carreras for filter dropdown
   const [uniqueCarreras, setUniqueCarreras] = useState<string[]>([]);
@@ -68,7 +60,7 @@ export const StudentsListPage = () => {
 
   useEffect(() => {
     fetchStudents();
-  }, [debouncedSearchTerm, carreraFilter, semestreFilter, estatusFilter, tipoIngresoFilter, becaFilter, promedioMinFilter, promedioMaxFilter, currentPage, pageSize, sortBy, sortOrder]);
+  }, [debouncedSearchTerm, carreraFilter, semestreFilter, estatusFilter, tipoIngresoFilter, becaFilter, promedioMinFilter, promedioMaxFilter, currentPage, pageSize]);
 
   // Fetch unique carreras on mount
   useEffect(() => {
@@ -120,8 +112,6 @@ export const StudentsListPage = () => {
       const params: any = {
         page: currentPage,
         limit: pageSize,
-        sortBy,
-        sortOrder,
       };
 
       // Add filters
@@ -230,108 +220,7 @@ export const StudentsListPage = () => {
     setCurrentPage(1);
   };
 
-  const handleSort = (field: 'matricula' | 'nombre' | 'carrera' | 'semestre' | 'estatus') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('asc');
-    }
-  };
 
-  const getStatusBadgeVariant = (estatus: string): 'success' | 'warning' | 'info' | 'default' => {
-    switch (estatus) {
-      case 'ACTIVO':
-        return 'success';
-      case 'INACTIVO':
-        return 'warning';
-      case 'EGRESADO':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
-
-  const getEnglishStatusDisplay = (student: Student) => {
-    // Si cumple requisito de inglés (promedio >= 70% Y todos los niveles 1-6 completados)
-    if (student.cumpleRequisitoIngles === true) {
-      return {
-        badge: <Badge variant="success">✓ Completo</Badge>,
-        details: student.nivelInglesActual 
-          ? `Niveles 1-6 completados` 
-          : 'Requisito cumplido',
-        promedio: student.promedioIngles 
-          ? `Prom: ${student.promedioIngles.toFixed(2)}` 
-          : null,
-        subDetails: student.nivelInglesActual 
-          ? `Nivel actual: ${student.nivelInglesActual}` 
-          : null,
-      };
-    }
-    
-    // Si tiene nivel asignado pero no cumple requisito completo
-    // (puede tener buen promedio pero faltan niveles, o viceversa)
-    if (student.nivelInglesActual) {
-      const tienePromedioSuficiente = student.promedioIngles !== undefined && 
-                                      student.promedioIngles !== null && 
-                                      student.promedioIngles >= 70;
-      
-      if (tienePromedioSuficiente) {
-        // Tiene buen promedio pero faltan niveles
-        return {
-          badge: <Badge variant="warning">Faltan niveles</Badge>,
-          details: `Nivel ${student.nivelInglesActual} de 6`,
-          promedio: student.promedioIngles 
-            ? `Prom: ${student.promedioIngles.toFixed(2)}` 
-            : null,
-          subDetails: 'Promedio suficiente, faltan niveles',
-        };
-      } else {
-        // En progreso pero promedio insuficiente o faltan niveles
-        return {
-          badge: <Badge variant="warning">En progreso</Badge>,
-          details: `Nivel ${student.nivelInglesActual} de 6`,
-          promedio: student.promedioIngles 
-            ? `Prom: ${student.promedioIngles.toFixed(2)}` 
-            : null,
-          subDetails: student.promedioIngles !== undefined && student.promedioIngles !== null && student.promedioIngles < 70
-            ? 'Promedio < 70%'
-            : 'Faltan niveles',
-        };
-      }
-    }
-    
-    // Si tiene examen de diagnóstico pero no nivel asignado
-    if (student.fechaExamenDiagnostico) {
-      return {
-        badge: <Badge variant="info">Examen realizado</Badge>,
-        details: student.porcentajeIngles 
-          ? `${student.porcentajeIngles.toFixed(1)}%` 
-          : 'Pendiente evaluación',
-        promedio: null,
-        subDetails: 'Esperando asignación de nivel',
-      };
-    }
-    
-    // Sin información
-    return {
-      badge: <Badge variant="default">Sin información</Badge>,
-      details: 'No registrado',
-      promedio: null,
-      subDetails: null,
-    };
-  };
-
-  const getSortIcon = (field: 'matricula' | 'nombre' | 'carrera' | 'semestre' | 'estatus') => {
-    if (sortBy !== field) {
-      return <Icon name="filter" size={16} className="text-gray-400" />;
-    }
-    return sortOrder === 'asc' ? (
-      <Icon name="chevron-up" size={16} className="text-blue-600" />
-    ) : (
-      <Icon name="chevron-down" size={16} className="text-blue-600" />
-    );
-  };
 
   const hasActiveFilters = searchTerm || carreraFilter || semestreFilter || estatusFilter || tipoIngresoFilter || becaFilter || promedioMinFilter || promedioMaxFilter;
 
@@ -527,61 +416,7 @@ export const StudentsListPage = () => {
             </div>
           </div>
           
-          {/* Column visibility toggle */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Columnas visibles:
-            </label>
-            <div className="flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showEmail}
-                  onChange={(e) => setShowEmail(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                Email
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showTelefono}
-                  onChange={(e) => setShowTelefono(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                Teléfono
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showPromedio}
-                  onChange={(e) => setShowPromedio(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                Promedio General
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showPromedioIngles}
-                  onChange={(e) => setShowPromedioIngles(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                Estatus Inglés
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showCreditos}
-                  onChange={(e) => setShowCreditos(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                Créditos
-              </label>
-            </div>
-          </div>
 
-          {/* Clear filters button */}
           {hasActiveFilters && (
             <div className="mt-4">
               <button
@@ -602,7 +437,11 @@ export const StudentsListPage = () => {
         )}
 
         {/* Loading state */}
-        {loading && <SkeletonTable rows={5} />}
+        {loading && (
+          <div className="flex justify-center py-12">
+            <Loader variant="spinner" size="lg" text="Cargando estudiantes..." />
+          </div>
+        )}
 
         {/* Students table */}
         {!loading && !error && (
@@ -626,284 +465,22 @@ export const StudentsListPage = () => {
               />
             ) : (
               <>
-                {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                          onClick={() => handleSort('matricula')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Matrícula
-                            {getSortIcon('matricula')}
-                          </div>
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('nombre')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Nombre
-                            {getSortIcon('nombre')}
-                          </div>
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('carrera')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Carrera
-                            {getSortIcon('carrera')}
-                          </div>
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('semestre')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Semestre
-                            {getSortIcon('semestre')}
-                          </div>
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('estatus')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Estatus
-                            {getSortIcon('estatus')}
-                          </div>
-                        </th>
-                        {showEmail && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Email
-                          </th>
-                        )}
-                        {showTelefono && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Teléfono
-                          </th>
-                        )}
-                        {showPromedio && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Promedio General
-                          </th>
-                        )}
-                        {showPromedioIngles && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Estatus Inglés
-                          </th>
-                        )}
-                        {showCreditos && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Créditos
-                          </th>
-                        )}
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Beca
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {students.map((student) => (
-                        <tr
-                          key={student.id}
-                          className="hover:bg-gray-50 transition-colors cursor-pointer"
-                          onClick={() => navigate(`/admin/students/${student.id}/edit`)}
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {student.matricula}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {student.nombre} {student.apellidoPaterno} {student.apellidoMaterno}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {student.carrera}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {student.semestre}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge variant={getStatusBadgeVariant(student.estatus)}>
-                              {student.estatus}
-                            </Badge>
-                          </td>
-                          {showEmail && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {student.email || '-'}
-                            </td>
-                          )}
-                          {showTelefono && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {student.telefono || '-'}
-                            </td>
-                          )}
-                          {showPromedio && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {student.promedioGeneral !== undefined && student.promedioGeneral !== null
-                                ? `${student.promedioGeneral.toFixed(2)}`
-                                : '-'}
-                            </td>
-                          )}
-                          {showPromedioIngles && (
-                            <td className="px-6 py-4">
-                              {(() => {
-                                const englishStatus = getEnglishStatusDisplay(student);
-                                return (
-                                  <div className="flex flex-col gap-1 min-w-[140px]">
-                                    {englishStatus.badge}
-                                    <div className="text-xs text-gray-700 font-medium">
-                                      {englishStatus.details}
-                                    </div>
-                                    {englishStatus.promedio && (
-                                      <div className="text-xs text-gray-600">
-                                        {englishStatus.promedio}
-                                      </div>
-                                    )}
-                                    {englishStatus.subDetails && (
-                                      <div className="text-xs text-gray-500 italic">
-                                        {englishStatus.subDetails}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })()}
-                            </td>
-                          )}
-                          {showCreditos && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {student.creditosAprobados || 0} / {student.creditosTotales || '-'}
-                            </td>
-                          )}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {student.beca ? (
-                              <Badge variant="success">
-                                <Icon name="check" size={14} className="mr-1" />
-                                Sí
-                              </Badge>
-                            ) : (
-                              <span className="text-sm text-gray-400">No</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-3">
-                              <button
-                                onClick={() => handleEdit(student.id)}
-                                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                                title="Editar estudiante"
-                              >
-                                <Icon name="edit" size={18} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClick(student)}
-                                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Eliminar estudiante"
-                              >
-                                <Icon name="delete" size={18} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Card View */}
-                <div className="lg:hidden divide-y divide-gray-200">
-                  {students.map((student) => {
-                    const englishStatus = getEnglishStatusDisplay(student);
-                    return (
-                      <div
-                        key={student.id}
-                        className="p-4 hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0"
-                        onClick={() => navigate(`/admin/students/${student.id}/edit`)}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-semibold text-gray-900 truncate">
-                              {student.nombre} {student.apellidoPaterno} {student.apellidoMaterno}
-                            </h3>
-                            <p className="text-sm text-gray-600 mt-1">Matrícula: {student.matricula}</p>
-                          </div>
-                          <div className="flex items-center gap-2 ml-2" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => handleEdit(student.id)}
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Editar estudiante"
-                            >
-                              <Icon name="edit" size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteClick(student)}
-                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Eliminar estudiante"
-                            >
-                              <Icon name="delete" size={18} />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <span className="text-gray-500">Carrera:</span>
-                            <p className="text-gray-900 font-medium">{student.carrera}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Semestre:</span>
-                            <p className="text-gray-900 font-medium">{student.semestre}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Estatus:</span>
-                            <div className="mt-1">
-                              <Badge variant={getStatusBadgeVariant(student.estatus)}>
-                                {student.estatus}
-                              </Badge>
-                            </div>
-                          </div>
-                          {showPromedio && (
-                            <div>
-                              <span className="text-gray-500">Promedio:</span>
-                              <p className="text-gray-900 font-medium">
-                                {student.promedioGeneral !== undefined && student.promedioGeneral !== null
-                                  ? `${student.promedioGeneral.toFixed(2)}`
-                                  : '-'}
-                              </p>
-                            </div>
-                          )}
-                          {showPromedioIngles && (
-                            <div className="col-span-2">
-                              <span className="text-gray-500">Estatus Inglés:</span>
-                              <div className="mt-1 space-y-1">
-                                {englishStatus.badge}
-                                <p className="text-xs text-gray-700">{englishStatus.details}</p>
-                                {englishStatus.promedio && (
-                                  <p className="text-xs text-gray-600">{englishStatus.promedio}</p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          <div>
-                            <span className="text-gray-500">Beca:</span>
-                            <div className="mt-1">
-                              {student.beca ? (
-                                <Badge variant="success">
-                                  <Icon name="check" size={14} className="mr-1" />
-                                  Sí
-                                </Badge>
-                              ) : (
-                                <span className="text-sm text-gray-400">No</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 bg-gray-50/50">
+                  {students.map((student) => (
+                    <StudentCard
+                      key={student.id}
+                      student={student}
+                      onClick={() => handleEdit(student.id)}
+                      onEdit={(e) => {
+                        e.stopPropagation();
+                        handleEdit(student.id);
+                      }}
+                      onDelete={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(student);
+                      }}
+                    />
+                  ))}
                 </div>
 
                 {/* Pagination */}

@@ -37,4 +37,7 @@ export { GradeDisplay, PartialGradesDisplay } from './GradeDisplay';
 export { AttendanceDisplay } from './AttendanceDisplay';
 export { CapacityIndicator } from './CapacityIndicator';
 export { Tooltip, IconTooltip } from './Tooltip';
-
+export { SubjectCard } from './SubjectCard';
+export { GroupCard } from './GroupCard';
+export { StudentCard } from './StudentCard';
+export { TeacherCard } from './TeacherCard';

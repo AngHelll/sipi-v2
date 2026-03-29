@@ -28,28 +28,28 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-soft transition-colors duration-200">
-      <div className="bg-white p-8 rounded-2xl shadow-strong w-full max-w-md border border-gray-100 animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-low transition-colors duration-200">
+      <div className="bg-surface p-8 rounded-2xl shadow-lg w-full max-w-md border border-outline-variant animate-fade-in">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-academic mb-4 shadow-accent">
-            <span className="text-2xl font-bold text-white font-display">S</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4 shadow-md">
+            <span className="text-2xl font-bold text-on-primary font-headline">S</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2 text-gray-900 font-display">
+          <h1 className="text-3xl font-bold mb-2 text-on-surface font-headline">
             SIPI Modern
           </h1>
-          <p className="text-sm text-gray-600">Sistema de Registro Estudiantil</p>
+          <p className="text-sm text-on-surface-variant">Sistema de Registro Estudiantil</p>
         </div>
-        <h2 className="text-xl font-semibold text-center mb-6 text-gray-800">
+        <h2 className="text-xl font-semibold text-center mb-6 text-on-surface">
           Iniciar Sesión
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div className="bg-error-container border border-error text-on-error-container px-4 py-3 rounded">
               {error}
             </div>
           )}
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="username" className="block text-sm font-medium text-on-surface mb-1">
               Usuario
             </label>
             <input
@@ -58,12 +58,12 @@ export const LoginPage = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+              className="w-full px-4 py-2.5 border border-outline-variant rounded-xl bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
               placeholder="Ingresa tu usuario"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-on-surface mb-1">
               Contraseña
             </label>
             <input
@@ -72,14 +72,14 @@ export const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-outline-variant rounded-xl bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
               placeholder="Ingresa tu contraseña"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-academic text-white py-3 rounded-xl hover:shadow-accent-strong transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-medium"
+            className="w-full bg-primary text-on-primary py-3 rounded-xl hover:opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-md"
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>

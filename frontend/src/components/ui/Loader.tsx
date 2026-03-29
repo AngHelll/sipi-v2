@@ -32,7 +32,7 @@ const borderSizeClasses: Record<LoaderSize, string> = {
 const SpinnerLoader = ({ size = 'md', className = '' }: { size?: LoaderSize; className?: string }) => {
   return (
     <div
-      className={`${sizeClasses[size]} ${borderSizeClasses[size]} border-gray-200 border-t-blue-600 rounded-full animate-spin ${className}`}
+      className={`${sizeClasses[size]} ${borderSizeClasses[size]} border-outline-variant border-t-primary rounded-full animate-spin ${className}`}
       role="status"
       aria-label="Cargando"
     >
@@ -54,9 +54,9 @@ const DotsLoader = ({ size = 'md', className = '' }: { size?: LoaderSize; classN
 
   return (
     <div className={`flex items-center gap-1.5 ${className}`} role="status" aria-label="Cargando">
-      <div className={`${dotSize} bg-blue-600 rounded-full animate-bounce`} style={{ animationDelay: '0ms' }} />
-      <div className={`${dotSize} bg-blue-600 rounded-full animate-bounce`} style={{ animationDelay: '150ms' }} />
-      <div className={`${dotSize} bg-blue-600 rounded-full animate-bounce`} style={{ animationDelay: '300ms' }} />
+      <div className={`${dotSize} bg-primary rounded-full animate-bounce`} style={{ animationDelay: '0ms' }} />
+      <div className={`${dotSize} bg-primary rounded-full animate-bounce`} style={{ animationDelay: '150ms' }} />
+      <div className={`${dotSize} bg-primary rounded-full animate-bounce`} style={{ animationDelay: '300ms' }} />
       <span className="sr-only">Cargando...</span>
     </div>
   );
@@ -68,7 +68,7 @@ const DotsLoader = ({ size = 'md', className = '' }: { size?: LoaderSize; classN
 const PulseLoader = ({ size = 'md', className = '' }: { size?: LoaderSize; className?: string }) => {
   return (
     <div
-      className={`${sizeClasses[size]} bg-blue-600 rounded-full animate-pulse ${className}`}
+      className={`${sizeClasses[size]} bg-primary rounded-full animate-pulse ${className}`}
       role="status"
       aria-label="Cargando"
     >
@@ -98,15 +98,15 @@ const BarsLoader = ({ size = 'md', className = '' }: { size?: LoaderSize; classN
   return (
     <div className={`flex items-end gap-1 ${className}`} role="status" aria-label="Cargando">
       <div
-        className={`${barWidth} ${barHeight} bg-blue-600 rounded animate-pulse`}
+        className={`${barWidth} ${barHeight} bg-primary rounded animate-pulse`}
         style={{ animationDelay: '0ms', animationDuration: '1s' }}
       />
       <div
-        className={`${barWidth} ${barHeight} bg-blue-600 rounded animate-pulse`}
+        className={`${barWidth} ${barHeight} bg-primary rounded animate-pulse`}
         style={{ animationDelay: '200ms', animationDuration: '1s' }}
       />
       <div
-        className={`${barWidth} ${barHeight} bg-blue-600 rounded animate-pulse`}
+        className={`${barWidth} ${barHeight} bg-primary rounded animate-pulse`}
         style={{ animationDelay: '400ms', animationDuration: '1s' }}
       />
       <span className="sr-only">Cargando...</span>
@@ -143,14 +143,14 @@ export const Loader = ({
     <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
       {renderLoader()}
       {text && (
-        <p className="text-sm text-gray-600 font-medium animate-pulse">{text}</p>
+        <p className="text-sm text-outline font-medium animate-pulse">{text}</p>
       )}
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-90">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface bg-opacity-90">
         {content}
       </div>
     );
@@ -158,7 +158,7 @@ export const Loader = ({
 
   if (overlay) {
     return (
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-white bg-opacity-75 rounded-lg">
+      <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface bg-opacity-75 rounded-lg">
         {content}
       </div>
     );
