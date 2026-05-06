@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { subjectsApi, exportApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { ConfirmDialog, Badge, Icon, Loader } from '../../components/ui';
+import { ConfirmDialog, Loader, SubjectCard } from '../../components/ui';
 import type { Subject, SubjectsListResponse } from '../../types';
 
 export const SubjectsListPage = () => {
@@ -36,10 +36,6 @@ export const SubjectsListPage = () => {
   const [sortBy, setSortBy] = useState<'clave' | 'nombre' | 'creditos'>('nombre');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
-  // Column visibility
-  const [showNivel, setShowNivel] = useState(false);
-  const [showHoras, setShowHoras] = useState(true);
-  const [showGrupos, setShowGrupos] = useState(true);
 
   // Debounced search
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -156,63 +152,6 @@ export const SubjectsListPage = () => {
     setCurrentPage(1);
   };
   
-  const getTipoBadgeVariant = (tipo?: string): 'success' | 'warning' | 'info' | 'default' => {
-    switch (tipo) {
-      case 'OBLIGATORIA':
-        return 'success';
-      case 'OPTATIVA':
-        return 'info';
-      case 'ELECTIVA':
-        return 'warning';
-      case 'SERVICIO_SOCIAL':
-        return 'default';
-      default:
-        return 'default';
-    }
-  };
-  
-  const getEstatusBadgeVariant = (estatus?: string): 'success' | 'warning' | 'info' | 'default' => {
-    switch (estatus) {
-      case 'ACTIVA':
-        return 'success';
-      case 'INACTIVA':
-        return 'warning';
-      case 'DESCONTINUADA':
-        return 'default';
-      case 'EN_REVISION':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
-
-  const handleSort = (field: 'clave' | 'nombre' | 'creditos') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('asc');
-    }
-  };
-
-  const getSortIcon = (field: 'clave' | 'nombre' | 'creditos') => {
-    if (sortBy !== field) {
-      return (
-        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
-    }
-    return sortOrder === 'asc' ? (
-      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-      </svg>
-    ) : (
-      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    );
-  };
 
   const hasActiveFilters = searchTerm || tipoFilter || estatusFilter || nivelFilter;
 
@@ -327,41 +266,7 @@ export const SubjectsListPage = () => {
             </div>
           </div>
           
-          {/* Column visibility toggle */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Columnas visibles:
-            </label>
-            <div className="flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showNivel}
-                  onChange={(e) => setShowNivel(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                Nivel
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showHoras}
-                  onChange={(e) => setShowHoras(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                Horas
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showGrupos}
-                  onChange={(e) => setShowGrupos(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                Grupos Activos
-              </label>
-            </div>
-          </div>
+          {/* Column visibility toggle (now hidden since we use cards, but we keep the logic if we want list view toggle later) */}
 
           {/* Clear filters button */}
           {hasActiveFilters && (
@@ -399,164 +304,22 @@ export const SubjectsListPage = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('clave')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Clave
-                            {getSortIcon('clave')}
-                          </div>
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('nombre')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Nombre
-                            {getSortIcon('nombre')}
-                          </div>
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('creditos')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Créditos
-                            {getSortIcon('creditos')}
-                          </div>
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Tipo
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Estatus
-                        </th>
-                        {showNivel && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Nivel
-                          </th>
-                        )}
-                        {showHoras && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Horas
-                          </th>
-                        )}
-                        {showGrupos && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Grupos
-                          </th>
-                        )}
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {subjects.map((subject) => (
-                        <tr
-                          key={subject.id}
-                          className="hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {subject.clave}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {subject.nombre}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {subject.creditos}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {subject.tipo ? (
-                              <Badge variant={getTipoBadgeVariant(subject.tipo)}>
-                                {subject.tipo.replace('_', ' ')}
-                              </Badge>
-                            ) : (
-                              <span className="text-sm text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {subject.estatus ? (
-                              <Badge variant={getEstatusBadgeVariant(subject.estatus)}>
-                                {subject.estatus.replace('_', ' ')}
-                              </Badge>
-                            ) : (
-                              <span className="text-sm text-gray-400">-</span>
-                            )}
-                          </td>
-                          {showNivel && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {subject.nivel || '-'}
-                            </td>
-                          )}
-                          {showHoras && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              <div className="flex flex-col">
-                                <span className="text-xs">
-                                  T: {subject.horasTeoria || 0} | P: {subject.horasPractica || 0} | L: {subject.horasLaboratorio || 0}
-                                </span>
-                                <span className="text-xs font-semibold text-gray-700">
-                                  Total: {(subject.horasTeoria || 0) + (subject.horasPractica || 0) + (subject.horasLaboratorio || 0)}
-                                </span>
-                              </div>
-                            </td>
-                          )}
-                          {showGrupos && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {subject.gruposActivos || 0}
-                            </td>
-                          )}
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div className="flex items-center justify-end gap-3">
-                              <button
-                                onClick={() => handleEdit(subject.id)}
-                                className="text-blue-600 hover:text-blue-900 transition-colors"
-                                title="Editar materia"
-                              >
-                                <svg
-                                  className="w-5 h-5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                  />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClick(subject)}
-                                className="text-red-600 hover:text-red-900 transition-colors"
-                                title="Eliminar materia"
-                              >
-                                <svg
-                                  className="w-5 h-5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
+                  {subjects.map((subject) => (
+                    <SubjectCard
+                      key={subject.id}
+                      subject={subject}
+                      onClick={() => handleEdit(subject.id)}
+                      onEdit={(e) => {
+                        e.stopPropagation();
+                        handleEdit(subject.id);
+                      }}
+                      onDelete={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(subject);
+                      }}
+                    />
+                  ))}
                 </div>
 
                 {/* Pagination */}

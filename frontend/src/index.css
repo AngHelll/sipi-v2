@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@config "../tailwind.config.js";
 /* Professional Dark Mode Strategy:
  * - Tailwind CSS v4 handles ALL theming via 'dark' class on <html>
  * - NO custom CSS colors - let Tailwind handle everything

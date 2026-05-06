@@ -5,7 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { groupsApi, subjectsApi, exportApi } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { ConfirmDialog, CapacityIndicator, Loader } from '../../components/ui';
+import { ConfirmDialog, CapacityIndicator, Loader, GroupCard } from '../../components/ui';
 import { UserRole } from '../../types';
 import type { Group, GroupsListResponse, Subject } from '../../types';
 
@@ -232,33 +232,6 @@ export const GroupsListPage = () => {
     setCurrentPage(1);
   };
 
-  const handleSort = (field: 'nombre' | 'periodo') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('asc');
-    }
-  };
-
-  const getSortIcon = (field: 'nombre' | 'periodo') => {
-    if (sortBy !== field) {
-      return (
-        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
-    }
-    return sortOrder === 'asc' ? (
-      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-      </svg>
-    ) : (
-      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    );
-  };
 
   const hasActiveFilters = periodoFilter || subjectFilter;
 
@@ -412,147 +385,19 @@ export const GroupsListPage = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('nombre')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Grupo
-                            {getSortIcon('nombre')}
-                          </div>
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Materia
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Maestro
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('periodo')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Período
-                            {getSortIcon('periodo')}
-                          </div>
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Cupos
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Modalidad
-                        </th>
-                        {isAdmin && (
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Acciones
-                          </th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredGroups.map((group) => (
-                        <tr 
-                          key={group.id} 
-                          className="hover:bg-gray-50 transition-colors cursor-pointer"
-                          onClick={() => handleView(group.id)}
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {group.nombre}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {group.subject ? (
-                              <div>
-                                <div className="font-medium">{group.subject.nombre}</div>
-                                <div className="text-xs text-gray-400">{group.subject.clave}</div>
-                              </div>
-                            ) : (
-                              'N/A'
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {group.teacher
-                              ? `${group.teacher.nombre} ${group.teacher.apellidoPaterno} ${group.teacher.apellidoMaterno}`
-                              : 'N/A'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {group.periodo}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div className="flex items-center gap-2">
-                              <CapacityIndicator
-                                current={group.cupoActual || 0}
-                                max={group.cupoMaximo || 30}
-                                min={group.cupoMinimo || 5}
-                                showDetails={false}
-                                size="sm"
-                              />
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div>
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                {group.modalidad || 'PRESENCIAL'}
-                              </span>
-                              {group.horario && (
-                                <div className="text-xs text-gray-400 mt-1">{group.horario}</div>
-                              )}
-                            </div>
-                          </td>
-                          {isAdmin && (
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center justify-end gap-3">
-                                <button
-                                  onClick={(e) => handleEdit(group.id, e)}
-                                  className="text-indigo-600 hover:text-indigo-900 transition-colors"
-                                  title="Editar grupo"
-                                >
-                                  <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                    />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick(group);
-                                  }}
-                                  className="text-red-600 hover:text-red-900 transition-colors"
-                                  title="Eliminar grupo"
-                                >
-                                  <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
+                  {filteredGroups.map((group) => (
+                    <GroupCard
+                      key={group.id}
+                      group={group}
+                      onClick={() => handleView(group.id)}
+                      onEdit={isAdmin ? (e) => handleEdit(group.id, e) : undefined}
+                      onDelete={isAdmin ? (e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(group);
+                      } : undefined}
+                    />
+                  ))}
                 </div>
 
                 {/* Pagination */}

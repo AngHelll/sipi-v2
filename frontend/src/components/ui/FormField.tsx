@@ -81,12 +81,12 @@ export const FormField = ({
   const hasError = isTouched && displayError;
   const inputClasses = `
     w-full px-3 py-2 border rounded-lg transition-colors
-    focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+    focus:ring-2 focus:ring-primary focus:border-primary
     ${hasError 
-      ? 'border-red-300 bg-red-50 focus:ring-red-500 focus:border-red-500' 
-      : 'border-gray-300 bg-white'
+      ? 'border-error bg-error-container focus:ring-error focus:border-error' 
+      : 'border-outline-variant bg-surface'
     }
-    ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}
+    ${disabled ? 'bg-surface-container-low cursor-not-allowed' : ''}
     ${className}
   `.trim();
 
@@ -94,10 +94,10 @@ export const FormField = ({
     <div>
       <label
         htmlFor={name}
-        className="block text-sm font-medium text-gray-700 mb-1"
+        className="block text-sm font-medium text-on-surface mb-1"
       >
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-error ml-1">*</span>}
       </label>
       
       {as === 'select' && options ? (
@@ -154,7 +154,7 @@ export const FormField = ({
       )}
 
       {hasError && (
-        <p className="mt-1 text-sm text-red-600 flex items-center">
+        <p className="mt-1 text-sm text-error flex items-center">
           <svg
             className="w-4 h-4 mr-1"
             fill="currentColor"
@@ -171,7 +171,7 @@ export const FormField = ({
       )}
 
       {!hasError && helpText && (
-        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+        <p className="mt-1 text-xs text-on-surface-variant">{helpText}</p>
       )}
     </div>
   );
