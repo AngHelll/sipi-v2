@@ -69,6 +69,7 @@ Un sistema completo de gestión académica con roles diferenciados, autenticaci�
 - [API](#-api)
 - [Roles y Permisos](#-roles-y-permisos)
 - [Desarrollo](#-desarrollo)
+- [CI/CD y lockfiles](#cicd-y-lockfiles-gitea--drone)
 - [Contribuir](#-contribuir)
 - [Licencia](#-licencia)
 
@@ -458,6 +459,10 @@ npm run prisma:studio
 ```
 
 Abre `http://localhost:5555` en tu navegador.
+
+### CI/CD y lockfiles (Gitea / Drone)
+
+El pipeline corre `npm ci` en backend y frontend; los cambios de dependencias (incluidos parches de `npm audit`) deben quedar reflejados en **`package-lock.json`** y subirse al remoto para que el despliegue en RaspyLab sea reproducible. Los `.env` y secretos siguen fuera del repositorio (`.gitignore`).
 
 ## 📝 Modelo de Datos
 
