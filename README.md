@@ -464,6 +464,8 @@ Abre `http://localhost:5555` en tu navegador.
 
 El pipeline corre `npm ci` en backend y frontend; los cambios de dependencias (incluidos parches de `npm audit`) deben quedar reflejados en **`package-lock.json`** y subirse al remoto para que el despliegue en RaspyLab sea reproducible. Los `.env` y secretos siguen fuera del repositorio (`.gitignore`).
 
+**Deploy en el Pi (paso Drone SSH):** el script hace `git fetch` en `~/raspylab/production/sipi/app`. El remoto `origin` debe apuntar a una URL que **resuelva en el propio Raspberry** (p. ej. `http://127.0.0.1:3030/.../sipi.git`, puerto publicado de Gitea) y `~/.git-credentials` debe incluir la misma URL (host + puerto) para HTTP. No uses solo `gitea.raspylab.local` en el Pi si ese nombre no está en `/etc/hosts` o en DNS local. En el contenedor de build, Drone usa `gitea:3000` (red Docker `traefik-net`).
+
 ## 📝 Modelo de Datos
 
 ### Entidades Principales
