@@ -129,7 +129,7 @@ model enrollments {
   aprobado             Boolean?
   fechaAprobacion      DateTime?
   observaciones        String?                     @db.Text
-  // RB-038: Campos específicos para inglés
+  // LEGACY RB-038: solo datos históricos; inglés nuevo → academic_activities / exams / special_courses
   nivelIngles          Int?
   esExamenDiagnostico  Boolean                     @default(false)
   requierePago         Boolean                     @default(false)
@@ -215,6 +215,7 @@ model groups {
   @@index([esCursoIngles, estatus])
 }
 
+// FUTURO: sin API — requisitos entre materias
 model prerequisites {
   id                                                 String             @id
   subjectId                                          String
@@ -234,6 +235,7 @@ model prerequisites {
   @@index([tipo])
 }
 
+// FUTURO: sin API — documentos del estudiante
 model student_documents {
   id               String                    @id
   studentId        String
@@ -307,7 +309,7 @@ model students {
   beca                   Boolean               @default(false)
   tipoBeca               String?               @db.VarChar(50)
   observaciones          String?               @db.Text
-  // RB-038: Información de inglés del estudiante
+  // Perfil de inglés del estudiante (canónico; actualizado desde academic-activities)
   nivelInglesActual      Int?
   nivelInglesCertificado Int?
   fechaExamenDiagnostico DateTime?
@@ -684,7 +686,7 @@ model academic_activities {
   @@index([studentId, estatus])
 }
 
-// V2: Nueva tabla enrollments (materias regulares)
+// FUTURO: lectura unificada en enrollments.service — escritura V2 para materias regulares pendiente
 model enrollments_v2 {
   id                   String    @id @default(uuid())
   activityId           String    @unique
@@ -766,6 +768,7 @@ model special_courses {
   @@index([fechaInicio])
 }
 
+// FUTURO: sin API — reservado para servicio social (no eliminar sin migración)
 model social_service {
   id               String    @id @default(uuid())
   activityId       String    @unique
@@ -791,6 +794,7 @@ model social_service {
   @@index([fechaInicio, fechaFin])
 }
 
+// FUTURO: sin API — reservado para prácticas profesionales (no eliminar sin migración)
 model professional_practices {
   id               String    @id @default(uuid())
   activityId       String    @unique

@@ -10,6 +10,11 @@ import {
   EnrollmentsListResponseDto,
 } from './enrollments.dtos';
 import { EnrollmentValidators, EnrollmentCalculators } from './enrollments.validators';
+import {
+  ENGLISH_INSCRIPTION_TYPES,
+  ENGLISH_VIA_ACTIVITIES_MESSAGE,
+  LEGACY_ENGLISH_ENROLLMENT_FILTER,
+} from './enrollment-legacy.constants';
 
 /**
  * Helper function to map Prisma enrollment to response DTO
@@ -41,14 +46,6 @@ export const mapEnrollmentToResponseDto = (enrollment: any): EnrollmentResponseD
     aprobado: enrollment.aprobado !== null && enrollment.aprobado !== undefined ? enrollment.aprobado : undefined,
     fechaAprobacion: enrollment.fechaAprobacion ? enrollment.fechaAprobacion.toISOString() : undefined,
     observaciones: enrollment.observaciones || undefined,
-    // RB-038: English enrollment fields
-    nivelIngles: enrollment.nivelIngles !== null && enrollment.nivelIngles !== undefined ? enrollment.nivelIngles : undefined,
-    esExamenDiagnostico: enrollment.esExamenDiagnostico !== null && enrollment.esExamenDiagnostico !== undefined ? enrollment.esExamenDiagnostico : undefined,
-    requierePago: enrollment.requierePago !== null && enrollment.requierePago !== undefined ? enrollment.requierePago : undefined,
-    pagoAprobado: enrollment.pagoAprobado !== null && enrollment.pagoAprobado !== undefined ? enrollment.pagoAprobado : undefined,
-    fechaPagoAprobado: enrollment.fechaPagoAprobado ? enrollment.fechaPagoAprobado.toISOString() : undefined,
-    montoPago: enrollment.montoPago ? Number(enrollment.montoPago) : undefined,
-    comprobantePago: enrollment.comprobantePago || undefined,
   };
 };
 
@@ -85,12 +82,12 @@ export const getEnrollmentsMe = async (
 
   // Get total count
   const total = await prisma.enrollments.count({
-    where: { studentId: student.id },
+    where: { studentId: student.id, ...LEGACY_ENGLISH_ENROLLMENT_FILTER },
   });
 
   // Get enrollments with related data
   const enrollments = await prisma.enrollments.findMany({
-    where: { studentId: student.id },
+    where: { studentId: student.id, ...LEGACY_ENGLISH_ENROLLMENT_FILTER },
     skip,
     take,
     orderBy: { id: 'desc' }, // Order by id since createdAt doesn't exist
@@ -204,9 +201,9 @@ export const getAllEnrollments = async (
     sortOrder = 'desc',
   } = query;
 
-  // Build where clause
-  const where: Record<string, unknown> = {};
-  
+  // Build where clause (exclude legacy English rows; use academic-activities for inglés)
+  const where: Record<string, unknown> = { ...LEGACY_ENGLISH_ENROLLMENT_FILTER };
+
   if (studentId) {
     where.studentId = studentId;
   }
@@ -641,7 +638,7 @@ export const getEnrollmentsByGroup = async (
 
   // Get enrollments for this group (both legacy and V2)
   const legacyEnrollments = await prisma.enrollments.findMany({
-    where: { groupId },
+    where: { groupId, ...LEGACY_ENGLISH_ENROLLMENT_FILTER },
     orderBy: { id: 'asc' },
     include: {
       students: {
@@ -948,6 +945,13 @@ export const createEnrollment = async (
 ): Promise<EnrollmentResponseDto> => {
   const { studentId, groupId, calificacion } = data;
 
+  if (
+    data.tipoInscripcion &&
+    (ENGLISH_INSCRIPTION_TYPES as readonly string[]).includes(data.tipoInscripcion)
+  ) {
+    throw new Error(ENGLISH_VIA_ACTIVITIES_MESSAGE);
+  }
+
   // Apply business rule validations using validators
   await EnrollmentValidators.validateStudentActive(studentId);
   const group = await EnrollmentValidators.validateGroupAvailable(groupId);
@@ -1098,6 +1102,21 @@ export const updateEnrollment = async (
 
   if (!existingEnrollment) {
     throw new Error('Enrollment not found');
+  }
+
+  if (
+    existingEnrollment.esExamenDiagnostico ||
+    existingEnrollment.tipoInscripcion === 'EXAMEN_DIAGNOSTICO' ||
+    existingEnrollment.tipoInscripcion === 'CURSO_INGLES'
+  ) {
+    throw new Error(ENGLISH_VIA_ACTIVITIES_MESSAGE);
+  }
+
+  if (
+    data.tipoInscripcion &&
+    (ENGLISH_INSCRIPTION_TYPES as readonly string[]).includes(data.tipoInscripcion)
+  ) {
+    throw new Error(ENGLISH_VIA_ACTIVITIES_MESSAGE);
   }
 
   // If user is TEACHER, they can only update calificacion
@@ -1325,38 +1344,6 @@ export const updateEnrollment = async (
       },
     },
   });
-
-  return {
-    ...mapEnrollmentToResponseDto(enrollment),
-    student: {
-      id: enrollment.students.id,
-      matricula: enrollment.students.matricula,
-      nombre: enrollment.students.nombre,
-      apellidoPaterno: enrollment.students.apellidoPaterno,
-      apellidoMaterno: enrollment.students.apellidoMaterno,
-      carrera: enrollment.students.carrera,
-      semestre: enrollment.students.semestre,
-      estatus: enrollment.students.estatus,
-    },
-    group: {
-      id: enrollment.groups.id,
-      nombre: enrollment.groups.nombre,
-      periodo: enrollment.groups.periodo,
-      subject: {
-        id: enrollment.groups.subjects.id,
-        clave: enrollment.groups.subjects.clave,
-        nombre: enrollment.groups.subjects.nombre,
-        creditos: enrollment.groups.subjects.creditos,
-      },
-      teacher: {
-        id: enrollment.groups.teachers.id,
-        nombre: enrollment.groups.teachers.nombre,
-        apellidoPaterno: enrollment.groups.teachers.apellidoPaterno,
-        apellidoMaterno: enrollment.groups.teachers.apellidoMaterno,
-        departamento: enrollment.groups.teachers.departamento,
-      },
-    },
-  };
 
   // RB-037: Recalculate student averages after updating enrollment
   // Only recalculate if grade-related fields were updated

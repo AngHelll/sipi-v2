@@ -1,8 +1,10 @@
 # 📋 Flujos de Negocio - SIPI-V2
 
-**Última actualización:** 2025-01-23
+**Última actualización:** 2026-05-24
 
 Este documento centraliza todos los flujos de negocio principales del sistema.
+
+> **Canon inglés:** `/api/academic-activities/*`. Las rutas `/api/enrollments/english/*` respondieron **410 Gone** desde 2026-05-24.
 
 ---
 

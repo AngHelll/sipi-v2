@@ -6,6 +6,7 @@
  */
 
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import prisma from '../src/config/database';
 
 // Default credentials for initial setup
@@ -20,7 +21,7 @@ async function createTestUser() {
     console.log('🔧 Creating test user...\n');
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.users.findUnique({
       where: { username: DEFAULT_USERNAME },
     });
 
@@ -34,11 +35,14 @@ async function createTestUser() {
     const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
     // Create user
-    const user = await prisma.user.create({
+    const now = new Date();
+    const user = await prisma.users.create({
       data: {
+        id: randomUUID(),
         username: DEFAULT_USERNAME,
         passwordHash,
         role: DEFAULT_ROLE,
+        updatedAt: now,
       },
     });
 

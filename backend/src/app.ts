@@ -17,6 +17,7 @@ import enrollmentsRoutes from './modules/enrollments/enrollments.routes';
 import academicActivitiesRoutes from './modules/academic-activities/academic-activities.routes';
 import searchRoutes from './modules/search/search.routes';
 import exportRoutes from './modules/export/export.routes';
+import careersRoutes from './modules/careers/careers.routes';
 
 const app = express();
 
@@ -69,7 +70,7 @@ app.use(compression({
   threshold: 1024, // Only compress responses larger than 1KB
 }));
 
-app.use(express.json());
+app.use(express.json({ type: 'application/json' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -87,6 +88,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentsRoutes);
+app.use('/api/careers', careersRoutes);
 app.use('/api/teachers', teachersRoutes);
 app.use('/api/subjects', subjectsRoutes);
 app.use('/api/groups', groupsRoutes);

@@ -9,6 +9,8 @@ Las migraciones se aplican en orden cronológico (por nombre de carpeta). Este e
 3. **20251125020647_add_promedio_ingles** - Agrega promedioIngles a students
 4. **20251125025746_add_english_enrollment_fields** - Campos de inglés (RB-038)
 5. **20260123000000_add_optimization_indexes** - Índices de optimización (Nivel 1) ✅
+6. **20260524100000_add_academic_activities_v2** - Tablas V2 (inglés, exámenes, cursos especiales) ✅
+7. **20260610120000_add_careers_catalog** - Catálogo de carreras + carreraId en students/subjects ✅
 
 **Nota**: Las migraciones de "fase" (20251122*) fueron eliminadas porque:
 - Estaban vacías (sin archivo migration.sql)
@@ -81,4 +83,21 @@ Debería mostrar: "Database schema is up to date!"
 
 ---
 
-**Última actualización**: 2026-01-23
+### Migraciones en entornos que ya tienen las tablas
+
+Si aplicaste el schema con `db push` (o las migraciones "phase" antiguas) y las tablas ya existen, marca las migraciones como aplicadas sin ejecutarlas:
+
+```bash
+npx prisma migrate resolve --applied 20260524100000_add_academic_activities_v2
+npx prisma migrate resolve --applied 20260610120000_add_careers_catalog
+```
+
+Después de la migración de careers, carga el catálogo:
+
+```bash
+npm run seed:careers
+```
+
+---
+
+**Última actualización**: 2026-06-10

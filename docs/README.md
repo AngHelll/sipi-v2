@@ -6,6 +6,11 @@ Este directorio contiene toda la documentación del proyecto organizada por cate
 
 ## 📖 Guías Principales
 
+### Producto y alcance
+- **[PRODUCTO.md](PRODUCTO.md)** - Enfoque actual (SIPI Inglés + SIS básico), API canónica, roadmap
+- **[ROADMAP.md](ROADMAP.md)** - Workflow por capas: Producto → Flujos → Contratos → Web → Móvil
+- **[MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)** - Contrato API para clientes móviles (iOS/Android)
+
 ### Estado y Visión General
 - **[ESTADO-SISTEMA.md](ESTADO-SISTEMA.md)** - Estado actual del sistema y métricas
 

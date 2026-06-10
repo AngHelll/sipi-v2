@@ -93,6 +93,12 @@ Un sistema completo de gestión académica con roles diferenciados, autenticaci�
 - **Inscripciones**: Gestión de inscripciones estudiantiles
 - **Calificaciones**: Sistema de calificación para maestros
 
+### 🇬🇧 SIPI Inglés (producto principal)
+- **Exámenes de diagnóstico**: Períodos, cupos, solicitud por alumno, placement (niveles 1–6)
+- **Cursos de inglés**: Inscripción, pago con comprobante, aprobación administrativa
+- **Seguimiento**: Estado de inglés del alumno, progreso por nivel
+- **API canónica**: `/api/academic-activities/*` — diseñada para extender otras actividades especiales; **alcance actual: solo inglés** ([docs/PRODUCTO.md](docs/PRODUCTO.md), [docs/FLUJOS-NEGOCIO.md](docs/FLUJOS-NEGOCIO.md))
+
 ### 📊 Dashboards y Reportes
 - Dashboards personalizados por rol
 - Gráficas interactivas con Recharts
@@ -394,6 +400,13 @@ sipi-modern/
 - `PUT /api/enrollments/:id` - Actualizar inscripción (TEACHER/ADMIN)
 - `DELETE /api/enrollments/:id` - Eliminar inscripción (ADMIN)
 
+### Inglés y actividades académicas (V2)
+- `POST /api/academic-activities/exams` - Solicitar examen de diagnóstico (STUDENT)
+- `GET /api/academic-activities/exams/student/english-status` - Estado de inglés (STUDENT)
+- `POST /api/academic-activities/special-courses` - Solicitar curso de inglés (STUDENT)
+- `GET /api/academic-activities/exam-periods/available` - Períodos abiertos (STUDENT)
+- Ver flujos completos en [docs/FLUJOS-NEGOCIO.md](docs/FLUJOS-NEGOCIO.md)
+
 ### Búsqueda y Exportación
 - `GET /api/search?q=query` - Búsqueda global
 - `GET /api/export/students` - Exportar estudiantes a Excel
@@ -410,6 +423,8 @@ sipi-modern/
 - Ver su propio perfil y datos
 - Ver sus inscripciones y calificaciones
 - Ver grupos disponibles para inscribirse
+- Solicitar exámenes de diagnóstico y cursos de inglés
+- Consultar progreso de inglés (niveles, pagos pendientes)
 - Dashboard con estadísticas personales
 
 ### 👨‍🏫 TEACHER (Maestro)

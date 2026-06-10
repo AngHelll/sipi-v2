@@ -302,6 +302,23 @@ export const studentsApi = {
   },
 };
 
+export interface CareerDto {
+  id: string;
+  codigo: string;
+  nombre: string;
+  nombreCorto?: string | null;
+  area?: string | null;
+  duracionSemestres: number;
+  estatus: string;
+}
+
+export const careersApi = {
+  getAll: async (params?: { estatus?: string; area?: string }): Promise<{ careers: CareerDto[] }> => {
+    const response = await api.get<{ careers: CareerDto[] }>('/careers', { params });
+    return response.data;
+  },
+};
+
 // Teachers API endpoints
 export const teachersApi = {
   /**
@@ -756,9 +773,8 @@ export const enrollmentsApi = {
   },
 };
 
-// English Enrollments API endpoints (RB-038)
 // ============================================
-// V2: Academic Activities API
+// Academic Activities API — SIPI Inglés (canónico)
 // ============================================
 
 /**
@@ -1280,226 +1296,6 @@ export const examPeriodsApi = {
     period: import('../types').ExamPeriod;
   }> => {
     const response = await api.put(`/academic-activities/exam-periods/${id}/close`);
-    return response.data;
-  },
-};
-
-// ============================================
-// V1: English Enrollments API (Deprecated - mantener por compatibilidad)
-// ============================================
-
-export const englishEnrollmentsApi = {
-  /**
-   * Request diagnostic exam enrollment (STUDENT only)
-   */
-  requestDiagnosticExam: async (groupId: string): Promise<{ message: string; enrollment: import('../types').Enrollment }> => {
-    const response = await api.post<{ message: string; enrollment: import('../types').Enrollment }>(
-      '/enrollments/english/exam',
-      { groupId }
-    );
-    return response.data;
-  },
-
-  /**
-   * Request English course enrollment (STUDENT only)
-   */
-  requestEnglishCourse: async (groupId: string, nivelIngles: number): Promise<{ message: string; enrollment: import('../types').Enrollment }> => {
-    const response = await api.post<{ message: string; enrollment: import('../types').Enrollment }>(
-      '/enrollments/english/course',
-      { groupId, nivelIngles }
-    );
-    return response.data;
-  },
-
-  /**
-   * Submit payment proof (STUDENT only)
-   */
-  submitPaymentProof: async (enrollmentId: string, montoPago: number, comprobantePago: string): Promise<{ message: string; enrollment: import('../types').Enrollment }> => {
-    const response = await api.post<{ message: string; enrollment: import('../types').Enrollment }>(
-      `/enrollments/english/${enrollmentId}/payment`,
-      { montoPago, comprobantePago }
-    );
-    return response.data;
-  },
-
-  /**
-   * Approve payment (ADMIN only)
-   */
-  approvePayment: async (enrollmentId: string): Promise<{ message: string; enrollment: import('../types').Enrollment }> => {
-    const response = await api.put<{ message: string; enrollment: import('../types').Enrollment }>(
-      `/enrollments/english/${enrollmentId}/approve-payment`
-    );
-    return response.data;
-  },
-
-  /**
-   * Reject payment (ADMIN only)
-   */
-  rejectPayment: async (enrollmentId: string, motivo: string): Promise<{ message: string; enrollment: import('../types').Enrollment }> => {
-    const response = await api.put<{ message: string; enrollment: import('../types').Enrollment }>(
-      `/enrollments/english/${enrollmentId}/reject-payment`,
-      { motivo }
-    );
-    return response.data;
-  },
-
-  /**
-   * Process diagnostic exam result (TEACHER/ADMIN)
-   */
-  processDiagnosticExamResult: async (enrollmentId: string, examGrade: number): Promise<{ message: string; enrollment: import('../types').Enrollment }> => {
-    const response = await api.put<{ message: string; enrollment: import('../types').Enrollment }>(
-      `/enrollments/english/${enrollmentId}/exam-result`,
-      { examGrade }
-    );
-    return response.data;
-  },
-
-  /**
-   * Process English course completion (TEACHER/ADMIN)
-   */
-  processEnglishCourseCompletion: async (enrollmentId: string, finalGrade: number): Promise<{ message: string; enrollment: import('../types').Enrollment }> => {
-    const response = await api.put<{ message: string; enrollment: import('../types').Enrollment }>(
-      `/enrollments/english/${enrollmentId}/course-completion`,
-      { finalGrade }
-    );
-    return response.data;
-  },
-
-  /**
-   * Get student English status V2 (STUDENT only) - includes V2 exams and courses
-   */
-  getStudentEnglishStatusV2: async (): Promise<{
-    student: {
-      id: string;
-      matricula: string;
-      nombre: string;
-      apellidoPaterno: string;
-      apellidoMaterno: string;
-    };
-    nivelInglesActual: number | null;
-    nivelInglesCertificado: number | null;
-    porcentajeIngles: number | null;
-    cumpleRequisitoIngles: boolean;
-    fechaExamenDiagnostico: string | null;
-    diagnosticExams: Array<{
-      id: string;
-      codigo: string;
-      fechaInscripcion: string;
-      estatus: string;
-      calificacion: number | null;
-      nivelIngles: number | null;
-      subject: string;
-      period: {
-        id: string;
-        nombre: string;
-      } | null;
-      fechaExamen: string | null;
-      fechaResultado: string | null;
-    }>;
-    englishCourses: Array<{
-      id: string;
-      codigo: string;
-      nivelIngles: number | null;
-      fechaInscripcion: string;
-      estatus: string;
-      pagoAprobado: boolean | null;
-      calificacion: number | null;
-      subject: string;
-      groupId: string | null;
-      completadoPorDiagnostico: boolean;
-    }>;
-    completedLevels: number[];
-    missingLevels: number[];
-    pendingExam: {
-      id: string;
-      codigo: string;
-      fechaInscripcion: string;
-      estatus: string;
-      period: {
-        id: string;
-        nombre: string;
-      } | null;
-    } | null;
-    progress: {
-      totalLevels: number;
-      completed: number;
-      percentage: number;
-    };
-  }> => {
-    const response = await api.get('/academic-activities/exams/student/english-status');
-    return response.data;
-  },
-
-  /**
-   * Get student English status (STUDENT only) - Legacy endpoint
-   */
-  getStudentEnglishStatus: async (): Promise<{
-    student: {
-      id: string;
-      matricula: string;
-      nombre: string;
-      apellidoPaterno: string;
-      apellidoMaterno: string;
-    };
-    nivelInglesActual: number | null;
-    nivelInglesCertificado: number | null;
-    porcentajeIngles: number | null;
-    cumpleRequisitoIngles: boolean;
-    fechaExamenDiagnostico: string | null;
-    diagnosticExams: Array<{
-      id: string;
-      fechaInscripcion: string;
-      estatus: string;
-      calificacion: number | null;
-      subject: string;
-    }>;
-    englishCourses: Array<{
-      id: string;
-      nivelIngles: number | null;
-      fechaInscripcion: string;
-      estatus: string;
-      pagoAprobado: boolean | null;
-      calificacion: number | null;
-      subject: string;
-    }>;
-    completedLevels: number[];
-    missingLevels: number[];
-    progress: {
-      totalLevels: number;
-      completed: number;
-      percentage: number;
-    };
-  }> => {
-    const response = await api.get('/enrollments/english/student-status');
-    return response.data;
-  },
-
-  /**
-   * Get pending payment approvals (ADMIN only)
-   */
-  getPendingPaymentApprovals: async (): Promise<{
-    enrollments: Array<{
-      id: string;
-      codigo: string;
-      fechaInscripcion: string;
-      nivelIngles: number | null;
-      montoPago: number | null;
-      comprobantePago: string | null;
-      student: {
-        id: string;
-        matricula: string;
-        nombre: string;
-        carrera: string;
-      };
-      subject: {
-        id: string;
-        clave: string;
-        nombre: string;
-      };
-    }>;
-    total: number;
-  }> => {
-    const response = await api.get('/enrollments/english/pending-approvals');
     return response.data;
   },
 };

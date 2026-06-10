@@ -77,7 +77,7 @@ export type Student = {
   beca?: boolean;
   tipoBeca?: string;
   observaciones?: string;
-  // RB-038: Información de inglés del estudiante
+  // Perfil de inglés (actualizado desde academic-activities)
   nivelInglesActual?: number;
   nivelInglesCertificado?: number;
   fechaExamenDiagnostico?: string;
@@ -259,15 +259,11 @@ export type Enrollment = {
   aprobado?: boolean;
   fechaAprobacion?: string;
   observaciones?: string;
-  // RB-038: Campos específicos para inglés
+  /** Curso de inglés V2 mostrado en listado de grupo (desde academic-activities) */
   nivelIngles?: number | null;
-  esExamenDiagnostico?: boolean;
-  requierePago?: boolean;
-  pagoAprobado?: boolean | null;
-  fechaPagoAprobado?: string;
-  montoPago?: number | null;
-  comprobantePago?: string | null;
-  
+  isSpecialCourse?: boolean;
+  courseType?: string | null;
+
   student?: EnrollmentStudent;
   group?: EnrollmentGroup;
 };

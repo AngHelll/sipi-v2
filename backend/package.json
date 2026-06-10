@@ -13,6 +13,8 @@
     "create:bulk-subjects": "ts-node scripts/create-bulk-subjects.ts",
     "create:bulk-groups": "ts-node scripts/create-bulk-groups.ts",
     "purge:database": "ts-node scripts/purge-database.ts",
+    "reset:admin": "ts-node scripts/purge-and-admin.ts",
+    "seed:careers": "ts-node scripts/seed-careers.ts",
     "reset:all-data": "ts-node scripts/reset-and-create-all-data.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

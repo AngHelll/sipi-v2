@@ -12,6 +12,7 @@ import {
   StudentsListResponseDto,
 } from './students.dtos';
 import { StudentValidators, StudentCalculators } from './students.validators';
+import { resolveCareerFields } from '../careers/careers.service';
 
 /**
  * Helper function to map Prisma student to response DTO
@@ -56,7 +57,7 @@ const mapStudentToResponseDto = (student: any): StudentResponseDto => {
     beca: student.beca || undefined,
     tipoBeca: student.tipoBeca || undefined,
     observaciones: student.observaciones || undefined,
-    // RB-038: Información de inglés del estudiante
+    // Perfil de inglés (SIPI Inglés — actualizado desde academic-activities)
     nivelInglesActual: student.nivelInglesActual || undefined,
     nivelInglesCertificado: student.nivelInglesCertificado || undefined,
     fechaExamenDiagnostico: student.fechaExamenDiagnostico ? student.fechaExamenDiagnostico.toISOString() : undefined,
@@ -85,6 +86,8 @@ export const createStudent = async (
   const studentId = randomUUID();
   const now = new Date();
 
+  const careerFields = await resolveCareerFields(studentData.carrera);
+
   // Create user and student in a transaction
   const result = await prisma.$transaction(async (tx) => {
     // Create user
@@ -108,7 +111,8 @@ export const createStudent = async (
         nombre: studentData.nombre,
         apellidoPaterno: studentData.apellidoPaterno,
         apellidoMaterno: studentData.apellidoMaterno,
-        carrera: studentData.carrera,
+        carrera: careerFields.carrera,
+        carreraId: careerFields.carreraId,
         semestre: studentData.semestre,
         estatus: studentData.estatus,
         createdAt: now,
@@ -127,6 +131,7 @@ export const createStudent = async (
     apellidoPaterno: result.student.apellidoPaterno,
     apellidoMaterno: result.student.apellidoMaterno,
     carrera: result.student.carrera,
+    carreraId: result.student.carreraId || undefined,
     semestre: result.student.semestre,
     estatus: result.student.estatus,
     user: {
@@ -318,7 +323,14 @@ export const updateStudent = async (
     updateData.apellidoPaterno = data.apellidoPaterno;
   if (data.apellidoMaterno !== undefined)
     updateData.apellidoMaterno = data.apellidoMaterno;
-  if (data.carrera !== undefined) updateData.carrera = data.carrera;
+  if (data.carrera !== undefined || data.carreraId !== undefined) {
+    const careerFields = await resolveCareerFields(
+      data.carrera ?? existingStudent.carrera,
+      data.carreraId ?? existingStudent.carreraId
+    );
+    updateData.carrera = careerFields.carrera;
+    updateData.carreraId = careerFields.carreraId;
+  }
   if (data.semestre !== undefined) updateData.semestre = data.semestre;
   if (data.estatus !== undefined) updateData.estatus = data.estatus;
   if (data.curp !== undefined) updateData.curp = data.curp;
@@ -349,8 +361,6 @@ export const updateStudent = async (
   if (data.beca !== undefined) updateData.beca = data.beca;
   if (data.tipoBeca !== undefined) updateData.tipoBeca = data.tipoBeca;
   if (data.observaciones !== undefined) updateData.observaciones = data.observaciones;
-  if (data.carreraId !== undefined) updateData.carreraId = data.carreraId;
-
   const student = await prisma.students.update({
     where: { id },
     data: updateData,
