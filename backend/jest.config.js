@@ -4,7 +4,8 @@ module.exports = {
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    // tsconfig.json limita types a ['node']; los tests necesitan los globals de jest
+    '^.+\\.ts$': ['ts-jest', { tsconfig: { types: ['node', 'jest'] } }],
   },
   collectCoverageFrom: [
     'src/**/*.ts',

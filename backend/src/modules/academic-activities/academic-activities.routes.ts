@@ -1,5 +1,4 @@
-// Academic Activities Routes - Route definitions for academic activities endpoints
-// V2: Rutas para actividades académicas
+// Academic Activities — API canónica de SIPI Inglés (extensible a otras actividades especiales)
 import { Router } from 'express';
 import { authenticate, authorize } from '../../middleware/auth';
 import { validateRequest, validateUUID } from '../../middleware/validation';

@@ -260,7 +260,7 @@ function App() {
             }
           />
 
-          {/* Student English routes (RB-038) */}
+          {/* Student — SIPI Inglés (academic-activities) */}
           <Route
             path="/student/english/status"
             element={
@@ -286,7 +286,7 @@ function App() {
             }
           />
 
-          {/* Admin English routes (RB-038) */}
+          {/* Admin — SIPI Inglés (academic-activities) */}
           <Route
             path="/admin/english/payment-approvals"
             element={

@@ -10,14 +10,8 @@ export interface CreateEnrollmentDto {
   groupId: string;
   calificacion?: number; // Optional, can be set later by teacher
   // New fields (Phase 2) - all optional with defaults
-  tipoInscripcion?: 'NORMAL' | 'ESPECIAL' | 'REPETICION' | 'EQUIVALENCIA' | 'EXAMEN_DIAGNOSTICO' | 'CURSO_INGLES';
-  estatus?: 'INSCRITO' | 'EN_CURSO' | 'BAJA' | 'APROBADO' | 'REPROBADO' | 'CANCELADO' | 'PENDIENTE_PAGO' | 'PAGO_PENDIENTE_APROBACION' | 'PAGO_APROBADO';
-  // RB-038: English enrollment fields
-  nivelIngles?: number;
-  esExamenDiagnostico?: boolean;
-  requierePago?: boolean;
-  montoPago?: number;
-  comprobantePago?: string;
+  tipoInscripcion?: 'NORMAL' | 'ESPECIAL' | 'REPETICION' | 'EQUIVALENCIA';
+  estatus?: 'INSCRITO' | 'EN_CURSO' | 'BAJA' | 'APROBADO' | 'REPROBADO' | 'CANCELADO';
   // Note: academicPeriodId is not in enrollments model - access via groups.periodoId if needed
   // Partial grades
   calificacionParcial1?: number;
@@ -46,15 +40,8 @@ export interface UpdateEnrollmentDto {
   studentId?: string; // Only ADMIN
   groupId?: string; // Only ADMIN
   // New fields (Phase 2)
-  tipoInscripcion?: 'NORMAL' | 'ESPECIAL' | 'REPETICION' | 'EQUIVALENCIA' | 'EXAMEN_DIAGNOSTICO' | 'CURSO_INGLES';
-  estatus?: 'INSCRITO' | 'EN_CURSO' | 'BAJA' | 'APROBADO' | 'REPROBADO' | 'CANCELADO' | 'PENDIENTE_PAGO' | 'PAGO_PENDIENTE_APROBACION' | 'PAGO_APROBADO';
-  // RB-038: English enrollment fields
-  nivelIngles?: number;
-  esExamenDiagnostico?: boolean;
-  requierePago?: boolean;
-  pagoAprobado?: boolean;
-  montoPago?: number;
-  comprobantePago?: string;
+  tipoInscripcion?: 'NORMAL' | 'ESPECIAL' | 'REPETICION' | 'EQUIVALENCIA';
+  estatus?: 'INSCRITO' | 'EN_CURSO' | 'BAJA' | 'APROBADO' | 'REPROBADO' | 'CANCELADO';
   fechaBaja?: string; // ISO date string
   // Partial grades
   calificacionParcial1?: number;
@@ -123,14 +110,10 @@ export interface EnrollmentResponseDto {
   fechaBaja?: string;
   tipoInscripcion?: 'NORMAL' | 'ESPECIAL' | 'REPETICION' | 'EQUIVALENCIA' | 'EXAMEN_DIAGNOSTICO' | 'CURSO_INGLES';
   estatus?: 'INSCRITO' | 'EN_CURSO' | 'BAJA' | 'APROBADO' | 'REPROBADO' | 'CANCELADO' | 'PENDIENTE_PAGO' | 'PAGO_PENDIENTE_APROBACION' | 'PAGO_APROBADO';
-  // RB-038: English enrollment fields
+  /** Presente solo en filas V2 mapeadas (p. ej. curso de inglés en un grupo) */
   nivelIngles?: number | null;
-  esExamenDiagnostico?: boolean;
-  requierePago?: boolean;
-  pagoAprobado?: boolean | null;
-  fechaPagoAprobado?: string;
-  montoPago?: number | null;
-  comprobantePago?: string | null;
+  isSpecialCourse?: boolean;
+  courseType?: string | null;
   // Partial grades
   calificacionParcial1?: number;
   calificacionParcial2?: number;
