@@ -603,9 +603,9 @@ export const StudentFormPage = () => {
 
             <CareerSelector
               value={formData.carrera}
-              onChange={(value) => {
+              onChange={(nombre) => {
                 handleChange({
-                  target: { name: 'carrera', value },
+                  target: { name: 'carrera', value: nombre },
                 } as React.ChangeEvent<HTMLInputElement>);
               }}
               required

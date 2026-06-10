@@ -302,6 +302,23 @@ export const studentsApi = {
   },
 };
 
+export interface CareerDto {
+  id: string;
+  codigo: string;
+  nombre: string;
+  nombreCorto?: string | null;
+  area?: string | null;
+  duracionSemestres: number;
+  estatus: string;
+}
+
+export const careersApi = {
+  getAll: async (params?: { estatus?: string; area?: string }): Promise<{ careers: CareerDto[] }> => {
+    const response = await api.get<{ careers: CareerDto[] }>('/careers', { params });
+    return response.data;
+  },
+};
+
 // Teachers API endpoints
 export const teachersApi = {
   /**
