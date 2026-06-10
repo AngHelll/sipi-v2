@@ -1,0 +1,20 @@
+---
+description: Workflow producto-primero de SIPI — validar contra producto y roadmap antes de implementar
+alwaysApply: true
+---
+
+# Producto primero
+
+SIPI es **SIPI Inglés**: gestionar el requisito del 70% de inglés (diagnóstico → pago → placement → cursos niveles 1–6 → certificación). El SIS básico (estudiantes, maestros, materias, grupos, inscripciones regulares) es soporte, no el producto.
+
+Antes de implementar una feature nueva:
+
+1. Verifica que encaje en `docs/PRODUCTO.md` y en la capa correcta de `docs/ROADMAP.md` (Producto → Flujos → Contratos API → Web → Móvil). Si no encaja, propone actualizar producto primero, no escribas código.
+2. Si el cambio de API afecta a clientes móviles, actualiza `docs/MOBILE-API-CONTRACT.md` en el mismo cambio.
+
+## Reglas de arquitectura
+
+- La API canónica de inglés es `/api/academic-activities/*` (exams, exam-periods, special-courses). **Nunca** agregar flujos de inglés a `enrollments` ni usar los campos legacy RB-038 (`esExamenDiagnostico`, `nivelIngles`, `requierePago`, etc. en `enrollments`): son solo histórico y están filtrados de los listados.
+- Las rutas retiradas responden 410 vía `deprecatedRoute` (ver `backend/src/modules/enrollments/english/deprecated.routes.ts`); no las revivas.
+- Los modelos "futuros" (`social_service`, `professional_practices`, `enrollments_v2`, `prerequisites`, `student_documents`) viven solo en schema. **No crear API/UI para ellos** sin justificación de producto en Capa 0.
+- Todo cambio de schema Prisma requiere su migración SQL en `backend/prisma/migrations/` (el deploy en RaspyLab corre `prisma migrate deploy`); nada de confiar en `db push` para producción.
