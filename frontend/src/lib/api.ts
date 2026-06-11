@@ -803,6 +803,20 @@ export const examsApi = {
   },
 
   /**
+   * Cancel a diagnostic exam request (STUDENT own / ADMIN any with motivo)
+   */
+  cancelExam: async (
+    activityId: string,
+    data?: { motivo?: string }
+  ): Promise<{
+    message: string;
+    result: { activityId: string; estatus: string; estatusAnterior: string };
+  }> => {
+    const response = await api.put(`/academic-activities/exams/${activityId}/cancel`, data || {});
+    return response.data;
+  },
+
+  /**
    * Get exam by ID (ADMIN only)
    */
   getById: async (id: string): Promise<{
@@ -1212,6 +1226,61 @@ export const specialCoursesApi = {
     };
   }> => {
     const response = await api.put(`/academic-activities/special-courses/${activityId}/complete`, data);
+    return response.data;
+  },
+
+  /**
+   * Waitlist demand summary (ADMIN only)
+   */
+  getWaitlistSummary: async (): Promise<{
+    total: number;
+    demand: Array<{ courseType: string; nivelIngles: number | null; count: number }>;
+  }> => {
+    const response = await api.get('/academic-activities/special-courses/waitlist/summary');
+    return response.data;
+  },
+
+  /**
+   * Assign group to a waitlisted course (ADMIN only)
+   */
+  assignGroup: async (
+    activityId: string,
+    data: { groupId: string; requierePago?: boolean }
+  ): Promise<{
+    message: string;
+    result: { activityId: string; groupId: string; estatus: string; requierePago: boolean };
+  }> => {
+    const response = await api.put(`/academic-activities/special-courses/${activityId}/assign-group`, data);
+    return response.data;
+  },
+
+  /**
+   * Cancel a special course request (STUDENT own / ADMIN any with motivo)
+   */
+  cancelCourse: async (
+    activityId: string,
+    data?: { motivo?: string }
+  ): Promise<{
+    message: string;
+    result: { activityId: string; estatus: string; estatusAnterior: string };
+  }> => {
+    const response = await api.put(`/academic-activities/special-courses/${activityId}/cancel`, data || {});
+    return response.data;
+  },
+
+  /**
+   * Register initial English level via equivalencia (ADMIN only)
+   */
+  registerInitialLevel: async (data: {
+    studentId: string;
+    nivel: number;
+    calificacion: number;
+    calificacionesPorNivel?: Record<number, number>;
+  }): Promise<{
+    message: string;
+    result: { studentId: string; nivelInglesActual: number; nivelesAcreditados: number[] };
+  }> => {
+    const response = await api.post('/academic-activities/special-courses/initial-level', data);
     return response.data;
   },
 };

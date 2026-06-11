@@ -62,17 +62,27 @@ Este endpoint es la fuente de verdad del requisito 70% (`cumpleRequisitoIngles`,
 | Ver períodos disponibles | `GET /api/academic-activities/exam-periods/available` | STUDENT |
 | Solicitar examen | `POST /api/academic-activities/exams` body `{ "examType": "DIAGNOSTICO", "periodId": "..." }` | STUDENT |
 | Ver mis exámenes | `GET /api/academic-activities/exams/student` | STUDENT |
+| Cancelar solicitud | `PUT /api/academic-activities/exams/:id/cancel` | STUDENT (propias, sin resultado) / ADMIN (`motivo` requerido) |
 
-Estados de pago del examen: `PENDIENTE_PAGO` → (admin aprueba) → `PAGO_APROBADO` → examen → `EVALUADO`. El pago se entrega físicamente; el admin lo registra con `receive-and-approve-payment`.
+Estados de pago del examen: `PENDIENTE_PAGO` → (admin aprueba) → `PAGO_APROBADO` → examen → `EVALUADO`. El pago se entrega físicamente; el admin lo registra con `receive-and-approve-payment`. La cancelación revierte el cupo del período.
 
 ### 2.3 Curso de inglés (niveles 1–6)
 
 | Acción | Endpoint | Rol |
 |--------|----------|-----|
-| Ver grupos de inglés disponibles | `GET /api/groups/available/english-courses` | STUDENT |
-| Solicitar curso | `POST /api/academic-activities/special-courses` body `{ "courseType": "INGLES", "nivelIngles": N, "groupId": "..." }` | STUDENT |
+| Ver grupos de inglés disponibles | `GET /api/groups/available/english-courses` | STUDENT, ADMIN |
+| Solicitar curso (grupo publicado) | `POST /api/academic-activities/special-courses` body `{ "courseType": "INGLES", "nivelIngles": N, "groupId": "..." }` | STUDENT |
+| Unirse a lista de espera (sin grupo) | `POST /api/academic-activities/special-courses` body `{ "courseType": "INGLES", "nivelIngles": N }` (sin `groupId`) | STUDENT |
+| Cancelar solicitud | `PUT /api/academic-activities/special-courses/:id/cancel` | STUDENT (propias, sin calificación) / ADMIN (`motivo` requerido) |
+| Demanda de lista de espera | `GET /api/academic-activities/special-courses/waitlist/summary` | ADMIN |
+| Asignar grupo desde lista de espera | `PUT /api/academic-activities/special-courses/:id/assign-group` body `{ "groupId", "requierePago" }` | ADMIN |
+| Registrar nivel inicial (equivalencia) | `POST /api/academic-activities/special-courses/initial-level` body `{ "studentId", "nivel", "calificacion" }` | ADMIN |
 
-El avance del curso (calificación, aprobado) se refleja en `english-status.englishCourses`.
+Reglas de contrato (2026-06-11):
+
+- **`requierePago` ya no se acepta** en el body de `POST .../special-courses`: la política de pago la decide el servidor (con grupo → `PENDIENTE_PAGO`; sin grupo → `LISTA_ESPERA` sin pago).
+- Nuevo estatus de actividad: **`LISTA_ESPERA`** — solicitud de curso sin grupo publicado. Los clientes deben mostrarlo como "en lista de espera" (no como inscripción activa) y permitir cancelarla.
+- El avance del curso (calificación, aprobado) se refleja en `english-status.englishCourses`.
 
 ---
 
@@ -101,7 +111,8 @@ Sin cambios de contrato, con la semántica post-limpieza:
 |----------|-----------|
 | Estatus 70% (progreso, niveles, requisito) | `GET .../exams/student/english-status` |
 | Solicitar examen diagnóstico | `GET .../exam-periods/available` + `POST .../exams` |
-| Solicitar curso de inglés | `GET /api/groups/available/english-courses` + `POST .../special-courses` |
+| Solicitar curso de inglés / lista de espera | `GET /api/groups/available/english-courses` + `POST .../special-courses` |
+| Cancelar solicitud (examen o curso) | `PUT .../exams/:id/cancel` / `PUT .../special-courses/:id/cancel` |
 | Pagos pendientes (informativo) | `english-status.pendingExam` / `diagnosticExams[].estatus` |
 
 Roles TEACHER/ADMIN en móvil (futuro): listados `GET .../exams`, `GET .../special-courses`, aprobación de pagos (`receive-and-approve-payment`, `reject-payment`) y captura de resultados (`PUT .../exams/:id/result`, `PUT .../special-courses/:id/complete`).
@@ -114,4 +125,4 @@ Roles TEACHER/ADMIN en móvil (futuro): listados `GET .../exams`, `GET .../speci
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-06-10
+**Última actualización**: 2026-06-11 (lista de espera, cancelación, nivel inicial)

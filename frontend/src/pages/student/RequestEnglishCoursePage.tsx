@@ -213,13 +213,17 @@ export const RequestEnglishCoursePage = () => {
     try {
       setSubmitting(true);
       setError(null);
-      await specialCoursesApi.createSpecialCourse({
+      const result = await specialCoursesApi.createSpecialCourse({
         courseType: 'INGLES',
         nivelIngles,
         groupId: useAvailableCourse && selectedGroupId ? selectedGroupId : undefined,
-        requierePago: true,
       });
-      showToast('Curso de inglés solicitado exitosamente. Realiza el pago y lleva el comprobante físico a Servicio Estudiantil para completar tu inscripción.', 'success');
+      showToast(
+        result.activity.estatus === 'LISTA_ESPERA'
+          ? 'Te agregamos a la lista de espera. Cuando se abra un grupo para tu nivel podrás completar tu inscripción.'
+          : 'Curso de inglés solicitado exitosamente. Realiza el pago y lleva el comprobante físico a Servicio Estudiantil para completar tu inscripción.',
+        'success'
+      );
       navigate('/student/english/status');
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Error al solicitar el curso de inglés';
@@ -352,9 +356,13 @@ export const RequestEnglishCoursePage = () => {
                   Inscribirme a un curso disponible
                 </span>
               </label>
-              {useAvailableCourse && (
+              {useAvailableCourse ? (
                 <p className="text-sm text-gray-500 ml-6">
                   Selecciona un curso de inglés disponible. El nivel se ajustará automáticamente.
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500 ml-6">
+                  Si no hay grupos publicados para tu nivel, te sumas a la lista de espera y el área abrirá un grupo según la demanda.
                 </p>
               )}
             </div>
@@ -386,7 +394,7 @@ export const RequestEnglishCoursePage = () => {
                     <p className="text-sm text-yellow-800">
                       <strong>No hay cursos disponibles para tu nivel actual ({currentLevel || 1}).</strong>
                       <br />
-                      Puedes solicitar un curso directamente usando la opción de abajo.
+                      Desmarca la opción de arriba para unirte a la lista de espera; el área abrirá un grupo según la demanda.
                     </p>
                   </div>
                 )}
@@ -429,30 +437,33 @@ export const RequestEnglishCoursePage = () => {
                     </p>
                   </div>
                 )}
-                <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Nota:</strong> Estás solicitando el curso directamente sin grupo específico. 
-                    Esto puede requerir aprobación adicional.
+                <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>Lista de espera:</strong> No hay grupo publicado para este nivel. 
+                    Tu solicitud se sumará a la lista de espera y el área abrirá un grupo cuando haya suficientes interesados. 
+                    No necesitas pagar hasta que te asignen un grupo.
                   </p>
                 </div>
               </>
             )}
 
-            <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <Icon name="warning" size={24} className="text-yellow-600 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-yellow-900 mb-1">Importante - Proceso de Pago</h3>
-                  <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
-                    <li>Este curso requiere pago</li>
-                    <li>Después de solicitar, deberás realizar el pago correspondiente</li>
-                    <li>Lleva el comprobante de pago físico a Servicio Estudiantil</li>
-                    <li>El personal de Servicio Estudiantil revisará y aprobará tu pago</li>
-                    <li>Una vez aprobado, tu inscripción estará activa y podrás asistir al curso</li>
-                  </ul>
+            {useAvailableCourse && (
+              <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Icon name="warning" size={24} className="text-yellow-600 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-yellow-900 mb-1">Importante - Proceso de Pago</h3>
+                    <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
+                      <li>Este curso requiere pago</li>
+                      <li>Después de solicitar, deberás realizar el pago correspondiente</li>
+                      <li>Lleva el comprobante de pago físico a Servicio Estudiantil</li>
+                      <li>El personal de Servicio Estudiantil revisará y aprobará tu pago</li>
+                      <li>Una vez aprobado, tu inscripción estará activa y podrás asistir al curso</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-6 flex gap-4">
               <button
@@ -475,7 +486,7 @@ export const RequestEnglishCoursePage = () => {
                 ) : (
                   <>
                     <Icon name="check" size={20} />
-                    Solicitar Curso
+                    {useAvailableCourse ? 'Solicitar Curso' : 'Unirme a Lista de Espera'}
                   </>
                 )}
               </button>

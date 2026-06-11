@@ -467,8 +467,8 @@ export type ProcessExamResultRequest = {
 export type CreateSpecialCourseRequest = {
   courseType: SpecialCourseType;
   nivelIngles?: number;
+  /** Sin groupId la solicitud entra a lista de espera; el pago lo decide el servidor */
   groupId?: string;
-  requierePago?: boolean;
 };
 
 export type SubmitPaymentRequest = {

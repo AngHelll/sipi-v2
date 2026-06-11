@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
-import { studentsApi } from '../../lib/api';
+import { studentsApi, specialCoursesApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { FormField, StatusSelector, CareerSelector, PageLoader, ButtonLoader } from '../../components/ui';
 
@@ -17,6 +17,12 @@ export const StudentFormPage = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   const [student, setStudent] = useState<any>(null);
+
+  // Registro de nivel inicial de inglés (equivalencia)
+  const [showInitialLevel, setShowInitialLevel] = useState(false);
+  const [initialNivel, setInitialNivel] = useState('1');
+  const [initialCalificacion, setInitialCalificacion] = useState('');
+  const [savingInitialLevel, setSavingInitialLevel] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -995,6 +1001,97 @@ export const StudentFormPage = () => {
                     </p>
                   </div>
                 </div>
+
+                {/* Registrar nivel inicial (equivalencia) — solo si el alumno aún no tiene nivel */}
+                {student && !student.nivelInglesActual && (
+                  <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-amber-900 mb-1">
+                      Registrar nivel inicial (transferencia / equivalencia)
+                    </h3>
+                    <p className="text-xs text-amber-800 mb-3">
+                      Para alumnos que ya traen nivel de inglés acreditado de otra institución. 
+                      Crea el historial canónico (niveles previos aprobados) y posiciona al alumno en el nivel indicado. 
+                      Solo se puede registrar una vez; después el nivel se mueve por diagnóstico y cursos.
+                    </p>
+                    {showInitialLevel ? (
+                      <div className="flex flex-wrap items-end gap-3">
+                        <div className="w-48">
+                          <FormField
+                            label="Nivel donde queda el alumno"
+                            name="initialNivel"
+                            value={initialNivel}
+                            onChange={(e) => setInitialNivel(e.target.value)}
+                            as="select"
+                            options={[1, 2, 3, 4, 5, 6].map((n) => ({
+                              value: String(n),
+                              label: `Nivel ${n}${n > 1 ? ` (acredita 1-${n - 1})` : ' (sin niveles acreditados)'}`,
+                            }))}
+                          />
+                        </div>
+                        <div className="w-44">
+                          <FormField
+                            label="Calificación (70-100)"
+                            name="initialCalificacion"
+                            type="number"
+                            value={initialCalificacion}
+                            onChange={(e) => setInitialCalificacion(e.target.value)}
+                            min={70}
+                            max={100}
+                            step="0.1"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const nivel = parseInt(initialNivel, 10);
+                            const calificacion = parseFloat(initialCalificacion);
+                            if (isNaN(calificacion) || calificacion < 70 || calificacion > 100) {
+                              showToast('La calificación debe estar entre 70 y 100', 'error');
+                              return;
+                            }
+                            try {
+                              setSavingInitialLevel(true);
+                              const result = await specialCoursesApi.registerInitialLevel({
+                                studentId: student.id,
+                                nivel,
+                                calificacion,
+                              });
+                              showToast(result.message, 'success');
+                              setShowInitialLevel(false);
+                              setInitialCalificacion('');
+                              await fetchStudent();
+                            } catch (err: any) {
+                              showToast(err.response?.data?.error || 'Error al registrar el nivel inicial', 'error');
+                            } finally {
+                              setSavingInitialLevel(false);
+                            }
+                          }}
+                          disabled={savingInitialLevel}
+                          className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        >
+                          {savingInitialLevel ? <ButtonLoader /> : null}
+                          Registrar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowInitialLevel(false)}
+                          disabled={savingInitialLevel}
+                          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowInitialLevel(true)}
+                        className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm"
+                      >
+                        Registrar nivel inicial
+                      </button>
+                    )}
+                  </div>
+                )}
               </>
             )}
 

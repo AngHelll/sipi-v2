@@ -69,7 +69,8 @@ export class ExamsValidators {
     studentId: string, 
     examGrade: number, 
     nivelIngles?: number,
-    calificacionesPorNivel?: Record<number, number>
+    calificacionesPorNivel?: Record<number, number>,
+    origen: 'DIAGNOSTICO' | 'EQUIVALENCIA' = 'DIAGNOSTICO'
   ): Promise<void> {
     // Determine level: use provided nivelIngles or calculate from grade
     let nivel: number;
@@ -136,7 +137,8 @@ export class ExamsValidators {
       where: { id: studentId },
       data: {
         nivelInglesActual: finalNivel,
-        fechaExamenDiagnostico: new Date(),
+        // Solo el diagnóstico fija la fecha de examen; la equivalencia no es un examen
+        fechaExamenDiagnostico: origen === 'DIAGNOSTICO' ? new Date() : undefined,
         porcentajeIngles: examGrade,
         // If perfect score, mark requirement as met immediately
         // Otherwise, cumpleRequisitoIngles will be recalculated by recalculateStudentAverages
@@ -163,12 +165,14 @@ export class ExamsValidators {
 
       // Create records for all levels that need to be completed
       for (const intermediateLevel of levelsToCreate) {
-        // Check if student already has a record for this level
+        // Check if student already has an ACTIVE record for this level
+        // (canceladas, bajas o reprobadas no bloquean la acreditación del nivel)
         const existingCourse = await (prisma as any).academic_activities.findFirst({
           where: {
             studentId,
             activityType: 'SPECIAL_COURSE',
             deletedAt: null,
+            estatus: { notIn: ['CANCELADO', 'BAJA', 'REPROBADO'] },
             special_courses: {
               courseType: 'INGLES',
               nivelIngles: intermediateLevel,
@@ -224,7 +228,9 @@ export class ExamsValidators {
                 id: randomUUID(),
                 activityId: activity.id,
                 accion: 'CREATED',
-                descripcion: `Nivel ${intermediateLevel} de inglés completado mediante examen de diagnóstico (calificación: ${levelGrade})`,
+                descripcion: origen === 'DIAGNOSTICO'
+                  ? `Nivel ${intermediateLevel} de inglés completado mediante examen de diagnóstico (calificación: ${levelGrade})`
+                  : `Nivel ${intermediateLevel} de inglés acreditado por equivalencia / nivel inicial (calificación: ${levelGrade})`,
               },
             });
           });

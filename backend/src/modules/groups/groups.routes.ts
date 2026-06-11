@@ -30,7 +30,8 @@ router.get(
 router.get(
   '/available/english-courses',
   authenticate,
-  authorize(UserRole.STUDENT),
+  // ADMIN también lo usa para asignar grupos desde la lista de espera
+  authorize(UserRole.STUDENT, UserRole.ADMIN),
   groupsController.getAvailableEnglishCourses
 );
 

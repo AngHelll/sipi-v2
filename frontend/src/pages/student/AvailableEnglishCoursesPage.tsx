@@ -48,7 +48,6 @@ export const AvailableEnglishCoursesPage = () => {
         courseType: 'INGLES',
         nivelIngles,
         groupId,
-        requierePago: true,
       });
       showToast('Te has inscrito exitosamente al curso de inglés', 'success');
       navigate('/student/english/status');

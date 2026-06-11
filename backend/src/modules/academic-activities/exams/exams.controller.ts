@@ -16,6 +16,51 @@ import {
  * POST /api/academic-activities/exams
  * Create diagnostic exam (Student)
  */
+/**
+ * PUT /api/academic-activities/exams/:id/cancel
+ * Cancel a diagnostic exam request (Student: own only / Admin: any with motivo)
+ */
+export const cancelExamHandler = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = String(req.params.id);
+    const { motivo } = req.body;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || (userRole !== 'STUDENT' && userRole !== 'ADMIN')) {
+      res.status(403).json({ error: 'Not authorized to cancel' });
+      return;
+    }
+
+    let studentId: string | undefined;
+    if (userRole === 'STUDENT') {
+      const prisma = require('../../../config/database').default;
+      const student = await prisma.students.findUnique({ where: { userId } });
+      if (!student) {
+        res.status(404).json({ error: 'Student not found' });
+        return;
+      }
+      studentId = student.id;
+    }
+
+    const { cancelActivity } = await import('../academic-activities.service');
+    const result = await cancelActivity(id, {
+      cancelledBy: userId,
+      role: userRole as 'STUDENT' | 'ADMIN',
+      studentId,
+      motivo,
+    });
+
+    res.status(200).json({
+      message: 'Solicitud de examen cancelada exitosamente',
+      result,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: errorMessage });
+  }
+};
+
 export const createDiagnosticExamHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     const { examType, subjectId, nivelIngles, periodId } = req.body;

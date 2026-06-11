@@ -99,6 +99,7 @@ export class SpecialCoursesValidators {
         'EN_CURSO': 'Ya estás cursando',
         'PENDIENTE_PAGO': 'Ya tienes una solicitud pendiente de pago',
         'PAGO_PENDIENTE_APROBACION': 'Ya tienes una solicitud de pago pendiente de aprobación',
+        'LISTA_ESPERA': 'Ya estás en lista de espera',
         'APROBADO': 'Ya completaste',
       };
       const statusMessage = statusMessages[activeEnrollment.estatus] || 'Ya tienes una solicitud activa';
@@ -107,6 +108,55 @@ export class SpecialCoursesValidators {
 
     // If groupId is provided, check if student is already enrolled in that specific group
     // This check will be done in the service layer where groupId is available
+  }
+
+  /**
+   * Validate that the group corresponds to the requested course
+   * Para cursos de inglés: el grupo debe ser de inglés, del mismo nivel y con cupo.
+   *
+   * @param groupId - ID of the group
+   * @param courseType - Requested course type
+   * @param nivelIngles - Requested English level (if INGLES)
+   * @throws Error if the group doesn't match the course
+   */
+  static async validateGroupMatchesCourse(
+    groupId: string,
+    courseType: string,
+    nivelIngles?: number
+  ): Promise<void> {
+    const group = await prisma.groups.findUnique({
+      where: { id: groupId },
+      select: {
+        esCursoIngles: true,
+        nivelIngles: true,
+        cupoActual: true,
+        cupoMaximo: true,
+        estatus: true,
+      } as any,
+    }) as any;
+
+    if (!group) {
+      throw new Error('Grupo no encontrado');
+    }
+
+    if (courseType === 'INGLES') {
+      if (!group.esCursoIngles) {
+        throw new Error('El grupo seleccionado no es un grupo de inglés');
+      }
+      if (nivelIngles && group.nivelIngles && group.nivelIngles !== nivelIngles) {
+        throw new Error(
+          `El grupo seleccionado es de nivel ${group.nivelIngles} y la solicitud es de nivel ${nivelIngles}`
+        );
+      }
+    }
+
+    if (group.estatus === 'CERRADO' || group.estatus === 'CANCELADO' || group.estatus === 'FINALIZADO') {
+      throw new Error(`El grupo no está disponible para inscripciones (estatus: ${group.estatus})`);
+    }
+
+    if (group.cupoActual >= group.cupoMaximo) {
+      throw new Error('El grupo seleccionado ya no tiene cupos disponibles');
+    }
   }
 
   /**

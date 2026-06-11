@@ -66,6 +66,19 @@ router.put(
 );
 
 /**
+ * PUT /api/academic-activities/exams/:id/cancel
+ * Cancel exam request (Student: own / Admin: any with motivo)
+ */
+router.put(
+  '/exams/:id/cancel',
+  authenticate,
+  authorize(UserRole.STUDENT, UserRole.ADMIN),
+  validateUUID('id'),
+  validateRequest,
+  examsController.cancelExamHandler
+);
+
+/**
  * GET /api/academic-activities/exams/student/english-status
  * Get student English status (V2) - includes exams and courses
  * IMPORTANT: This route must be defined BEFORE /exams/student to avoid route conflicts
@@ -224,6 +237,29 @@ router.get(
 );
 
 /**
+ * GET /api/academic-activities/special-courses/waitlist/summary
+ * Waitlist demand by course type and level (Admin only)
+ * IMPORTANT: must be defined BEFORE /special-courses/:id
+ */
+router.get(
+  '/special-courses/waitlist/summary',
+  authenticate,
+  authorize(UserRole.ADMIN),
+  specialCoursesController.getWaitlistSummaryHandler
+);
+
+/**
+ * POST /api/academic-activities/special-courses/initial-level
+ * Register initial English level via equivalencia (Admin only)
+ */
+router.post(
+  '/special-courses/initial-level',
+  authenticate,
+  authorize(UserRole.ADMIN),
+  specialCoursesController.registerInitialLevelHandler
+);
+
+/**
  * GET /api/academic-activities/special-courses/:id
  * Get special course by ID (Admin only)
  */
@@ -284,6 +320,32 @@ router.put(
   validateUUID('id'),
   validateRequest,
   specialCoursesController.completeSpecialCourseHandler
+);
+
+/**
+ * PUT /api/academic-activities/special-courses/:id/assign-group
+ * Assign group to waitlisted course (Admin only)
+ */
+router.put(
+  '/special-courses/:id/assign-group',
+  authenticate,
+  authorize(UserRole.ADMIN),
+  validateUUID('id'),
+  validateRequest,
+  specialCoursesController.assignGroupHandler
+);
+
+/**
+ * PUT /api/academic-activities/special-courses/:id/cancel
+ * Cancel special course request (Student: own / Admin: any with motivo)
+ */
+router.put(
+  '/special-courses/:id/cancel',
+  authenticate,
+  authorize(UserRole.STUDENT, UserRole.ADMIN),
+  validateUUID('id'),
+  validateRequest,
+  specialCoursesController.cancelSpecialCourseHandler
 );
 
 export default router;

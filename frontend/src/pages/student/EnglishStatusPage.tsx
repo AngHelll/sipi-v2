@@ -1,9 +1,13 @@
 // English Status Page - Student dashboard for English enrollment status
 import { useEffect, useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
-import { examsApi } from '../../lib/api';
+import { examsApi, specialCoursesApi } from '../../lib/api';
 import { Loader, Card, Badge, Icon } from '../../components/ui';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../context/ToastContext';
+
+/** Estados en los que el alumno puede cancelar su solicitud */
+const CANCELABLE_STATUSES = ['LISTA_ESPERA', 'PENDIENTE_PAGO', 'INSCRITO'];
 
 interface EnglishStatus {
   student: {
@@ -77,7 +81,9 @@ export const EnglishStatusPage = () => {
   const [status, setStatus] = useState<EnglishStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchStatus();
@@ -109,9 +115,38 @@ export const EnglishStatusPage = () => {
       PAGO_PENDIENTE_APROBACION: { color: 'bg-purple-100 text-purple-800', label: 'Pago Pendiente' },
       PAGO_APROBADO: { color: 'bg-green-100 text-green-800', label: 'Pago Aprobado' },
       CANCELADO: { color: 'bg-gray-100 text-gray-800', label: 'Cancelado' },
+      LISTA_ESPERA: { color: 'bg-indigo-100 text-indigo-800', label: 'Lista de Espera' },
     };
     const statusInfo = statusMap[estatus] || { color: 'bg-gray-100 text-gray-800', label: estatus };
     return <Badge className={statusInfo.color}>{statusInfo.label}</Badge>;
+  };
+
+  const handleCancelExam = async (activityId: string) => {
+    if (!window.confirm('¿Seguro que quieres cancelar tu solicitud de examen de diagnóstico?')) return;
+    try {
+      setCancellingId(activityId);
+      await examsApi.cancelExam(activityId);
+      showToast('Solicitud de examen cancelada', 'success');
+      await fetchStatus();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Error al cancelar la solicitud', 'error');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const handleCancelCourse = async (activityId: string) => {
+    if (!window.confirm('¿Seguro que quieres cancelar tu solicitud de curso de inglés?')) return;
+    try {
+      setCancellingId(activityId);
+      await specialCoursesApi.cancelCourse(activityId);
+      showToast('Solicitud de curso cancelada', 'success');
+      await fetchStatus();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Error al cancelar la solicitud', 'error');
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   const getGradeColor = (grade: number | null) => {
@@ -384,6 +419,7 @@ export const EnglishStatusPage = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calificación</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -409,6 +445,17 @@ export const EnglishStatusPage = () => {
                         {exam.calificacion !== null ? exam.calificacion.toFixed(1) : 'Sin calificar'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(exam.estatus)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {CANCELABLE_STATUSES.includes(exam.estatus) && exam.calificacion === null && (
+                          <button
+                            onClick={() => handleCancelExam(exam.id)}
+                            disabled={cancellingId === exam.id}
+                            className="text-red-600 hover:text-red-800 disabled:opacity-50 text-sm font-medium"
+                          >
+                            {cancellingId === exam.id ? 'Cancelando...' : 'Cancelar'}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -463,6 +510,7 @@ export const EnglishStatusPage = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pago</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calificación</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -493,6 +541,17 @@ export const EnglishStatusPage = () => {
                         {course.calificacion !== null ? course.calificacion.toFixed(1) : 'Sin calificar'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(course.estatus)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {CANCELABLE_STATUSES.includes(course.estatus) && course.calificacion === null && !course.completadoPorDiagnostico && (
+                          <button
+                            onClick={() => handleCancelCourse(course.id)}
+                            disabled={cancellingId === course.id}
+                            className="text-red-600 hover:text-red-800 disabled:opacity-50 text-sm font-medium"
+                          >
+                            {cancellingId === course.id ? 'Cancelando...' : 'Cancelar'}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

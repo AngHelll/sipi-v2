@@ -48,12 +48,18 @@ interface SpecialCoursesListResponse {
   };
 }
 
+interface WaitlistSummary {
+  total: number;
+  demand: Array<{ courseType: string; nivelIngles: number | null; count: number }>;
+}
+
 export const SpecialCoursesListPage = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<SpecialCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<SpecialCoursesListResponse['pagination'] | null>(null);
+  const [waitlist, setWaitlist] = useState<WaitlistSummary | null>(null);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,6 +86,13 @@ export const SpecialCoursesListPage = () => {
   useEffect(() => {
     fetchCourses();
   }, [debouncedSearchTerm, courseTypeFilter, estatusFilter, requierePagoFilter, currentPage, pageSize, sortBy, sortOrder]);
+
+  useEffect(() => {
+    specialCoursesApi
+      .getWaitlistSummary()
+      .then(setWaitlist)
+      .catch((err) => console.error('Error fetching waitlist summary:', err));
+  }, []);
 
   const fetchCourses = async () => {
     try {
@@ -131,6 +144,7 @@ export const SpecialCoursesListPage = () => {
       REPROBADO: { label: 'Reprobado', variant: 'danger' },
       CANCELADO: { label: 'Cancelado', variant: 'default' },
       BAJA: { label: 'Baja', variant: 'danger' },
+      LISTA_ESPERA: { label: 'Lista de Espera', variant: 'info' },
     };
 
     const config = statusConfig[estatus] || { label: estatus, variant: 'default' };
@@ -187,6 +201,44 @@ export const SpecialCoursesListPage = () => {
           <p className="text-gray-600">Gestiona las solicitudes de cursos especiales de los estudiantes</p>
         </div>
 
+        {/* Waitlist demand */}
+        {waitlist && waitlist.total > 0 && (
+          <div className="mb-6 bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <div className="flex items-start justify-between flex-wrap gap-3">
+              <div>
+                <h2 className="font-semibold text-indigo-900 mb-1">
+                  Lista de espera: {waitlist.total} solicitud{waitlist.total === 1 ? '' : 'es'} sin grupo
+                </h2>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {waitlist.demand.map((d) => (
+                    <Badge key={`${d.courseType}-${d.nivelIngles}`} variant="info">
+                      {getCourseTypeLabel(d.courseType)}
+                      {d.nivelIngles ? ` Nivel ${d.nivelIngles}` : ''}: {d.count} interesado{d.count === 1 ? '' : 's'}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-sm text-indigo-800 mt-2">
+                  Si hay suficientes interesados, crea un grupo del nivel y asígnalos desde el detalle de cada solicitud.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEstatusFilter('LISTA_ESPERA')}
+                  className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Ver solicitudes
+                </button>
+                <button
+                  onClick={() => navigate('/admin/groups/new')}
+                  className="px-3 py-1.5 text-sm border border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors"
+                >
+                  Crear grupo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -225,10 +277,10 @@ export const SpecialCoursesListPage = () => {
               as="select"
               options={[
                 { value: '', label: 'Todos' },
+                { value: 'LISTA_ESPERA', label: 'Lista de Espera' },
                 { value: 'INSCRITO', label: 'Inscrito' },
                 { value: 'EN_CURSO', label: 'En Curso' },
                 { value: 'PENDIENTE_PAGO', label: 'Pendiente Pago' },
-                { value: 'INSCRITO', label: 'Inscrito' },
                 { value: 'APROBADO', label: 'Aprobado' },
                 { value: 'REPROBADO', label: 'Reprobado' },
                 { value: 'CANCELADO', label: 'Cancelado' },

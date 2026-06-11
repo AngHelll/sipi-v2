@@ -2,9 +2,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
-import { specialCoursesApi } from '../../lib/api';
+import { specialCoursesApi, groupsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { PageLoader, Badge, Icon, FormField, ButtonLoader } from '../../components/ui';
+import type { Group } from '../../types';
 
 interface SpecialCourse {
   id: string;
@@ -48,6 +49,13 @@ export const SpecialCourseDetailPage = () => {
   const [grading, setGrading] = useState(false);
   const [calificacion, setCalificacion] = useState('');
   const [savingGrade, setSavingGrade] = useState(false);
+  // Asignación de grupo (lista de espera)
+  const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState('');
+  const [assignRequierePago, setAssignRequierePago] = useState(true);
+  const [assigning, setAssigning] = useState(false);
+  // Cancelación (admin)
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -92,6 +100,7 @@ export const SpecialCourseDetailPage = () => {
       REPROBADO: { label: 'Reprobado', variant: 'danger' },
       CANCELADO: { label: 'Cancelado', variant: 'default' },
       BAJA: { label: 'Baja', variant: 'danger' },
+      LISTA_ESPERA: { label: 'Lista de Espera', variant: 'info' },
     };
 
     const config = statusConfig[estatus] || { label: estatus, variant: 'default' };
@@ -109,6 +118,58 @@ export const SpecialCourseDetailPage = () => {
       CERTIFICACION: 'Certificación',
     };
     return labels[courseType] || courseType;
+  };
+
+  // Carga grupos de inglés disponibles cuando la solicitud está en lista de espera
+  useEffect(() => {
+    if (course?.estatus === 'LISTA_ESPERA' && course.course?.courseType === 'INGLES') {
+      groupsApi
+        .getAvailableEnglishCourses()
+        .then((result) => {
+          const nivel = course.course?.nivelIngles;
+          setAvailableGroups(
+            nivel ? result.courses.filter((g) => g.nivelIngles === nivel) : result.courses
+          );
+        })
+        .catch((err) => console.error('Error fetching available groups:', err));
+    }
+  }, [course]);
+
+  const handleAssignGroup = async () => {
+    if (!id || !selectedGroupId) {
+      showToast('Selecciona un grupo', 'error');
+      return;
+    }
+    try {
+      setAssigning(true);
+      const result = await specialCoursesApi.assignGroup(id, {
+        groupId: selectedGroupId,
+        requierePago: assignRequierePago,
+      });
+      showToast(result.message, 'success');
+      setSelectedGroupId('');
+      await fetchCourse();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Error al asignar el grupo', 'error');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const handleCancelCourse = async () => {
+    if (!id) return;
+    const motivo = window.prompt('Motivo de la cancelación (requerido):');
+    if (!motivo || !motivo.trim()) return;
+    try {
+      setCancelling(true);
+      await specialCoursesApi.cancelCourse(id, { motivo: motivo.trim() });
+      showToast('Solicitud cancelada', 'success');
+      await fetchCourse();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Error al cancelar la solicitud', 'error');
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const handleSaveGrade = async () => {
@@ -223,6 +284,65 @@ export const SpecialCourseDetailPage = () => {
             )}
           </div>
         </div>
+
+        {/* Waitlist: assign group */}
+        {course.estatus === 'LISTA_ESPERA' && (
+          <div className="bg-indigo-50 rounded-lg shadow-md border border-indigo-200 p-6 mb-6">
+            <h2 className="text-lg font-semibold text-indigo-900 mb-2">Solicitud en Lista de Espera</h2>
+            <p className="text-sm text-indigo-800 mb-4">
+              El alumno espera que se abra un grupo
+              {course.course?.nivelIngles ? ` de nivel ${course.course.nivelIngles}` : ''}. 
+              Asigna un grupo disponible o crea uno nuevo si hay suficiente demanda.
+            </p>
+            {availableGroups.length > 0 ? (
+              <div className="space-y-4">
+                <FormField
+                  label="Grupo disponible"
+                  name="assignGroupId"
+                  value={selectedGroupId}
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
+                  as="select"
+                  options={[
+                    { value: '', label: 'Selecciona un grupo' },
+                    ...availableGroups.map((g) => ({
+                      value: g.id,
+                      label: `${g.nombre} - Nivel ${g.nivelIngles || 'N/A'} (${(g.cupoMaximo || 0) - (g.cupoActual || 0)} cupos)`,
+                    })),
+                  ]}
+                />
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={assignRequierePago}
+                    onChange={(e) => setAssignRequierePago(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <span className="text-sm text-gray-700">Requiere pago (el alumno deberá pagar para quedar inscrito)</span>
+                </label>
+                <button
+                  onClick={handleAssignGroup}
+                  disabled={!selectedGroupId || assigning}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {assigning ? <ButtonLoader /> : <Icon name="check" size={18} />}
+                  Asignar Grupo
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-indigo-800">
+                  No hay grupos abiertos{course.course?.nivelIngles ? ` de nivel ${course.course.nivelIngles}` : ''} con cupo.
+                </p>
+                <button
+                  onClick={() => navigate('/admin/groups/new')}
+                  className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Crear grupo
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Student Information */}
         {course.student && (
@@ -382,6 +502,20 @@ export const SpecialCourseDetailPage = () => {
             </div>
           )}
         </div>
+
+        {/* Admin: cancel request */}
+        {['LISTA_ESPERA', 'PENDIENTE_PAGO', 'INSCRITO', 'EN_CURSO'].includes(course.estatus) && (
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleCancelCourse}
+              disabled={cancelling}
+              className="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {cancelling ? <ButtonLoader /> : <Icon name="x" size={18} />}
+              Cancelar Solicitud
+            </button>
+          </div>
+        )}
       </div>
     </Layout>
   );

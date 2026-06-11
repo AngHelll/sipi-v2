@@ -19,6 +19,11 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 4. Sistema registra en `activity_history`
 5. Si hay período asociado, incrementa `cupoActual`
 
+#### Cancelación de Solicitud
+- Estudiante: `PUT /api/academic-activities/exams/:id/cancel` — solo sus propias solicitudes, en estados tempranos (`LISTA_ESPERA`, `PENDIENTE_PAGO`, `INSCRITO`) y sin resultado registrado.
+- Admin: misma ruta, cualquier estado no terminal, con `motivo` requerido.
+- Efectos: estatus → `CANCELADO`, y se **revierte el cupo** del período (`cupoActual - 1`).
+
 #### Flujo de Procesamiento (Admin/Teacher)
 1. Admin visualiza inscripciones: `GET /api/academic-activities/exams`
 2. Admin procesa resultado: `PUT /api/academic-activities/exams/:id/result`
@@ -41,9 +46,28 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 #### Solicitud de Curso (Estudiante)
 1. Estudiante solicita curso: `POST /api/academic-activities/special-courses`
 2. Sistema valida nivel de inglés y requisitos
-3. Sistema crea `academic_activity` y `special_course`
-4. Si requiere pago, crea registro de pago pendiente
-5. Admin aprueba pago y activa curso
+3. **Con `groupId`** (grupo publicado): valida que el grupo sea de inglés, del mismo nivel y con cupo → estatus `PENDIENTE_PAGO`. El alumno paga y el admin aprueba (`receive-and-approve-payment`), lo que activa la inscripción y consume cupo.
+4. **Sin `groupId`** (no hay grupo publicado): la solicitud entra a **`LISTA_ESPERA`**, sin pago. No es una inscripción evaluable.
+5. La política de pago la decide **el servidor**; el cliente no puede enviar `requierePago`.
+
+#### Lista de Espera (Admin)
+1. Admin consulta demanda: `GET /api/academic-activities/special-courses/waitlist/summary` — interesados por tipo de curso y nivel.
+2. Si hay demanda suficiente, admin crea un grupo de inglés del nivel.
+3. Admin asigna el grupo a cada solicitud: `PUT /api/academic-activities/special-courses/:id/assign-group` body `{ groupId, requierePago }`.
+   - Con pago → `PENDIENTE_PAGO` (el cupo se consume al aprobar el pago).
+   - Sin pago → `INSCRITO` directo (consume cupo de inmediato).
+
+#### Cancelación de Solicitud
+- Estudiante: `PUT /api/academic-activities/special-courses/:id/cancel` — solo sus propias, en `LISTA_ESPERA`, `PENDIENTE_PAGO` o `INSCRITO`, sin calificación.
+- Admin: misma ruta, cualquier estado no terminal, con `motivo` requerido.
+- Efectos: estatus → `CANCELADO`; si estaba `INSCRITO` con grupo, se **revierte el cupo** del grupo.
+
+#### Nivel Inicial / Equivalencia (Admin)
+Para alumnos de transferencia que ya traen nivel de inglés acreditado:
+1. Admin registra: `POST /api/academic-activities/special-courses/initial-level` body `{ studentId, nivel (1-6), calificacion (70-100) }`.
+2. Sistema crea los registros canónicos de niveles acreditados (1..nivel-1) y posiciona al alumno en `nivel` (`nivelInglesActual`).
+3. Solo se permite **una vez** y solo si el alumno no tiene nivel ni actividades de inglés activas. Después, el nivel se mueve únicamente por diagnóstico y cursos.
+4. Los campos de inglés en `students` (`nivelInglesActual`, `promedioIngles`, `cumpleRequisitoIngles`, etc.) **nunca se editan a mano**: son derivados del flujo canónico.
 
 ---
 
