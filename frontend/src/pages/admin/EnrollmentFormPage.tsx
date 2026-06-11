@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
-import { enrollmentsApi, studentsApi, groupsApi, specialCoursesApi } from '../../lib/api';
+import { enrollmentsApi, studentsApi, groupsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { FormField, StatusSelector, PageLoader, ButtonLoader } from '../../components/ui';
 import type { Student, Group } from '../../types';
@@ -61,7 +61,6 @@ export const EnrollmentFormPage = () => {
     estatus: string;
     tipoInscripcion?: string;
   } | null>(null);
-  const [isSpecialCourse, setIsSpecialCourse] = useState(false);
 
   useEffect(() => {
     fetchOptions();
@@ -104,13 +103,27 @@ export const EnrollmentFormPage = () => {
       setFetching(true);
       const enrollment = await enrollmentsApi.getById(id);
 
-      // Populate form with enrollment data
+      // Inglés se gestiona en sus propias pantallas (academic-activities)
+      if (
+        enrollment.tipoInscripcion === 'CURSO_INGLES' ||
+        enrollment.tipoInscripcion === 'EXAMEN_DIAGNOSTICO'
+      ) {
+        showToast('Las inscripciones de inglés se gestionan en Cursos Especiales', 'info');
+        navigate(
+          enrollment.tipoInscripcion === 'CURSO_INGLES'
+            ? `/admin/special-courses/${enrollment.id}`
+            : '/admin/exams'
+        );
+        return;
+      }
+
+      // Populate form with enrollment data (solo materias regulares)
       setFormData({
         studentId: enrollment.studentId,
         groupId: enrollment.groupId,
         calificacion: enrollment.calificacion?.toString() || '',
-        tipoInscripcion: enrollment.tipoInscripcion || 'NORMAL',
-        estatus: enrollment.estatus || 'INSCRITO',
+        tipoInscripcion: (enrollment.tipoInscripcion as 'NORMAL' | 'ESPECIAL' | 'REPETICION' | 'EQUIVALENCIA') || 'NORMAL',
+        estatus: (enrollment.estatus as 'INSCRITO' | 'EN_CURSO' | 'BAJA' | 'APROBADO' | 'REPROBADO' | 'CANCELADO') || 'INSCRITO',
         calificacionParcial1: enrollment.calificacionParcial1?.toString() || '',
         calificacionParcial2: enrollment.calificacionParcial2?.toString() || '',
         calificacionParcial3: enrollment.calificacionParcial3?.toString() || '',
@@ -142,10 +155,6 @@ export const EnrollmentFormPage = () => {
         estatus: enrollment.estatus || 'INSCRITO',
         tipoInscripcion: enrollment.tipoInscripcion,
       });
-
-      // Check if this is a special course (English course)
-      const isSpecial = enrollment.tipoInscripcion === 'CURSO_INGLES';
-      setIsSpecialCourse(isSpecial);
     } catch (err: any) {
       showToast('Error al cargar la inscripción', 'error');
       console.error('Error fetching enrollment:', err);
@@ -522,40 +531,27 @@ export const EnrollmentFormPage = () => {
       setLoading(true);
 
       if (isEdit && id) {
-        // Special courses use a different endpoint and have limited fields
-        if (isSpecialCourse) {
-          // For special courses, only calificacion can be updated via completeSpecialCourse
-          if (!formData.calificacion) {
-            showToast('La calificación es requerida para cursos de inglés', 'error');
-            return;
-          }
-          await specialCoursesApi.completeCourse(id, {
-            calificacion: parseFloat(formData.calificacion),
-          });
-          showToast('Calificación del curso de inglés actualizada correctamente', 'success');
-        } else {
-          // Regular enrollment update
-          await enrollmentsApi.update(id, {
-            studentId: formData.studentId,
-            groupId: formData.groupId,
-            calificacion: formData.calificacion ? parseFloat(formData.calificacion) : undefined,
-            tipoInscripcion: formData.tipoInscripcion,
-            estatus: formData.estatus,
-            calificacionParcial1: formData.calificacionParcial1 ? parseFloat(formData.calificacionParcial1) : undefined,
-            calificacionParcial2: formData.calificacionParcial2 ? parseFloat(formData.calificacionParcial2) : undefined,
-            calificacionParcial3: formData.calificacionParcial3 ? parseFloat(formData.calificacionParcial3) : undefined,
-            calificacionFinal: formData.calificacionFinal ? parseFloat(formData.calificacionFinal) : undefined,
-            calificacionExtra: formData.calificacionExtra ? parseFloat(formData.calificacionExtra) : undefined,
-            asistencias: formData.asistencias,
-            faltas: formData.faltas,
-            retardos: formData.retardos,
-            porcentajeAsistencia: formData.porcentajeAsistencia ? parseFloat(formData.porcentajeAsistencia) : undefined,
-            aprobado: formData.aprobado,
-            fechaAprobacion: formData.fechaAprobacion ? new Date(formData.fechaAprobacion) : undefined,
-            observaciones: formData.observaciones || undefined,
-          });
-          showToast('Inscripción actualizada correctamente', 'success');
-        }
+        // Regular enrollment update
+        await enrollmentsApi.update(id, {
+          studentId: formData.studentId,
+          groupId: formData.groupId,
+          calificacion: formData.calificacion ? parseFloat(formData.calificacion) : undefined,
+          tipoInscripcion: formData.tipoInscripcion,
+          estatus: formData.estatus,
+          calificacionParcial1: formData.calificacionParcial1 ? parseFloat(formData.calificacionParcial1) : undefined,
+          calificacionParcial2: formData.calificacionParcial2 ? parseFloat(formData.calificacionParcial2) : undefined,
+          calificacionParcial3: formData.calificacionParcial3 ? parseFloat(formData.calificacionParcial3) : undefined,
+          calificacionFinal: formData.calificacionFinal ? parseFloat(formData.calificacionFinal) : undefined,
+          calificacionExtra: formData.calificacionExtra ? parseFloat(formData.calificacionExtra) : undefined,
+          asistencias: formData.asistencias,
+          faltas: formData.faltas,
+          retardos: formData.retardos,
+          porcentajeAsistencia: formData.porcentajeAsistencia ? parseFloat(formData.porcentajeAsistencia) : undefined,
+          aprobado: formData.aprobado,
+          fechaAprobacion: formData.fechaAprobacion ? new Date(formData.fechaAprobacion) : undefined,
+          observaciones: formData.observaciones || undefined,
+        });
+        showToast('Inscripción actualizada correctamente', 'success');
       } else {
         await enrollmentsApi.create({
         studentId: formData.studentId,
@@ -670,8 +666,8 @@ export const EnrollmentFormPage = () => {
               error={formErrors.studentId}
               touched={touchedFields.studentId}
               validate={validators.studentId}
-              disabled={getFieldDisabled('studentId') || isSpecialCourse}
-              helpText={isEdit || isSpecialCourse ? "El estudiante no puede ser modificado. Los estudiantes se gestionan de forma independiente." : undefined}
+              disabled={getFieldDisabled('studentId')}
+              helpText={isEdit ? "El estudiante no puede ser modificado. Los estudiantes se gestionan de forma independiente." : undefined}
               as="select"
               options={[
                 { value: '', label: 'Selecciona un estudiante' },
@@ -699,8 +695,7 @@ export const EnrollmentFormPage = () => {
               error={formErrors.groupId}
               touched={touchedFields.groupId}
               validate={validators.groupId}
-              disabled={getFieldDisabled('groupId') || isSpecialCourse}
-              helpText={isSpecialCourse ? "El grupo no puede ser modificado para cursos de inglés." : undefined}
+              disabled={getFieldDisabled('groupId')}
               as="select"
               options={[
                 { value: '', label: 'Selecciona un grupo' },
@@ -779,90 +774,49 @@ export const EnrollmentFormPage = () => {
               min={0}
               max={100}
               step={0.01}
-              required={isSpecialCourse}
               error={formErrors.calificacion}
               touched={touchedFields.calificacion}
               validate={validators.calificacion}
-              helpText={isSpecialCourse 
-                ? "Requerida para cursos de inglés. Máximo 2 decimales." 
-                : "Opcional. Puede dejarse vacío y asignarse después. Máximo 2 decimales."}
+              helpText="Opcional. Puede dejarse vacío y asignarse después. Máximo 2 decimales."
             />
 
-            {/* Special Course Notice */}
-            {isSpecialCourse && (
-              <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div>
-                    <h3 className="font-semibold text-blue-900 mb-1">Curso de Inglés</h3>
-                    <p className="text-sm text-blue-800">
-                      Este es un curso especial de inglés. Solo puedes modificar la calificación final.
-                      El estatus se actualiza automáticamente según la calificación (≥70 = APROBADO, &lt;70 = REPROBADO).
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+            <div className="md:col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                Información de Inscripción
+              </h2>
+            </div>
 
-            {/* Enrollment Information Section - Hidden for special courses */}
-            {!isSpecialCourse && (
-              <>
-                <div className="md:col-span-2">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
-                    Información de Inscripción
-                  </h2>
-                </div>
+            <FormField
+              label="Tipo de Inscripción"
+              name="tipoInscripcion"
+              value={formData.tipoInscripcion}
+              onChange={handleChange}
+              required
+              error={formErrors.tipoInscripcion}
+              touched={touchedFields.tipoInscripcion}
+              disabled={getFieldDisabled('tipoInscripcion')}
+              as="select"
+              options={[
+                { value: 'NORMAL', label: 'NORMAL' },
+                { value: 'ESPECIAL', label: 'ESPECIAL' },
+                { value: 'REPETICION', label: 'REPETICIÓN' },
+                { value: 'EQUIVALENCIA', label: 'EQUIVALENCIA' },
+              ]}
+            />
 
-                <FormField
-                  label="Tipo de Inscripción"
-                  name="tipoInscripcion"
-                  value={formData.tipoInscripcion}
-                  onChange={handleChange}
-                  required
-                  error={formErrors.tipoInscripcion}
-                  touched={touchedFields.tipoInscripcion}
-                  disabled={getFieldDisabled('tipoInscripcion')}
-                  as="select"
-                  options={[
-                    { value: 'NORMAL', label: 'NORMAL' },
-                    { value: 'ESPECIAL', label: 'ESPECIAL' },
-                    { value: 'REPETICION', label: 'REPETICIÓN' },
-                    { value: 'EQUIVALENCIA', label: 'EQUIVALENCIA' },
-                  ]}
-                />
-
-                <StatusSelector
-                  type="enrollment"
-                  value={formData.estatus}
-                  onChange={(value) => {
-                    handleChange({
-                      target: { name: 'estatus', value },
-                    } as React.ChangeEvent<HTMLInputElement>);
-                  }}
-                  required
-                  error={formErrors.estatus}
-                  touched={touchedFields.estatus}
-                  disabled={getFieldDisabled('estatus') || isSpecialCourse}
-                />
-              </>
-            )}
-
-            {/* Status display for special courses (read-only) */}
-            {isSpecialCourse && (
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Estatus
-                </label>
-                <div className="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-700">
-                  {formData.estatus || 'N/A'}
-                  <span className="ml-2 text-xs text-gray-500">
-                    (Se actualiza automáticamente al calificar)
-                  </span>
-                </div>
-              </div>
-            )}
+            <StatusSelector
+              type="enrollment"
+              value={formData.estatus}
+              onChange={(value) => {
+                handleChange({
+                  target: { name: 'estatus', value },
+                } as React.ChangeEvent<HTMLInputElement>);
+              }}
+              required
+              error={formErrors.estatus}
+              touched={touchedFields.estatus}
+              disabled={getFieldDisabled('estatus')}
+            />
             {(formData.estatus === 'APROBADO' || formData.estatus === 'REPROBADO' || formData.estatus === 'BAJA' || formData.estatus === 'CANCELADO') && (
               <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm text-blue-800">
@@ -871,19 +825,13 @@ export const EnrollmentFormPage = () => {
               </div>
             )}
 
-            {/* Partial Grades Section - Hidden for special courses */}
-            {!isSpecialCourse && (
-              <>
-                <div className="md:col-span-2">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
-                    Calificaciones Parciales
-                  </h2>
-                </div>
-              </>
-            )}
+            <div className="md:col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                Calificaciones Parciales
+              </h2>
+            </div>
 
-            {!isSpecialCourse && (
-              <>
+            <>
                 <FormField
                   label="Calificación Parcial 1"
                   name="calificacionParcial1"
@@ -1053,29 +1001,6 @@ export const EnrollmentFormPage = () => {
                   />
                 )}
               </>
-            )}
-
-            {/* Evaluation info for special courses (read-only) */}
-            {isSpecialCourse && (
-              <div className="md:col-span-2">
-                <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Evaluación</h3>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div>
-                      <span className="font-medium">Aprobado:</span> {formData.aprobado ? 'Sí' : 'No'}
-                      <span className="ml-2 text-xs text-gray-500">
-                        (Se actualiza automáticamente: ≥70 = Aprobado)
-                      </span>
-                    </div>
-                    {formData.fechaAprobacion && (
-                      <div>
-                        <span className="font-medium">Fecha de Aprobación:</span> {formData.fechaAprobacion}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
 
             <div className="md:col-span-2">
               <FormField

@@ -33,8 +33,8 @@ export const SubjectsListPage = () => {
   const [nivelFilter, setNivelFilter] = useState<number | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortBy, setSortBy] = useState<'clave' | 'nombre' | 'creditos'>('nombre');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy] = useState<'clave' | 'nombre' | 'creditos'>('nombre');
+  const [sortOrder] = useState<'asc' | 'desc'>('asc');
   
 
   // Debounced search

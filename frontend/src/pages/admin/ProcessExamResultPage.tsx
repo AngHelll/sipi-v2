@@ -312,6 +312,7 @@ export const ProcessExamResultPage = () => {
           
           <FormField
             label="Resultado (%)"
+            name="resultado"
             type="number"
             value={resultado}
             onChange={(e) => {
@@ -330,8 +331,8 @@ export const ProcessExamResultPage = () => {
             }}
             error={errors.resultado}
             placeholder="0-100"
-            min="0"
-            max="100"
+            min={0}
+            max={100}
             step="0.1"
             required
             helpText="Ingresa el resultado del examen como un porcentaje (0-100)"
@@ -370,6 +371,7 @@ export const ProcessExamResultPage = () => {
             <>
               <FormField
                 label="Nivel Final de Inglés"
+                name="nivelFinal"
                 type="number"
                 value={nivelFinal}
                 onChange={(e) => {
@@ -383,8 +385,8 @@ export const ProcessExamResultPage = () => {
                 }}
                 error={errors.nivelFinal}
                 placeholder={parseFloat(resultado) >= 70 ? "1-6 o 0 (dejar vacío = 0)" : "1-6"}
-                min="0"
-                max="6"
+                min={0}
+                max={6}
                 required={parseFloat(resultado) < 70}
                 helpText={
                   parseFloat(resultado) >= 70
@@ -415,6 +417,7 @@ export const ProcessExamResultPage = () => {
                       <FormField
                         key={nivel}
                         label={`Calificación Nivel ${nivel}`}
+                        name={`calificacion_${nivel}`}
                         type="number"
                         value={calificacionesPorNivel[nivel] || ''}
                         onChange={(e) => {
@@ -431,8 +434,8 @@ export const ProcessExamResultPage = () => {
                         }}
                         error={errors[`calificacion_${nivel}`]}
                         placeholder="0-100"
-                        min="0"
-                        max="100"
+                        min={0}
+                        max={100}
                         step="0.1"
                         required
                         helpText={`Calificación que recibirá el estudiante en el nivel ${nivel} completado por examen de diagnóstico`}

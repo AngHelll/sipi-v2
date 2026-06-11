@@ -5,8 +5,6 @@ import { Layout } from '../../components/layout/Layout';
 import { examPeriodsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { FormField, PageLoader, ButtonLoader } from '../../components/ui';
-import type { ExamPeriod, ExamPeriodStatus } from '../../types';
-
 export const ExamPeriodFormPage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();

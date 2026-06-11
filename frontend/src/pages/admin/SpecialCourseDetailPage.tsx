@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { specialCoursesApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { PageLoader, Badge, Icon } from '../../components/ui';
+import { PageLoader, Badge, Icon, FormField, ButtonLoader } from '../../components/ui';
 
 interface SpecialCourse {
   id: string;
@@ -45,6 +45,9 @@ export const SpecialCourseDetailPage = () => {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [course, setCourse] = useState<SpecialCourse | null>(null);
+  const [grading, setGrading] = useState(false);
+  const [calificacion, setCalificacion] = useState('');
+  const [savingGrade, setSavingGrade] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -106,6 +109,28 @@ export const SpecialCourseDetailPage = () => {
       CERTIFICACION: 'Certificación',
     };
     return labels[courseType] || courseType;
+  };
+
+  const handleSaveGrade = async () => {
+    if (!id) return;
+    const grade = parseFloat(calificacion);
+    if (isNaN(grade) || grade < 0 || grade > 100) {
+      showToast('La calificación debe estar entre 0 y 100', 'error');
+      return;
+    }
+    try {
+      setSavingGrade(true);
+      await specialCoursesApi.completeCourse(id, { calificacion: grade });
+      showToast('Calificación registrada correctamente', 'success');
+      setGrading(false);
+      setCalificacion('');
+      await fetchCourse();
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Error al registrar la calificación';
+      showToast(errorMessage, 'error');
+    } finally {
+      setSavingGrade(false);
+    }
   };
 
   const formatDate = (dateString: string | null) => {
@@ -308,10 +333,52 @@ export const SpecialCourseDetailPage = () => {
               )}
             </div>
           ) : (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800">
-                <strong>Nota:</strong> Este curso aún no ha sido calificado. El docente asignado al grupo debe registrar la calificación cuando el estudiante complete el curso.
-              </p>
+            <div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>Nota:</strong> Este curso aún no ha sido calificado. El docente asignado al grupo registra la calificación al completar el curso; como administrador también puedes registrarla aquí.
+                </p>
+              </div>
+              {grading ? (
+                <div className="mt-4 flex items-end gap-3">
+                  <div className="flex-1 max-w-xs">
+                    <FormField
+                      label="Calificación (0-100)"
+                      name="calificacion"
+                      type="number"
+                      value={calificacion}
+                      onChange={(e) => setCalificacion(e.target.value)}
+                      min={0}
+                      max={100}
+                      step="0.1"
+                      required
+                    />
+                  </div>
+                  <button
+                    onClick={handleSaveGrade}
+                    disabled={savingGrade}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {savingGrade ? <ButtonLoader /> : <Icon name="check" size={18} />}
+                    Guardar
+                  </button>
+                  <button
+                    onClick={() => { setGrading(false); setCalificacion(''); }}
+                    disabled={savingGrade}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setGrading(true)}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  <Icon name="edit" size={18} />
+                  Registrar Calificación
+                </button>
+              )}
             </div>
           )}
         </div>

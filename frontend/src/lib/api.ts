@@ -224,6 +224,7 @@ export const studentsApi = {
       apellidoPaterno: string;
       apellidoMaterno: string;
       carrera: string;
+      carreraId?: string;
       semestre: number;
       estatus: string;
       curp?: string;
@@ -246,6 +247,7 @@ export const studentsApi = {
       apellidoPaterno?: string;
       apellidoMaterno?: string;
       carrera?: string;
+      carreraId?: string;
       semestre?: number;
       estatus?: string;
       curp?: string;

@@ -1,6 +1,6 @@
 # SIPI — Alcance de producto
 
-**Última actualización:** 2026-05-24
+**Última actualización:** 2026-06-10
 
 ## Enfoque: SIPI Inglés
 
@@ -95,7 +95,7 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 
 | Cliente | Inglés V2 |
 |---------|-----------|
-| Web React | Sí |
+| Web React | Sí — inglés solo en sus pantallas (exámenes, cursos especiales, pagos); el formulario genérico de inscripciones es exclusivo de materias regulares |
 | iOS | Pendiente (`academic-activities`) |
 
 ---
@@ -123,8 +123,9 @@ Más detalle: [REGLAS-NEGOCIO-ENROLLMENTS.md](REGLAS-NEGOCIO-ENROLLMENTS.md) (re
 
 1. ~~Migración Prisma V2~~
 2. ~~Deprecar `/api/enrollments/english` y eliminar código legacy~~
-3. iOS contra `academic-activities` — contrato en [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
-4. Android (seguimiento para alumnos) — mismo contrato
-5. Opcional: otra `SpecialCourseType` cuando exista requisito de negocio
+3. ~~Cierre capa web: inglés solo en pantallas V2, typecheck en CI~~
+4. iOS contra `academic-activities` — contrato en [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
+5. Android (seguimiento para alumnos) — mismo contrato
+6. Opcional: otra `SpecialCourseType` cuando exista requisito de negocio
 
 Detalle por capas y próximos pasos: [ROADMAP.md](ROADMAP.md)

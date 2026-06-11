@@ -372,9 +372,15 @@ export const GroupDetailPage = () => {
           ) : enrollments.length === 0 ? (
             <EmptyState
               title="No hay inscripciones"
-              message="Este grupo no tiene estudiantes inscritos aún."
-              actionLabel="Crear Inscripción"
-              onAction={() => navigate(`/admin/enrollments/new?groupId=${id}`)}
+              description="Este grupo no tiene estudiantes inscritos aún."
+              action={
+                <button
+                  onClick={() => navigate(`/admin/enrollments/new?groupId=${id}`)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                >
+                  Crear Inscripción
+                </button>
+              }
             />
           ) : (
             <>
@@ -436,9 +442,9 @@ export const GroupDetailPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {enrollment.porcentajeAsistencia !== undefined ? (
                             <AttendanceDisplay
-                              percentage={enrollment.porcentajeAsistencia}
-                              asistencias={enrollment.asistencias}
-                              faltas={enrollment.faltas}
+                              porcentaje={enrollment.porcentajeAsistencia}
+                              asistencias={enrollment.asistencias ?? 0}
+                              faltas={enrollment.faltas ?? 0}
                             />
                           ) : (
                             <span className="text-sm text-gray-500">-</span>

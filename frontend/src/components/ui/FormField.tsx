@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 export interface FormFieldProps {
   label: string;
   name: string;
-  type?: 'text' | 'password' | 'number' | 'email' | 'tel' | 'date';
+  type?: 'text' | 'password' | 'number' | 'email' | 'tel' | 'date' | 'datetime-local';
   value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   placeholder?: string;
@@ -23,6 +23,8 @@ export interface FormFieldProps {
   as?: 'input' | 'select' | 'textarea';
   options?: Array<{ value: string; label: string }>;
   rows?: number;
+  /** id de un <datalist> para autocompletado */
+  list?: string;
 }
 
 export const FormField = ({
@@ -47,6 +49,7 @@ export const FormField = ({
   as = 'input',
   options,
   rows = 3,
+  list,
 }: FormFieldProps) => {
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -149,6 +152,7 @@ export const FormField = ({
           maxLength={maxLength}
           step={step}
           placeholder={placeholder}
+          list={list}
           className={inputClasses}
         />
       )}

@@ -20,11 +20,13 @@ flowchart TB
 | 0. Producto | [PRODUCTO.md](PRODUCTO.md) | **Estable** — SIPI Inglés (requisito 70%, niveles 1–6); SIS básico como soporte |
 | 1. Flujos de negocio | [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md) | **Estable** — diagnóstico → pago → placement → cursos → certificación |
 | 2. Contratos API | [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md) + `/api/academic-activities/*` | **Estable** — canónico inglés en academic-activities; legacy `/enrollments/english/*` retirado (410) |
-| 3. Web (React) | `frontend/` | **Al día** — consume la API canónica para todo el flujo de inglés |
+| 3. Web (React) | `frontend/` | **Cerrada** — consume solo la API canónica para inglés; formulario de inscripciones limitado a materias regulares (inglés redirige a sus pantallas); typecheck (`tsc -b`) en verde y como gate en CI |
 | 4a. Móvil iOS | repo `sipi-mobile-ios` | **Parcial** — MVP por roles sobre endpoints genéricos; pestaña "Inglés" pendiente (ver contrato) |
 | 4b. Móvil Android | — | **No iniciado** — será la plataforma de seguimiento para disponibilidad de alumnos; partirá del mismo contrato |
 
 ## Próximos pasos (en orden)
+
+La capa web (3) quedó cerrada para el alcance actual: cualquier trabajo nuevo debe venir de las capas 0–2 o del frente móvil.
 
 1. **iOS — pestaña "Inglés" (alumno)**: estatus 70%, solicitar examen, solicitar curso, consumiendo `english-status` y endpoints canónicos. Limpiar campos RB-038 de `EnrollmentsModels.swift`.
 2. **iOS — hardening**: filtros admin pendientes, observabilidad (R5 del roadmap iOS).

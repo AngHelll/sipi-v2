@@ -175,7 +175,8 @@ export const GroupFormPage = () => {
 
     Object.keys(validators).forEach((key) => {
       const validator = validators[key as keyof typeof validators];
-      const value = formData[key as keyof typeof formData];
+      // Los validators solo cubren campos string del formulario
+      const value = formData[key as keyof typeof formData] as string | number;
       const error = validator(value);
       if (error) {
         errors[key] = error;

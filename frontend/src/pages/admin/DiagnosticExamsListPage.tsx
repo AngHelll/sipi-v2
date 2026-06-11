@@ -66,7 +66,7 @@ export const DiagnosticExamsListPage = () => {
   const [examTypeFilter, setExamTypeFilter] = useState('');
   const [estatusFilter, setEstatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize] = useState(20);
   const [sortBy, setSortBy] = useState<'fechaInscripcion' | 'estatus' | 'examType'>('fechaInscripcion');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 

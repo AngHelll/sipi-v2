@@ -5,7 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { groupsApi, subjectsApi, exportApi } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { ConfirmDialog, CapacityIndicator, Loader, GroupCard } from '../../components/ui';
+import { ConfirmDialog, Loader, GroupCard } from '../../components/ui';
 import { UserRole } from '../../types';
 import type { Group, GroupsListResponse, Subject } from '../../types';
 
@@ -36,8 +36,8 @@ export const GroupsListPage = () => {
   const [subjectFilter, setSubjectFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortBy, setSortBy] = useState<'nombre' | 'periodo'>('nombre');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy] = useState<'nombre' | 'periodo'>('nombre');
+  const [sortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Options for filters
   const [subjects, setSubjects] = useState<Subject[]>([]);

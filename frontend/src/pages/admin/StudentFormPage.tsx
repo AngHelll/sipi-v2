@@ -30,6 +30,7 @@ export const StudentFormPage = () => {
     apellidoPaterno: '',
     apellidoMaterno: '',
     carrera: '',
+    carreraId: '',
     semestre: 1,
     estatus: 'ACTIVO' as 'ACTIVO' | 'INACTIVO' | 'EGRESADO',
     curp: '',
@@ -83,6 +84,7 @@ export const StudentFormPage = () => {
         apellidoPaterno: studentData.apellidoPaterno,
         apellidoMaterno: studentData.apellidoMaterno,
         carrera: studentData.carrera,
+        carreraId: studentData.carreraId || '',
         semestre: studentData.semestre,
         estatus: studentData.estatus as 'ACTIVO' | 'INACTIVO' | 'EGRESADO',
         curp: studentData.curp || '',
@@ -399,6 +401,7 @@ export const StudentFormPage = () => {
           apellidoPaterno: formData.apellidoPaterno,
           apellidoMaterno: formData.apellidoMaterno,
           carrera: formData.carrera,
+          carreraId: formData.carreraId || undefined,
           semestre: formData.semestre,
           estatus: formData.estatus,
           curp: formData.curp || undefined,
@@ -446,6 +449,7 @@ export const StudentFormPage = () => {
             apellidoPaterno: formData.apellidoPaterno,
             apellidoMaterno: formData.apellidoMaterno,
             carrera: formData.carrera,
+            carreraId: formData.carreraId || undefined,
             semestre: formData.semestre,
             estatus: formData.estatus,
             curp: formData.curp || undefined,
@@ -603,10 +607,12 @@ export const StudentFormPage = () => {
 
             <CareerSelector
               value={formData.carrera}
-              onChange={(nombre) => {
+              onChange={(nombre, career) => {
                 handleChange({
                   target: { name: 'carrera', value: nombre },
                 } as React.ChangeEvent<HTMLInputElement>);
+                // Vincular explícitamente al catálogo de carreras cuando hay match
+                setFormData((prev) => ({ ...prev, carrera: nombre, carreraId: career?.id || '' }));
               }}
               required
               error={formErrors.carrera}

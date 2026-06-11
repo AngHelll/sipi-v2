@@ -30,8 +30,8 @@ steps:
       - git checkout $DRONE_COMMIT
       - echo "=== Building Backend ==="
       - cd backend && npm ci && npm run build
-      - echo "=== Building Frontend ==="
-      - cd ../frontend && npm ci && npx vite build
+      - echo "=== Building Frontend (typecheck + build) ==="
+      - cd ../frontend && npm ci && npm run build
       - echo "=== Build Complete ==="
 
   - name: deploy

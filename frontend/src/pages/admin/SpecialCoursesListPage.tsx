@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { specialCoursesApi } from '../../lib/api';
-import { useToast } from '../../context/ToastContext';
 import { Badge, SkeletonTable, EmptyState, FormField } from '../../components/ui';
 
 interface SpecialCourse {
