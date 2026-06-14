@@ -43,11 +43,11 @@ Respuesta (campos principales):
   "promedioIngles": 80.0,
   "cumpleRequisitoIngles": false,
   "fechaExamenDiagnostico": "2026-05-25T...",
-  "diagnosticExams": [ { "id", "codigo", "estatus", "calificacion", "nivelIngles", "period", "requierePago", "pagoAprobado", "montoPago" } ],
+  "diagnosticExams": [ { "id", "codigo", "estatus", "calificacion", "nivelIngles", "period", "requierePago", "pagoAprobado", "montoPago", "observaciones" } ],
   "englishCourses": [ { "id", "codigo", "estatus", "nivelIngles", "calificacion", "aprobado", "group" } ],
   "completedLevels": [1, 2, 3],
   "missingLevels": [4, 5, 6],
-  "pendingExam": { "id", "codigo", "estatus", "period", "requierePago", "pagoAprobado", "montoPago" },
+  "pendingExam": { "id", "codigo", "estatus", "period", "requierePago", "pagoAprobado", "montoPago", "observaciones" },
   "progress": { "totalLevels": 6, "completed": 3, "percentage": 50 },
   "requirementDetails": { "razonNoCumple": "..." }
 }
@@ -60,11 +60,23 @@ Este endpoint es la fuente de verdad del requisito 70% (`cumpleRequisitoIngles`,
 | Acción | Endpoint | Rol |
 |--------|----------|-----|
 | Ver períodos disponibles | `GET /api/academic-activities/exam-periods/available` | STUDENT |
-| Solicitar examen | `POST /api/academic-activities/exams` body `{ "examType": "DIAGNOSTICO", "periodId": "..." }` | STUDENT |
+| Solicitar examen (primer diagnóstico, sin período) | `POST /api/academic-activities/exams` body `{ "examType": "DIAGNOSTICO" }` → `LISTA_ESPERA` | STUDENT |
+| Solicitar examen (con período) | `POST /api/academic-activities/exams` body `{ "examType": "DIAGNOSTICO", "periodId": "..." }` | STUDENT |
 | Ver mis exámenes | `GET /api/academic-activities/exams/student` | STUDENT |
 | Cancelar solicitud | `PUT /api/academic-activities/exams/:id/cancel` | STUDENT (propias, sin resultado) / ADMIN (`motivo` requerido) |
+| Demanda lista de espera exámenes | `GET /api/academic-activities/exams/waitlist/summary` | ADMIN |
+| Asignar período desde lista de espera | `PUT /api/academic-activities/exams/:id/assign-period` body `{ "periodId" }` | ADMIN |
 
-Estados de pago del examen: `PENDIENTE_PAGO` → (admin aprueba) → `PAGO_APROBADO` → examen → `EVALUADO`. El pago se entrega físicamente; el admin lo registra con `receive-and-approve-payment`. La cancelación revierte el cupo del período.
+Reglas de contrato (exámenes, 2026-06-11):
+
+- **`nivelIngles` ya no se acepta** en `POST .../exams`: el placement lo define el admin/maestro al procesar el resultado.
+- **Primer diagnóstico sin `periodId`** → `LISTA_ESPERA` (gratuito, sin cupo de período hasta asignar).
+- **Segundo diagnóstico** (examen previo `APROBADO`/`EVALUADO`): solo con `periodId`; el período puede requerir pago.
+- **`APROBADO`/`EVALUADO` son terminales**: no bloquean una nueva solicitud si no hay otra activa; el retake es solo vía período.
+- **`LISTA_ESPERA`** en exámenes: mostrar como lista de espera (no inscripción activa); incluido en `pendingExam` de `english-status`.
+- **Pago rechazado**: `pagoAprobado: false` en `PENDIENTE_PAGO`; el alumno cancela y vuelve a solicitar.
+
+Estados de pago del examen: `PENDIENTE_PAGO` → (admin aprueba) → inscripción activa → examen → `APROBADO`/`EVALUADO`. El pago se entrega físicamente; el admin lo registra con `receive-and-approve-payment`. La cancelación revierte el cupo del período si aplica.
 
 ### 2.3 Curso de inglés (niveles 1–6)
 
@@ -125,4 +137,4 @@ Roles TEACHER/ADMIN en móvil (futuro): listados `GET .../exams`, `GET .../speci
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-06-11 (lista de espera, cancelación, nivel inicial)
+**Última actualización**: 2026-06-11 (lista de espera exámenes, sin nivel en solicitud, retake vía período, pago rechazado)

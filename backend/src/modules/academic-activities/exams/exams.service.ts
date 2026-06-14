@@ -9,58 +9,74 @@ import { EntityValidators } from '../../../shared/validators/entity.validators';
 
 /**
  * Create diagnostic exam
- * NO requiere grupo - solo tipo de examen y materia opcional
- * Puede estar asociado a un período de exámenes (periodId opcional)
+ * - Con periodId: inscripción a un período publicado → PENDIENTE_PAGO o INSCRITO según cobro.
+ * - Sin periodId (primer diagnóstico): LISTA_ESPERA — el admin asigna período cuando abra uno.
+ * - Sin periodId con diagnóstico previo (APROBADO/EVALUADO): no permitido; retoma solo vía período.
+ * El nivel de placement NO se captura en la solicitud; lo define processExamResult.
  */
 export const createDiagnosticExam = async (
   studentId: string,
   examType: 'DIAGNOSTICO' | 'ADMISION' | 'CERTIFICACION',
   subjectId?: string,
-  nivelIngles?: number,
   periodId?: string
 ) => {
   // Validate student exists
   await EntityValidators.validateStudentExists(studentId);
 
   // Validate exam-specific rules
-  await ExamsValidators.validateCanRequestExam(studentId, examType);
+  await ExamsValidators.validateCanRequestExam(studentId, examType, periodId);
 
   // Validate subject if provided
   if (subjectId) {
     await EntityValidators.validateSubjectExists(subjectId);
   }
 
-  // Check if period requires payment
+  // Retoma de diagnóstico: solo vía período publicado (puede tener costo)
+  if (!periodId && examType === 'DIAGNOSTICO') {
+    const priorDiagnostic = await (prisma as any).academic_activities.findFirst({
+      where: {
+        studentId,
+        activityType: 'EXAM',
+        deletedAt: null,
+        estatus: { in: ['APROBADO', 'EVALUADO'] },
+        exams: { examType: 'DIAGNOSTICO' },
+      },
+    });
+    if (priorDiagnostic) {
+      throw new Error(
+        'Para un segundo examen de diagnóstico debes inscribirte a un período publicado (puede tener costo según el período).'
+      );
+    }
+  }
+
   let periodRequiresPayment = false;
   let periodPaymentAmount: number | null = null;
-  
+  let initialStatus: string;
+
   if (periodId) {
     const { ExamPeriodsValidators } = await import('../exam-periods/exam-periods.validators');
     await ExamPeriodsValidators.validatePeriodOpen(periodId);
     await ExamPeriodsValidators.validateCapacity(periodId);
-    
-    // Get period to check if it requires payment
+
     const period = await (prisma as any).diagnostic_exam_periods.findUnique({
       where: { id: periodId },
-      select: {
-        requierePago: true,
-        montoPago: true,
-      },
+      select: { requierePago: true, montoPago: true },
     });
-    
+
     if (period) {
       periodRequiresPayment = period.requierePago || false;
       periodPaymentAmount = period.montoPago ? Number(period.montoPago) : null;
     }
+    initialStatus = periodRequiresPayment ? 'PENDIENTE_PAGO' : 'INSCRITO';
+  } else {
+    initialStatus = 'LISTA_ESPERA';
+    periodRequiresPayment = false;
   }
 
   // Generate codes
   const codigo = await generateActivityCode('EXAM');
   const activityId = randomUUID();
   const examId = randomUUID();
-
-  // Determine initial status based on payment requirement
-  const initialStatus = periodRequiresPayment ? 'PENDIENTE_PAGO' : 'INSCRITO';
 
   // Create activity and exam in transaction with increased timeout
   const result = await prisma.$transaction(async (tx) => {
@@ -83,7 +99,7 @@ export const createDiagnosticExam = async (
         activityId: activity.id,
         examType,
         subjectId: subjectId || null,
-        nivelIngles: nivelIngles || null,
+        nivelIngles: null,
         periodId: periodId || null,
         requierePago: periodRequiresPayment,
         pagoAprobado: periodRequiresPayment ? null : true, // null if payment required, true if not
@@ -115,7 +131,9 @@ export const createDiagnosticExam = async (
         id: randomUUID(),
         activityId: activity.id,
         accion: 'CREATED',
-        descripcion: `Examen de ${examType} creado`,
+        descripcion: periodId
+          ? `Examen de ${examType} solicitado (período asignado${periodRequiresPayment ? ', pendiente de pago' : ''})`
+          : `Examen de ${examType} agregado a lista de espera (sin período publicado)`,
       },
     });
 
@@ -130,10 +148,98 @@ export const createDiagnosticExam = async (
     codigo: result.activity.codigo,
     estatus: result.activity.estatus,
     examType: result.exam.examType,
-    nivelIngles: result.exam.nivelIngles,
     periodId: result.exam.periodId || undefined,
     requierePago: result.exam.requierePago,
     montoPago: result.exam.montoPago ? Number(result.exam.montoPago) : undefined,
+  };
+};
+
+/**
+ * Assign an exam period to a waitlisted diagnostic exam (Admin only)
+ */
+export const assignPeriodToExam = async (
+  activityId: string,
+  periodId: string,
+  assignedBy?: string
+) => {
+  const activity = await (prisma as any).academic_activities.findUnique({
+    where: { id: activityId },
+    include: { exams: true },
+  });
+
+  if (!activity || !activity.exams) {
+    throw new Error('Examen no encontrado');
+  }
+
+  if (activity.estatus !== 'LISTA_ESPERA') {
+    throw new Error('Solo se puede asignar período a solicitudes en lista de espera');
+  }
+
+  const { ExamPeriodsValidators } = await import('../exam-periods/exam-periods.validators');
+  await ExamPeriodsValidators.validatePeriodOpen(periodId);
+  await ExamPeriodsValidators.validateCapacity(periodId);
+
+  const period = await (prisma as any).diagnostic_exam_periods.findUnique({
+    where: { id: periodId },
+    select: { requierePago: true, montoPago: true },
+  });
+
+  const requierePago = period?.requierePago || false;
+  const montoPago = period?.montoPago ? Number(period.montoPago) : null;
+  const newStatus = requierePago ? 'PENDIENTE_PAGO' : 'INSCRITO';
+
+  await prisma.$transaction(async (tx) => {
+    await (tx as any).exams.update({
+      where: { id: activity.exams.id },
+      data: {
+        periodId,
+        requierePago,
+        montoPago,
+        pagoAprobado: requierePago ? null : true,
+        fechaPagoAprobado: requierePago ? null : new Date(),
+      },
+    });
+
+    await (tx as any).diagnostic_exam_periods.update({
+      where: { id: periodId },
+      data: { cupoActual: { increment: 1 } },
+    });
+
+    await (tx as any).activity_history.create({
+      data: {
+        id: randomUUID(),
+        activityId,
+        accion: 'UPDATED',
+        descripcion: `Período asignado desde lista de espera${requierePago ? ' (pendiente de pago)' : ''}`,
+        realizadoPor: assignedBy,
+      },
+    });
+  });
+
+  await updateActivityStatus(activityId, newStatus, assignedBy);
+
+  return { activityId, periodId, estatus: newStatus, requierePago };
+};
+
+/**
+ * Exam waitlist count (Admin only)
+ */
+export const getExamWaitlistSummary = async () => {
+  const waitlisted = await (prisma as any).academic_activities.findMany({
+    where: {
+      activityType: 'EXAM',
+      estatus: 'LISTA_ESPERA',
+      deletedAt: null,
+      exams: { examType: 'DIAGNOSTICO' },
+    },
+    include: {
+      exams: { select: { examType: true } },
+    },
+  });
+
+  return {
+    total: waitlisted.length,
+    byType: [{ examType: 'DIAGNOSTICO', count: waitlisted.length }],
   };
 };
 
@@ -259,11 +365,11 @@ export const rejectExamPayment = async (
     },
   });
 
-  // Update activity observations with rejection reason
+  // Update activity observations with rejection reason — el alumno puede cancelar y volver a solicitar
   await (prisma as any).academic_activities.update({
     where: { id: activityId },
     data: {
-      observaciones: `Pago rechazado. Motivo: ${motivo}`,
+      observaciones: `Pago rechazado. Motivo: ${motivo}. Puedes cancelar esta solicitud y volver a inscribirte cuando tengas el comprobante correcto.`,
     },
   });
 
@@ -388,6 +494,18 @@ export const processExamResult = async (
 
   if (activity.activityType !== 'EXAM') {
     throw new Error('Esta actividad no es un examen');
+  }
+
+  if (!['INSCRITO', 'EN_CURSO'].includes(activity.estatus)) {
+    throw new Error(`No se puede calificar un examen en estado ${activity.estatus}`);
+  }
+
+  if (activity.exams.requierePago && activity.exams.pagoAprobado !== true) {
+    throw new Error('No se puede calificar un examen con pago pendiente o rechazado');
+  }
+
+  if (activity.exams.resultado !== null && activity.exams.resultado !== undefined) {
+    throw new Error('Este examen ya tiene resultado registrado');
   }
 
   const exam = activity.exams;
@@ -693,8 +811,9 @@ export const getStudentEnglishStatusV2 = async (studentId: string) => {
     fechaExamen: activity.exams?.fechaExamen?.toISOString() || null,
     fechaResultado: activity.exams?.fechaResultado?.toISOString() || null,
     requierePago: activity.exams?.requierePago || false,
-    pagoAprobado: activity.exams?.pagoAprobado || null,
+    pagoAprobado: activity.exams?.pagoAprobado ?? null,
     montoPago: activity.exams?.montoPago ? Number(activity.exams.montoPago) : null,
+    observaciones: activity.observaciones || null,
   }));
 
   // Map English courses
@@ -753,7 +872,9 @@ export const getStudentEnglishStatusV2 = async (studentId: string) => {
       requierePago: boolean;
       pagoAprobado: boolean | null;
       montoPago: number | null;
-    }) => (exam.estatus === 'INSCRITO' && exam.calificacion === null) ||
+      observaciones?: string | null;
+    }) => (exam.estatus === 'LISTA_ESPERA') ||
+          (exam.estatus === 'INSCRITO' && exam.calificacion === null) ||
           (exam.estatus === 'PENDIENTE_PAGO') ||
           (exam.estatus === 'PAGO_PENDIENTE_APROBACION')
   );
@@ -767,6 +888,7 @@ export const getStudentEnglishStatusV2 = async (studentId: string) => {
     requierePago: pendingExamFound.requierePago,
     pagoAprobado: pendingExamFound.pagoAprobado,
     montoPago: pendingExamFound.montoPago,
+    observaciones: pendingExamFound.observaciones ?? null,
   } : null;
 
   // Recalculate English requirement status to ensure it's up-to-date

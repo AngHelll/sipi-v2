@@ -19,7 +19,8 @@ export class ExamsValidators {
    */
   static async validateCanRequestExam(
     studentId: string,
-    examType: 'DIAGNOSTICO' | 'ADMISION' | 'CERTIFICACION'
+    examType: 'DIAGNOSTICO' | 'ADMISION' | 'CERTIFICACION',
+    periodId?: string
   ): Promise<void> {
     // For diagnostic exams, check if student has already completed all English requirements
     if (examType === 'DIAGNOSTICO') {
@@ -30,13 +31,15 @@ export class ExamsValidators {
           'Ya has cumplido con todos los requisitos de inglés. Has completado todos los niveles (1-6) con un promedio aprobatorio. No es necesario realizar más exámenes de diagnóstico.'
         );
       }
+
+      // Solo bloquea solicitudes activas; APROBADO/EVALUADO son terminales (retoma vía período)
       const activeExam = await (prisma as any).academic_activities.findFirst({
         where: {
           studentId,
           activityType: 'EXAM',
           deletedAt: null,
           estatus: {
-            notIn: ['REPROBADO', 'CANCELADO', 'BAJA'],
+            notIn: ['REPROBADO', 'CANCELADO', 'BAJA', 'APROBADO', 'EVALUADO'],
           },
           exams: {
             examType: 'DIAGNOSTICO',
@@ -50,10 +53,10 @@ export class ExamsValidators {
           'EN_CURSO': 'Ya estás presentando',
           'PENDIENTE_PAGO': 'Ya tienes una solicitud pendiente de pago',
           'PAGO_PENDIENTE_APROBACION': 'Ya tienes una solicitud de pago pendiente de aprobación',
-          'APROBADO': 'Ya completaste',
+          'LISTA_ESPERA': 'Ya estás en lista de espera',
         };
         const statusMessage = statusMessages[activeExam.estatus] || 'Ya tienes una solicitud activa';
-        throw new Error(`${statusMessage} un examen de diagnóstico. No puedes inscribirte nuevamente.`);
+        throw new Error(`${statusMessage} para un examen de diagnóstico. No puedes inscribirte nuevamente.`);
       }
     }
   }

@@ -10,6 +10,8 @@ import {
   getStudentEnglishStatusV2,
   receiveAndApproveExamPayment,
   rejectExamPayment,
+  assignPeriodToExam,
+  getExamWaitlistSummary,
 } from './exams.service';
 
 /**
@@ -63,7 +65,7 @@ export const cancelExamHandler = async (req: Request, res: Response): Promise<vo
 
 export const createDiagnosticExamHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { examType, subjectId, nivelIngles, periodId } = req.body;
+    const { examType, subjectId, periodId } = req.body;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
 
@@ -98,7 +100,6 @@ export const createDiagnosticExamHandler = async (req: Request, res: Response): 
       student.id,
       examType,
       subjectId,
-      nivelIngles,
       periodId
     );
 
@@ -361,6 +362,61 @@ export const rejectExamPaymentHandler = async (req: Request, res: Response): Pro
 
     res.status(200).json({
       message: 'Pago rechazado',
+      result,
+    });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: errorMessage });
+  }
+};
+
+/**
+ * GET /api/academic-activities/exams/waitlist/summary
+ * Exam waitlist count (Admin only)
+ */
+export const getExamWaitlistSummaryHandler = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || userRole !== 'ADMIN') {
+      res.status(403).json({ error: 'Only admins can view the waitlist' });
+      return;
+    }
+
+    const result = await getExamWaitlistSummary();
+    res.status(200).json(result);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ error: errorMessage });
+  }
+};
+
+/**
+ * PUT /api/academic-activities/exams/:id/assign-period
+ * Assign period to waitlisted exam (Admin only)
+ */
+export const assignPeriodHandler = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = String(req.params.id);
+    const { periodId } = req.body;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || userRole !== 'ADMIN') {
+      res.status(403).json({ error: 'Only admins can assign periods' });
+      return;
+    }
+
+    if (!periodId) {
+      res.status(400).json({ error: 'periodId is required' });
+      return;
+    }
+
+    const result = await assignPeriodToExam(id, periodId, userId);
+
+    res.status(200).json({
+      message: 'Período asignado exitosamente',
       result,
     });
   } catch (error: unknown) {

@@ -103,6 +103,31 @@ router.get(
 );
 
 /**
+ * GET /api/academic-activities/exams/waitlist/summary
+ * Exam waitlist count (Admin only)
+ * IMPORTANT: must be defined BEFORE /exams/:id
+ */
+router.get(
+  '/exams/waitlist/summary',
+  authenticate,
+  authorize(UserRole.ADMIN),
+  examsController.getExamWaitlistSummaryHandler
+);
+
+/**
+ * PUT /api/academic-activities/exams/:id/assign-period
+ * Assign period to waitlisted exam (Admin only)
+ */
+router.put(
+  '/exams/:id/assign-period',
+  authenticate,
+  authorize(UserRole.ADMIN),
+  validateUUID('id'),
+  validateRequest,
+  examsController.assignPeriodHandler
+);
+
+/**
  * GET /api/academic-activities/exams/:id
  * Get exam by ID (Admin only)
  * IMPORTANT: This route must be defined BEFORE /exams to avoid route conflicts

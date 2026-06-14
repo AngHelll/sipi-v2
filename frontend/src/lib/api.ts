@@ -980,6 +980,31 @@ export const examsApi = {
   },
 
   /**
+   * Exam waitlist summary (ADMIN only)
+   */
+  getWaitlistSummary: async (): Promise<{
+    total: number;
+    byType: Array<{ examType: string; count: number }>;
+  }> => {
+    const response = await api.get('/academic-activities/exams/waitlist/summary');
+    return response.data;
+  },
+
+  /**
+   * Assign period to waitlisted exam (ADMIN only)
+   */
+  assignPeriod: async (
+    activityId: string,
+    data: { periodId: string }
+  ): Promise<{
+    message: string;
+    result: { activityId: string; periodId: string; estatus: string; requierePago: boolean };
+  }> => {
+    const response = await api.put(`/academic-activities/exams/${activityId}/assign-period`, data);
+    return response.data;
+  },
+
+  /**
    * Get student English status V2 (STUDENT only) - includes V2 exams and courses
    */
   getStudentEnglishStatusV2: async (): Promise<{
@@ -1012,6 +1037,7 @@ export const examsApi = {
       requierePago: boolean;
       pagoAprobado: boolean | null;
       montoPago: number | null;
+      observaciones?: string | null;
     }>;
     englishCourses: Array<{
       id: string;
@@ -1039,6 +1065,7 @@ export const examsApi = {
       requierePago: boolean;
       pagoAprobado: boolean | null;
       montoPago: number | null;
+      observaciones?: string | null;
     } | null;
     progress: {
       totalLevels: number;

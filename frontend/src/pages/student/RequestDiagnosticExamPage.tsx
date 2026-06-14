@@ -1,5 +1,5 @@
 // Request Diagnostic Exam Page - Student can request diagnostic exam
-// V2: Usa nuevos endpoints - Puede usar períodos disponibles o solicitud directa
+// V2: primer diagnóstico sin período → lista de espera; retoma solo vía período publicado
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
@@ -9,7 +9,6 @@ import { useToast } from '../../context/ToastContext';
 import type { AvailableExamPeriod } from '../../types';
 
 export const RequestDiagnosticExamPage = () => {
-  const [nivelIngles, setNivelIngles] = useState<number>(1);
   const [periodId, setPeriodId] = useState<string>('');
   const [usePeriod, setUsePeriod] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState(false);
@@ -20,6 +19,7 @@ export const RequestDiagnosticExamPage = () => {
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false);
   const [enrollmentMessage, setEnrollmentMessage] = useState<string>('');
   const [hasCompletedAllRequirements, setHasCompletedAllRequirements] = useState(false);
+  const [hasPriorDiagnostic, setHasPriorDiagnostic] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -32,32 +32,40 @@ export const RequestDiagnosticExamPage = () => {
     try {
       const status = await examsApi.getStudentEnglishStatusV2();
       setEnglishStatus(status);
-      
-      // Check if student has completed all English requirements
+
       if (status.cumpleRequisitoIngles && status.completedLevels?.length === 6) {
         setHasCompletedAllRequirements(true);
-        setEnrollmentMessage('¡Felicidades! Ya has cumplido con todos los requisitos de inglés. Has completado todos los niveles (1-6) con un promedio aprobatorio. No es necesario realizar más exámenes de diagnóstico.');
+        setEnrollmentMessage(
+          '¡Felicidades! Ya has cumplido con todos los requisitos de inglés. Has completado todos los niveles (1-6) con un promedio aprobatorio. No es necesario realizar más exámenes de diagnóstico.'
+        );
         return;
       }
-      
-      // Check if student has an active diagnostic exam
-      const activeExam = status.diagnosticExams?.find((exam: any) => {
+
+      const priorDone = status.diagnosticExams?.some((exam: { estatus: string }) =>
+        ['APROBADO', 'EVALUADO'].includes(exam.estatus)
+      );
+      setHasPriorDiagnostic(!!priorDone);
+      if (priorDone) {
+        setUsePeriod(true);
+      }
+
+      const activeExam = status.diagnosticExams?.find((exam: { estatus: string }) => {
         return !['REPROBADO', 'EVALUADO', 'APROBADO', 'CANCELADO', 'BAJA'].includes(exam.estatus);
       });
-      
+
       if (activeExam) {
         setIsAlreadyEnrolled(true);
         const statusMessages: Record<string, string> = {
-          'INSCRITO': 'Ya estás inscrito',
-          'EN_CURSO': 'Ya estás presentando',
-          'PENDIENTE_PAGO': 'Ya tienes una solicitud pendiente de pago',
-          'PAGO_PENDIENTE_APROBACION': 'Ya tienes una solicitud de pago pendiente de aprobación',
-          'APROBADO': 'Ya completaste',
+          INSCRITO: 'Ya estás inscrito',
+          EN_CURSO: 'Ya estás presentando',
+          PENDIENTE_PAGO: 'Ya tienes una solicitud pendiente de pago',
+          PAGO_PENDIENTE_APROBACION: 'Ya tienes una solicitud de pago pendiente de aprobación',
+          LISTA_ESPERA: 'Ya estás en lista de espera',
         };
         const statusMessage = statusMessages[activeExam.estatus] || 'Ya tienes una solicitud activa';
-        setEnrollmentMessage(`${statusMessage} un examen de diagnóstico. No puedes inscribirte nuevamente.`);
+        setEnrollmentMessage(`${statusMessage} para un examen de diagnóstico. No puedes inscribirte nuevamente.`);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error checking existing exam:', err);
     }
   };
@@ -68,26 +76,23 @@ export const RequestDiagnosticExamPage = () => {
       const result = await examPeriodsApi.getAvailablePeriods();
       const available = result.periods.filter((p) => p.estaDisponible);
       setAvailablePeriods(available);
-      
-      // Si no hay períodos disponibles, desactivar automáticamente la opción de período
-      if (available.length === 0 && usePeriod) {
+
+      if (available.length === 0) {
         setUsePeriod(false);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching available periods:', err);
-      // Si hay error, permitir solicitud directa
       setUsePeriod(false);
     } finally {
       setLoadingPeriods(false);
     }
   };
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (nivelIngles < 1 || nivelIngles > 6) {
-      showToast('El nivel de inglés debe estar entre 1 y 6', 'error');
+    if (hasPriorDiagnostic && !periodId) {
+      showToast('Para un segundo examen de diagnóstico debes seleccionar un período publicado', 'error');
       return;
     }
 
@@ -99,22 +104,29 @@ export const RequestDiagnosticExamPage = () => {
     try {
       setSubmitting(true);
       setError(null);
-      
-      // Si no hay períodos disponibles o se eligió solicitud directa, enviar sin periodId
-      const examData: any = {
+
+      const examData: { examType: 'DIAGNOSTICO'; periodId?: string } = {
         examType: 'DIAGNOSTICO',
-        nivelIngles,
       };
-      
+
       if (usePeriod && periodId) {
         examData.periodId = periodId;
       }
-      
-      await examsApi.createDiagnosticExam(examData);
-      showToast('Examen de diagnóstico solicitado exitosamente', 'success');
+
+      const response = await examsApi.createDiagnosticExam(examData);
+      const estatus = response.activity?.estatus;
+      const toastMessage =
+        estatus === 'LISTA_ESPERA'
+          ? 'Solicitud registrada en lista de espera. Te avisaremos cuando haya un período disponible.'
+          : estatus === 'PENDIENTE_PAGO'
+          ? 'Examen solicitado. Debes realizar el pago para completar tu inscripción.'
+          : 'Examen de diagnóstico solicitado exitosamente';
+      showToast(toastMessage, 'success');
       navigate('/student/english/status');
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al solicitar el examen de diagnóstico';
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+        'Error al solicitar el examen de diagnóstico';
       setError(errorMessage);
       showToast(errorMessage, 'error');
     } finally {
@@ -137,8 +149,9 @@ export const RequestDiagnosticExamPage = () => {
           </button>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Solicitar Examen de Diagnóstico</h1>
           <p className="text-gray-600">
-            El examen de diagnóstico es gratuito y te ayudará a determinar tu nivel actual de inglés.
-            <strong className="block mt-2">Ya no necesitas seleccionar un grupo.</strong>
+            {hasPriorDiagnostic
+              ? 'Si deseas presentar un segundo examen de diagnóstico, debes inscribirte a un período publicado. Según el período, puede tener un costo.'
+              : 'Tu primer examen de diagnóstico es gratuito. Si no hay período abierto, quedarás en lista de espera hasta que el administrador asigne fechas.'}
           </p>
         </div>
 
@@ -156,7 +169,7 @@ export const RequestDiagnosticExamPage = () => {
                 <h3 className="font-semibold text-green-900 mb-1">¡Requisitos Completados!</h3>
                 <p className="text-sm text-green-800">{enrollmentMessage}</p>
                 <p className="text-sm text-green-700 mt-2">
-                  Niveles completados: {englishStatus?.completedLevels?.join(', ') || 'N/A'} | 
+                  Niveles completados: {englishStatus?.completedLevels?.join(', ') || 'N/A'} |
                   Promedio: {englishStatus?.promedioIngles?.toFixed(2) || 'N/A'}%
                 </p>
               </div>
@@ -169,7 +182,7 @@ export const RequestDiagnosticExamPage = () => {
             <div className="flex items-start gap-3">
               <Icon name="warning" size={24} className="text-orange-600 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-orange-900 mb-1">Ya estás inscrito</h3>
+                <h3 className="font-semibold text-orange-900 mb-1">Solicitud activa</h3>
                 <p className="text-sm text-orange-800">{enrollmentMessage}</p>
               </div>
             </div>
@@ -198,113 +211,130 @@ export const RequestDiagnosticExamPage = () => {
             </div>
           </Card>
         ) : (
-        <Card className="p-6">
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <label className="flex items-center gap-2 mb-2">
-                <input
-                  type="checkbox"
-                  checked={usePeriod}
-                  onChange={(e) => setUsePeriod(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  Inscribirme a un período de exámenes disponible
-                </span>
-              </label>
-              {usePeriod && (
-                <p className="text-sm text-gray-500 ml-6">
-                  Selecciona un período abierto para inscribirte. Si no hay períodos disponibles, puedes solicitar el examen directamente.
-                </p>
+          <Card className="p-6">
+            <form onSubmit={handleSubmit}>
+              {!hasPriorDiagnostic && (
+                <div className="mb-6">
+                  <label className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      checked={usePeriod}
+                      onChange={(e) => setUsePeriod(e.target.checked)}
+                      disabled={availablePeriods.length === 0}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Inscribirme a un período de exámenes disponible
+                    </span>
+                  </label>
+                  {usePeriod && (
+                    <p className="text-sm text-gray-500 ml-6">
+                      Selecciona un período abierto. Si no hay períodos, puedes solicitar el examen y quedar en lista de espera.
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
 
-            {usePeriod && (
-              <FormField
-                label="Período de Exámenes"
-                name="periodId"
-                value={periodId}
-                onChange={(e) => setPeriodId(e.target.value)}
-                required={usePeriod}
-                as="select"
-                disabled={loadingPeriods}
-                options={[
-                  { value: '', label: loadingPeriods ? 'Cargando períodos...' : 'Selecciona un período' },
-                  ...availablePeriods.map((period) => ({
-                    value: period.id,
-                    label: `${period.nombre} (${period.cuposDisponibles} cupos disponibles)`,
-                  })),
-                ]}
-              />
-            )}
+              {(usePeriod || hasPriorDiagnostic) && (
+                <FormField
+                  label="Período de Exámenes"
+                  name="periodId"
+                  value={periodId}
+                  onChange={(e) => setPeriodId(e.target.value)}
+                  required={usePeriod || hasPriorDiagnostic}
+                  as="select"
+                  disabled={loadingPeriods}
+                  options={[
+                    {
+                      value: '',
+                      label: loadingPeriods
+                        ? 'Cargando períodos...'
+                        : availablePeriods.length === 0
+                        ? 'No hay períodos disponibles'
+                        : 'Selecciona un período',
+                    },
+                    ...availablePeriods.map((period) => ({
+                      value: period.id,
+                      label: `${period.nombre} (${period.cuposDisponibles} cupos)${
+                        period.requierePago && period.montoPago
+                          ? ` — $${period.montoPago.toFixed(2)}`
+                          : ''
+                      }`,
+                    })),
+                  ]}
+                />
+              )}
 
-            {!usePeriod && (
-              <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-yellow-800">
-                  <strong>Nota:</strong> Estás solicitando el examen directamente sin período. 
-                  Esto puede requerir aprobación adicional.
-                </p>
-              </div>
-            )}
+              {!usePeriod && !hasPriorDiagnostic && (
+                <div className="mb-4 bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                  <p className="text-sm text-indigo-800">
+                    <strong>Lista de espera:</strong> No hay período abierto en este momento. Tu solicitud quedará
+                    registrada y el administrador te asignará fechas cuando publique un período. El primer diagnóstico
+                    es gratuito.
+                  </p>
+                </div>
+              )}
 
-            <FormField
-              label="Nivel de Inglés Esperado"
-              name="nivelIngles"
-              type="number"
-              value={nivelIngles}
-              onChange={(e) => setNivelIngles(Number(e.target.value))}
-              min={1}
-              max={6}
-              required
-              helpText="Selecciona el nivel que crees tener (1-6)"
-            />
+              {hasPriorDiagnostic && availablePeriods.length === 0 && (
+                <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800">
+                    No hay períodos de examen abiertos. Cuando el administrador publique uno, podrás inscribirte desde
+                    aquí o desde &quot;Ver períodos disponibles&quot;.
+                  </p>
+                </div>
+              )}
 
-            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <Icon name="info" size={24} className="text-blue-600 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-blue-900 mb-1">Información importante</h3>
-                  <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-                    <li>El examen de diagnóstico es completamente gratuito</li>
-                    <li>No requiere aprobación de pago</li>
-                    <li>El resultado determinará tu nivel inicial de inglés (1-6)</li>
-                    <li>Una vez completado, podrás inscribirte a los cursos correspondientes</li>
-                  </ul>
+              <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Icon name="info" size={24} className="text-blue-600 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 mb-1">Información importante</h3>
+                    <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                      <li>El primer examen de diagnóstico es gratuito</li>
+                      <li>No necesitas indicar tu nivel: el resultado del examen define tu placement (niveles 1–6)</li>
+                      <li>Sin período abierto, entras a lista de espera hasta que haya fechas</li>
+                      <li>Un segundo diagnóstico solo es posible inscribiéndote a un período (puede tener costo)</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-6 flex gap-4">
-              <button
-                type="button"
-                onClick={() => navigate('/student/english/status')}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={(usePeriod && !periodId) || submitting || isAlreadyEnrolled || hasCompletedAllRequirements}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <ButtonLoader size="sm" />
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <Icon name="check" size={20} />
-                    Solicitar Examen
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </Card>
+              <div className="mt-6 flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/student/english/status')}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    ((usePeriod || hasPriorDiagnostic) && !periodId) ||
+                    submitting ||
+                    isAlreadyEnrolled ||
+                    hasCompletedAllRequirements ||
+                    (hasPriorDiagnostic && availablePeriods.length === 0)
+                  }
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <ButtonLoader size="sm" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="check" size={20} />
+                      {usePeriod || hasPriorDiagnostic ? 'Solicitar Examen' : 'Entrar a Lista de Espera'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </Card>
         )}
       </div>
     </Layout>
   );
 };
-

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { examsApi, studentsApi, examPeriodsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { Badge, Icon, SkeletonTable, EmptyState } from '../../components/ui';
+import { Badge, Icon, SkeletonTable, EmptyState, FormField, ButtonLoader } from '../../components/ui';
 import type { Student, ExamPeriod } from '../../types';
 
 interface Exam {
@@ -78,6 +78,14 @@ export const DiagnosticExamsListPage = () => {
   // Debounced search
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
+  const [waitlist, setWaitlist] = useState<{ total: number; byType: Array<{ examType: string; count: number }> } | null>(null);
+  const [assignModal, setAssignModal] = useState<{
+    isOpen: boolean;
+    examId: string | null;
+    periodId: string;
+  }>({ isOpen: false, examId: null, periodId: '' });
+  const [assigning, setAssigning] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -89,6 +97,10 @@ export const DiagnosticExamsListPage = () => {
 
   useEffect(() => {
     fetchOptions();
+    examsApi
+      .getWaitlistSummary()
+      .then(setWaitlist)
+      .catch((err) => console.error('Error fetching exam waitlist:', err));
   }, []);
 
   useEffect(() => {
@@ -243,6 +255,32 @@ export const DiagnosticExamsListPage = () => {
     }
   };
 
+  const handleOpenAssignModal = (examId: string) => {
+    setAssignModal({ isOpen: true, examId, periodId: '' });
+  };
+
+  const handleCloseAssignModal = () => {
+    setAssignModal({ isOpen: false, examId: null, periodId: '' });
+  };
+
+  const handleAssignPeriod = async () => {
+    if (!assignModal.examId || !assignModal.periodId) return;
+    try {
+      setAssigning(true);
+      await examsApi.assignPeriod(assignModal.examId, { periodId: assignModal.periodId });
+      showToast('Período asignado exitosamente', 'success');
+      handleCloseAssignModal();
+      fetchExams();
+      examsApi.getWaitlistSummary().then(setWaitlist).catch(() => {});
+    } catch (err: any) {
+      showToast(err.response?.data?.error || 'Error al asignar período', 'error');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const openPeriods = periods.filter((p) => p.estatus === 'ABIERTO');
+
   const handleClearFilters = () => {
     setSearchTerm('');
     setStudentIdFilter('');
@@ -275,6 +313,10 @@ export const DiagnosticExamsListPage = () => {
         return 'danger';
       case 'CANCELADO':
         return 'default';
+      case 'LISTA_ESPERA':
+        return 'info';
+      case 'PENDIENTE_PAGO':
+        return 'warning';
       default:
         return 'default';
     }
@@ -300,6 +342,8 @@ export const DiagnosticExamsListPage = () => {
         return 'Pago Pendiente';
       case 'PAGO_APROBADO':
         return 'Pago Aprobado';
+      case 'LISTA_ESPERA':
+        return 'Lista de Espera';
       default:
         return estatus || '-';
     }
@@ -349,6 +393,29 @@ export const DiagnosticExamsListPage = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Exámenes de Diagnóstico</h1>
         </div>
+
+        {waitlist && waitlist.total > 0 && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-indigo-900">
+                Lista de espera: {waitlist.total} solicitud{waitlist.total === 1 ? '' : 'es'} sin período
+              </p>
+              <p className="text-sm text-indigo-800 mt-1">
+                Asigna un período abierto a cada solicitud en lista de espera.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setEstatusFilter('LISTA_ESPERA');
+                setCurrentPage(1);
+              }}
+              className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Ver lista de espera
+            </button>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
@@ -447,6 +514,8 @@ export const DiagnosticExamsListPage = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Todos</option>
+                <option value="LISTA_ESPERA">Lista de Espera</option>
+                <option value="PENDIENTE_PAGO">Pendiente Pago</option>
                 <option value="INSCRITO">Inscrito</option>
                 <option value="EN_CURSO">En Curso</option>
                 <option value="APROBADO">Aprobado</option>
@@ -625,7 +694,16 @@ export const DiagnosticExamsListPage = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex items-center justify-end gap-2">
-                              {exam.estatus === 'PENDIENTE_PAGO' && exam.exam?.requierePago && (
+                              {exam.estatus === 'LISTA_ESPERA' && (
+                                <button
+                                  onClick={() => handleOpenAssignModal(exam.id)}
+                                  className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+                                  title="Asignar período"
+                                >
+                                  Asignar Período
+                                </button>
+                              )}
+                              {exam.estatus === 'PENDIENTE_PAGO' && exam.exam?.requierePago && exam.exam?.pagoAprobado !== false && (
                                 <>
                                   <button
                                     onClick={() => handleOpenPaymentModal(exam.id)}
@@ -746,6 +824,48 @@ export const DiagnosticExamsListPage = () => {
           </div>
         )}
       </div>
+
+      {/* Assign Period Modal */}
+      {assignModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Asignar Período</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Selecciona un período abierto con cupo. Si el período requiere pago, el alumno quedará en pendiente de pago.
+            </p>
+            <FormField
+              label="Período"
+              name="assignPeriodId"
+              value={assignModal.periodId}
+              onChange={(e) => setAssignModal({ ...assignModal, periodId: e.target.value })}
+              as="select"
+              options={[
+                { value: '', label: 'Selecciona un período' },
+                ...openPeriods.map((p) => ({
+                  value: p.id,
+                  label: `${p.nombre} (${(p.cupoMaximo || 0) - (p.cupoActual || 0)} cupos)`,
+                })),
+              ]}
+            />
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={handleCloseAssignModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAssignPeriod}
+                disabled={!assignModal.periodId || assigning}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {assigning ? <ButtonLoader /> : null}
+                Asignar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Payment Approval Modal */}
       {paymentModal.isOpen && (

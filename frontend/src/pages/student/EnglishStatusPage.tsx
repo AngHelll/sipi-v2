@@ -39,6 +39,7 @@ interface EnglishStatus {
     requierePago: boolean;
     pagoAprobado: boolean | null;
     montoPago: number | null;
+    observaciones?: string | null;
   }>;
   englishCourses: Array<{
     id: string;
@@ -65,6 +66,7 @@ interface EnglishStatus {
     requierePago: boolean;
     pagoAprobado: boolean | null;
     montoPago: number | null;
+    observaciones?: string | null;
   } | null;
   progress: {
     totalLevels: number;
@@ -193,77 +195,140 @@ export const EnglishStatusPage = () => {
         </div>
 
         {/* Pending exam notification */}
-        {status.pendingExam && (
-          <div className={`mb-8 border rounded-lg p-4 flex items-start gap-3 ${
-            status.pendingExam.estatus === 'PENDIENTE_PAGO' 
-              ? 'bg-orange-50 border-orange-200' 
-              : status.pendingExam.estatus === 'PAGO_PENDIENTE_APROBACION'
-              ? 'bg-purple-50 border-purple-200'
-              : 'bg-yellow-50 border-yellow-200'
-          }`}>
-            <Icon 
-              name={status.pendingExam.estatus === 'PENDIENTE_PAGO' ? 'warning' : 'info'} 
-              size={24} 
+        {status.pendingExam && (() => {
+          const pe = status.pendingExam;
+          const paymentRejected = pe.estatus === 'PENDIENTE_PAGO' && pe.pagoAprobado === false;
+          const bannerClass = paymentRejected
+            ? 'bg-red-50 border-red-200'
+            : pe.estatus === 'PENDIENTE_PAGO'
+            ? 'bg-orange-50 border-orange-200'
+            : pe.estatus === 'PAGO_PENDIENTE_APROBACION'
+            ? 'bg-purple-50 border-purple-200'
+            : pe.estatus === 'LISTA_ESPERA'
+            ? 'bg-indigo-50 border-indigo-200'
+            : 'bg-yellow-50 border-yellow-200';
+          const titleClass = paymentRejected
+            ? 'text-red-900'
+            : pe.estatus === 'PENDIENTE_PAGO'
+            ? 'text-orange-900'
+            : pe.estatus === 'PAGO_PENDIENTE_APROBACION'
+            ? 'text-purple-900'
+            : pe.estatus === 'LISTA_ESPERA'
+            ? 'text-indigo-900'
+            : 'text-yellow-900';
+          const bodyClass = paymentRejected
+            ? 'text-red-800'
+            : pe.estatus === 'PENDIENTE_PAGO'
+            ? 'text-orange-800'
+            : pe.estatus === 'PAGO_PENDIENTE_APROBACION'
+            ? 'text-purple-800'
+            : pe.estatus === 'LISTA_ESPERA'
+            ? 'text-indigo-800'
+            : 'text-yellow-800';
+          const detailClass = paymentRejected
+            ? 'text-red-700'
+            : pe.estatus === 'PENDIENTE_PAGO'
+            ? 'text-orange-700'
+            : pe.estatus === 'PAGO_PENDIENTE_APROBACION'
+            ? 'text-purple-700'
+            : pe.estatus === 'LISTA_ESPERA'
+            ? 'text-indigo-700'
+            : 'text-yellow-700';
+          const title = paymentRejected
+            ? 'Pago rechazado'
+            : pe.estatus === 'PENDIENTE_PAGO'
+            ? 'Examen de diagnóstico pendiente de pago'
+            : pe.estatus === 'PAGO_PENDIENTE_APROBACION'
+            ? 'Pago en revisión'
+            : pe.estatus === 'LISTA_ESPERA'
+            ? 'En lista de espera'
+            : 'Tienes un examen de diagnóstico inscrito';
+          const description = paymentRejected
+            ? (pe.observaciones ||
+              'Tu comprobante de pago fue rechazado. Cancela esta solicitud y vuelve a inscribirte cuando tengas el comprobante correcto.')
+            : pe.estatus === 'PENDIENTE_PAGO'
+            ? `Este examen requiere pago de $${pe.montoPago?.toFixed(2) || 'N/A'}. Lleva tu comprobante físico a Servicio Estudiantil.`
+            : pe.estatus === 'PAGO_PENDIENTE_APROBACION'
+            ? 'Tu comprobante de pago está siendo revisado por el administrador.'
+            : pe.estatus === 'LISTA_ESPERA'
+            ? 'Tu solicitud está en lista de espera. Cuando el administrador publique un período y te asigne fechas, podrás presentar el examen.'
+            : 'Estás inscrito en un examen de diagnóstico. Podrás presentarlo según las fechas del período asignado.';
+
+          return (
+          <div className={`mb-8 border rounded-lg p-4 flex items-start gap-3 ${bannerClass}`}>
+            <Icon
+              name={paymentRejected || pe.estatus === 'PENDIENTE_PAGO' ? 'warning' : 'info'}
+              size={24}
               className={`mt-0.5 ${
-                status.pendingExam.estatus === 'PENDIENTE_PAGO' 
-                  ? 'text-orange-600' 
-                  : status.pendingExam.estatus === 'PAGO_PENDIENTE_APROBACION'
+                paymentRejected
+                  ? 'text-red-600'
+                  : pe.estatus === 'PENDIENTE_PAGO'
+                  ? 'text-orange-600'
+                  : pe.estatus === 'PAGO_PENDIENTE_APROBACION'
                   ? 'text-purple-600'
+                  : pe.estatus === 'LISTA_ESPERA'
+                  ? 'text-indigo-600'
                   : 'text-yellow-600'
-              }`} 
+              }`}
             />
             <div className="flex-1">
-              <h2 className={`text-lg font-semibold mb-1 ${
-                status.pendingExam.estatus === 'PENDIENTE_PAGO' 
-                  ? 'text-orange-900' 
-                  : status.pendingExam.estatus === 'PAGO_PENDIENTE_APROBACION'
-                  ? 'text-purple-900'
-                  : 'text-yellow-900'
-              }`}>
-                {status.pendingExam.estatus === 'PENDIENTE_PAGO' 
-                  ? 'Examen de diagnóstico pendiente de pago'
-                  : status.pendingExam.estatus === 'PAGO_PENDIENTE_APROBACION'
-                  ? 'Pago en revisión'
-                  : 'Tienes un examen de diagnóstico inscrito'}
-              </h2>
-              <p className={`text-sm mb-2 ${
-                status.pendingExam.estatus === 'PENDIENTE_PAGO' 
-                  ? 'text-orange-800' 
-                  : status.pendingExam.estatus === 'PAGO_PENDIENTE_APROBACION'
-                  ? 'text-purple-800'
-                  : 'text-yellow-800'
-              }`}>
-                {status.pendingExam.estatus === 'PENDIENTE_PAGO' 
-                  ? `Este examen requiere pago de $${status.pendingExam.montoPago?.toFixed(2) || 'N/A'}. Por favor, sube tu comprobante de pago para continuar.`
-                  : status.pendingExam.estatus === 'PAGO_PENDIENTE_APROBACION'
-                  ? 'Tu comprobante de pago está siendo revisado por el administrador. Te notificaremos cuando sea aprobado.'
-                  : 'Estás inscrito en un examen de diagnóstico de inglés. Podrás presentarlo según las fechas y horarios establecidos por el administrador.'}
-              </p>
-              <div className={`text-sm space-y-1 ${
-                status.pendingExam.estatus === 'PENDIENTE_PAGO' 
-                  ? 'text-orange-700' 
-                  : status.pendingExam.estatus === 'PAGO_PENDIENTE_APROBACION'
-                  ? 'text-purple-700'
-                  : 'text-yellow-700'
-              }`}>
-                <p><strong>Código:</strong> {status.pendingExam.codigo}</p>
-                <p><strong>Fecha de inscripción:</strong> {new Date(status.pendingExam.fechaInscripcion).toLocaleDateString('es-MX')}</p>
-                {status.pendingExam.period && (
-                  <p><strong>Período:</strong> {status.pendingExam.period.nombre}</p>
+              <h2 className={`text-lg font-semibold mb-1 ${titleClass}`}>{title}</h2>
+              <p className={`text-sm mb-2 ${bodyClass}`}>{description}</p>
+              <div className={`text-sm space-y-1 ${detailClass}`}>
+                <p><strong>Código:</strong> {pe.codigo}</p>
+                <p><strong>Fecha de inscripción:</strong> {new Date(pe.fechaInscripcion).toLocaleDateString('es-MX')}</p>
+                {pe.period && (
+                  <p><strong>Período:</strong> {pe.period.nombre}</p>
                 )}
-                {status.pendingExam.requierePago && status.pendingExam.montoPago && (
-                  <p><strong>Monto a pagar:</strong> ${status.pendingExam.montoPago.toFixed(2)}</p>
+                {pe.requierePago && pe.montoPago && !paymentRejected && (
+                  <p><strong>Monto a pagar:</strong> ${pe.montoPago.toFixed(2)}</p>
                 )}
               </div>
-              {status.pendingExam.estatus === 'PENDIENTE_PAGO' && (
+              {pe.estatus === 'PENDIENTE_PAGO' && !paymentRejected && (
                 <div className="mt-4">
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                     <p className="text-sm text-yellow-800">
-                      <strong>Instrucciones:</strong> Debes llevar tu comprobante de pago físico a Servicio Estudiantil para que se procese tu inscripción.
+                      <strong>Instrucciones:</strong> Debes llevar tu comprobante de pago físico a Servicio Estudiantil.
                     </p>
                   </div>
                 </div>
               )}
+              {CANCELABLE_STATUSES.includes(pe.estatus) && (
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => handleCancelExam(pe.id)}
+                    disabled={cancellingId === pe.id}
+                    className="px-4 py-2 text-sm font-medium text-red-700 border border-red-300 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {cancellingId === pe.id ? 'Cancelando...' : 'Cancelar solicitud'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          );
+        })()}
+
+        {/* Second diagnostic exam (retake via period) */}
+        {!status.pendingExam &&
+          !status.cumpleRequisitoIngles &&
+          status.diagnosticExams.some((e) => ['APROBADO', 'EVALUADO'].includes(e.estatus)) && (
+          <div className="mb-8 bg-slate-50 border border-slate-200 rounded-lg p-4 flex items-start gap-3">
+            <Icon name="info" size={24} className="text-slate-600 mt-0.5" />
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 mb-1">¿Quieres presentar otro diagnóstico?</h2>
+              <p className="text-sm text-slate-800 mb-3">
+                Ya completaste un examen de diagnóstico. Si deseas un segundo intento, inscríbete a un período
+                publicado (puede tener costo según el período).
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/student/english/request-exam')}
+                className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm"
+              >
+                Solicitar segundo diagnóstico
+              </button>
             </div>
           </div>
         )}

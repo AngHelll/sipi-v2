@@ -454,8 +454,7 @@ export type UpdateExamPeriodRequest = {
 export type CreateExamRequest = {
   examType: ExamType;
   subjectId?: string;
-  nivelIngles?: number;
-  periodId?: string; // Opcional: asociar a un período
+  periodId?: string; // Opcional: primer diagnóstico sin período → lista de espera; retoma solo con período
 };
 
 export type ProcessExamResultRequest = {

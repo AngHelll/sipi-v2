@@ -1,6 +1,6 @@
 # 📋 Flujos de Negocio - SIPI-V2
 
-**Última actualización:** 2026-05-24
+**Última actualización:** 2026-06-11
 
 Este documento centraliza todos los flujos de negocio principales del sistema.
 
@@ -13,11 +13,18 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 ### Exámenes de Diagnóstico
 
 #### Flujo de Solicitud (Estudiante)
-1. Estudiante solicita examen: `POST /api/academic-activities/exams`
-2. Sistema crea `academic_activity` (tipo: EXAM, estatus: INSCRITO)
-3. Sistema crea `exam` (tipo: DIAGNOSTICO)
-4. Sistema registra en `activity_history`
-5. Si hay período asociado, incrementa `cupoActual`
+1. Estudiante solicita examen: `POST /api/academic-activities/exams` body `{ "examType": "DIAGNOSTICO", "periodId"?: "..." }`
+   - **Sin `periodId`** (primer diagnóstico): estatus **`LISTA_ESPERA`**, sin pago. El admin asigna período cuando publique uno (`PUT .../exams/:id/assign-period`).
+   - **Con `periodId`**: inscripción al período → `PENDIENTE_PAGO` o `INSCRITO` según cobro del período.
+   - **Segundo diagnóstico** (ya tiene examen `APROBADO`/`EVALUADO`): solo vía `periodId`; puede tener costo según el período.
+2. Sistema crea `academic_activity` (tipo: EXAM) y `exam` (tipo: DIAGNOSTICO, `nivelIngles: null` hasta calificar).
+3. Sistema registra en `activity_history`.
+4. Si hay período asociado, incrementa `cupoActual`.
+5. El **nivel de placement no se captura en la solicitud**; lo define `PUT .../exams/:id/result`.
+
+#### Lista de espera (exámenes)
+- Admin consulta demanda: `GET /api/academic-activities/exams/waitlist/summary`
+- Admin asigna período: `PUT /api/academic-activities/exams/:id/assign-period` body `{ "periodId" }` → `PENDIENTE_PAGO` o `INSCRITO` según el período.
 
 #### Cancelación de Solicitud
 - Estudiante: `PUT /api/academic-activities/exams/:id/cancel` — solo sus propias solicitudes, en estados tempranos (`LISTA_ESPERA`, `PENDIENTE_PAGO`, `INSCRITO`) y sin resultado registrado.
@@ -26,9 +33,13 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 
 #### Flujo de Procesamiento (Admin/Teacher)
 1. Admin visualiza inscripciones: `GET /api/academic-activities/exams`
-2. Admin procesa resultado: `PUT /api/academic-activities/exams/:id/result`
-3. Sistema actualiza calificación y estatus
-4. Sistema asigna nivel de inglés al estudiante si aplica
+2. Admin procesa resultado: `PUT /api/academic-activities/exams/:id/result` (solo `INSCRITO`/`EN_CURSO`, pago aprobado si aplica, sin resultado previo)
+3. Sistema actualiza calificación y estatus (`APROBADO` ≥70, `EVALUADO` <70 — estados **terminales** para nuevas solicitudes)
+4. Sistema asigna nivel de inglés al estudiante según el resultado
+
+#### Pago rechazado (examen)
+- Admin: `PUT .../exams/:id/reject-payment` — deja `PENDIENTE_PAGO` con `pagoAprobado: false` y observaciones con el motivo.
+- El alumno debe **cancelar** la solicitud y volver a inscribirse con comprobante correcto (o elegir otro período).
 
 ### Períodos de Exámenes
 
