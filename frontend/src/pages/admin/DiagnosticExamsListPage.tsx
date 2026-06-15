@@ -279,7 +279,11 @@ export const DiagnosticExamsListPage = () => {
     }
   };
 
-  const openPeriods = periods.filter((p) => p.estatus === 'ABIERTO');
+  const openPeriods = periods.filter((p) => {
+    if (p.estatus !== 'ABIERTO') return false;
+    const cupos = (p.cupoMaximo ?? 0) - (p.cupoActual ?? 0);
+    return cupos > 0;
+  });
 
   const handleClearFilters = () => {
     setSearchTerm('');
@@ -831,8 +835,15 @@ export const DiagnosticExamsListPage = () => {
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Asignar Período</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Selecciona un período abierto con cupo. Si el período requiere pago, el alumno quedará en pendiente de pago.
+              Selecciona un período en estatus <strong>ABIERTO</strong> con cupo disponible.
+              Si el período requiere pago, el alumno quedará en pendiente de pago.
+              La asignación admin no depende de la ventana de inscripción pública.
             </p>
+            {openPeriods.length === 0 ? (
+              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                No hay períodos ABIERTOS con cupo. Crea o abre un período en Administración → Períodos de examen.
+              </div>
+            ) : null}
             <FormField
               label="Período"
               name="assignPeriodId"

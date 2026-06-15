@@ -175,8 +175,12 @@ export const assignPeriodToExam = async (
     throw new Error('Solo se puede asignar período a solicitudes en lista de espera');
   }
 
+  if (activity.exams.periodId) {
+    throw new Error('Esta solicitud ya tiene un período asignado');
+  }
+
   const { ExamPeriodsValidators } = await import('../exam-periods/exam-periods.validators');
-  await ExamPeriodsValidators.validatePeriodOpen(periodId);
+  await ExamPeriodsValidators.validatePeriodAssignableByAdmin(periodId);
   await ExamPeriodsValidators.validateCapacity(periodId);
 
   const period = await (prisma as any).diagnostic_exam_periods.findUnique({

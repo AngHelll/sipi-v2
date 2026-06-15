@@ -84,6 +84,29 @@ export class ExamPeriodsValidators {
       throw new Error('El período de inscripciones no está activo en este momento');
     }
   }
+
+  /**
+   * Admin assigning a waitlisted student: period must be ABIERTO with cupo.
+   * Does not require the public inscription window (admin clears the waitlist).
+   */
+  static async validatePeriodAssignableByAdmin(periodId: string): Promise<void> {
+    const prisma = require('../../../config/database').default;
+    const period = await (prisma as any).diagnostic_exam_periods.findUnique({
+      where: { id: periodId },
+    });
+
+    if (!period) {
+      throw new Error('Período de exámenes no encontrado');
+    }
+
+    if (period.estatus !== 'ABIERTO') {
+      throw new Error('El período debe estar en estatus ABIERTO para asignar desde lista de espera');
+    }
+
+    if (period.cupoActual >= period.cupoMaximo) {
+      throw new Error('El período de exámenes está lleno');
+    }
+  }
 }
 
 

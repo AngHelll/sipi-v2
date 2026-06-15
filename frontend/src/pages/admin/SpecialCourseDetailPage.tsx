@@ -120,18 +120,24 @@ export const SpecialCourseDetailPage = () => {
     return labels[courseType] || courseType;
   };
 
-  // Carga grupos de inglés disponibles cuando la solicitud está en lista de espera
+  // Grupos asignables por admin (sin filtro de ventana de inscripción del alumno)
   useEffect(() => {
     if (course?.estatus === 'LISTA_ESPERA' && course.course?.courseType === 'INGLES') {
+      const nivel = course.course?.nivelIngles;
       groupsApi
-        .getAvailableEnglishCourses()
+        .getAll({ limit: 100, page: 1 })
         .then((result) => {
-          const nivel = course.course?.nivelIngles;
           setAvailableGroups(
-            nivel ? result.courses.filter((g) => g.nivelIngles === nivel) : result.courses
+            result.groups.filter(
+              (g) =>
+                g.esCursoIngles &&
+                (!nivel || g.nivelIngles === nivel) &&
+                g.estatus === 'ABIERTO' &&
+                (g.cupoActual ?? 0) < (g.cupoMaximo ?? 0)
+            )
           );
         })
-        .catch((err) => console.error('Error fetching available groups:', err));
+        .catch((err) => console.error('Error fetching assignable groups:', err));
     }
   }, [course]);
 
