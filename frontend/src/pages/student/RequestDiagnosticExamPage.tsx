@@ -33,10 +33,10 @@ export const RequestDiagnosticExamPage = () => {
       const status = await examsApi.getStudentEnglishStatusV2();
       setEnglishStatus(status);
 
-      if (status.cumpleRequisitoIngles && status.completedLevels?.length === 6) {
+      if (status.cumpleRequisitoIngles) {
         setHasCompletedAllRequirements(true);
         setEnrollmentMessage(
-          '¡Felicidades! Ya has cumplido con todos los requisitos de inglés. Has completado todos los niveles (1-6) con un promedio aprobatorio. No es necesario realizar más exámenes de diagnóstico.'
+          '¡Felicidades! Ya has cumplido con todos los requisitos de inglés. No es necesario realizar más exámenes de diagnóstico.'
         );
         return;
       }

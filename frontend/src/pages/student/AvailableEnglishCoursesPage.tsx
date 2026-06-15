@@ -1,36 +1,54 @@
-// Available English Courses Page - Student can view and enroll in available English courses
+// Available English Courses Page - filtered by student's current English level
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
-import { groupsApi, specialCoursesApi } from '../../lib/api';
+import { groupsApi, examsApi, specialCoursesApi } from '../../lib/api';
+import {
+  getCourseEligibility,
+  getEligibleCourseLevel,
+  type StudentEnglishStatusSnapshot,
+} from '../../lib/englishEligibility';
 import { useToast } from '../../context/ToastContext';
-import { Card, Loader } from '../../components/ui';
+import { Card, Loader, Icon } from '../../components/ui';
 import type { Group } from '../../types';
 
 export const AvailableEnglishCoursesPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [courses, setCourses] = useState<Group[]>([]);
+  const [courseEligibility, setCourseEligibility] = useState<ReturnType<typeof getCourseEligibility> | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCourses();
+    fetchData();
   }, []);
 
-  const fetchCourses = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const result = await groupsApi.getAvailableEnglishCourses();
-      console.log('📊 Cursos recibidos del API:', result);
-      console.log('📊 Total de cursos:', result.total);
-      console.log('📊 Array de cursos:', result.courses);
-      setCourses(result.courses || []);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al cargar los cursos disponibles';
+      const [coursesResult, status] = await Promise.all([
+        groupsApi.getAvailableEnglishCourses(),
+        examsApi.getStudentEnglishStatusV2(),
+      ]);
+      const snapshot: StudentEnglishStatusSnapshot = {
+        cumpleRequisitoIngles: status.cumpleRequisitoIngles,
+        nivelInglesActual: status.nivelInglesActual,
+        pendingExam: status.pendingExam,
+        diagnosticExams: status.diagnosticExams,
+        englishCourses: status.englishCourses,
+      };
+      const eligibility = getCourseEligibility(snapshot);
+      setCourseEligibility(eligibility);
+
+      const level = getEligibleCourseLevel(snapshot);
+      const filtered = (coursesResult.courses || []).filter((c) => c.nivelIngles === level);
+      setCourses(filtered);
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+        'Error al cargar los cursos disponibles';
       showToast(errorMessage, 'error');
-      console.error('❌ Error fetching available courses:', err);
-      console.error('❌ Error response:', err.response?.data);
       setCourses([]);
     } finally {
       setLoading(false);
@@ -38,21 +56,38 @@ export const AvailableEnglishCoursesPage = () => {
   };
 
   const handleEnroll = async (groupId: string, courseName: string, nivelIngles: number) => {
+    if (!courseEligibility?.canRequest) {
+      showToast(courseEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
+      return;
+    }
+
+    if (nivelIngles !== courseEligibility.level) {
+      showToast(`Solo puedes inscribirte al nivel ${courseEligibility.level}`, 'error');
+      return;
+    }
+
     if (!confirm(`¿Deseas inscribirte al curso "${courseName}"?`)) {
       return;
     }
 
     try {
       setEnrolling(groupId);
-      await specialCoursesApi.createSpecialCourse({
+      const result = await specialCoursesApi.createSpecialCourse({
         courseType: 'INGLES',
         nivelIngles,
         groupId,
       });
-      showToast('Te has inscrito exitosamente al curso de inglés', 'success');
+      showToast(
+        result.activity.estatus === 'LISTA_ESPERA'
+          ? 'Te agregamos a la lista de espera.'
+          : 'Curso solicitado. Realiza el pago y lleva tu comprobante a Servicio Estudiantil.',
+        'success'
+      );
       navigate('/student/english/status');
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al inscribirse al curso';
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+        'Error al inscribirse al curso';
       showToast(errorMessage, 'error');
     } finally {
       setEnrolling(null);
@@ -83,6 +118,9 @@ export const AvailableEnglishCoursesPage = () => {
     );
   };
 
+  const eligibleLevel = courseEligibility?.level ?? 1;
+  const canEnroll = courseEligibility?.canRequest ?? false;
+
   if (loading) {
     return (
       <Layout>
@@ -108,109 +146,102 @@ export const AvailableEnglishCoursesPage = () => {
           </button>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Cursos de Inglés Disponibles</h1>
           <p className="text-gray-600">
-            Selecciona un curso de inglés disponible para inscribirte. Asegúrate de tener el nivel apropiado.
-            <br />
-            <span className="font-semibold text-gray-800">
-              Aunque puedes solicitar inscribirte directamente (especialmente a nivel 1), se recomienda realizar primero tu examen de diagnóstico.
-            </span>
+            Solo se muestran grupos de <strong>nivel {eligibleLevel}</strong> (tu nivel actual).
+            {!courseEligibility?.canRequest && courseEligibility?.reason
+              ? ''
+              : ' Si no hay grupo publicado, puedes unirte a la lista de espera desde solicitar curso.'}
           </p>
         </div>
 
+        {!canEnroll && courseEligibility?.reason && (
+          <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
+            <Icon name="warning" size={24} className="text-orange-600 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-orange-900 mb-1">No puedes inscribirte ahora</h3>
+              <p className="text-sm text-orange-800">{courseEligibility.reason}</p>
+            </div>
+          </div>
+        )}
+
         {courses.length === 0 ? (
           <Card className="p-8 text-center">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay cursos disponibles</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              No hay cursos de nivel {eligibleLevel} disponibles
+            </h3>
             <p className="text-gray-600 mb-4">
-              Actualmente no hay cursos de inglés abiertos para inscripción.
+              No hay grupos abiertos para tu nivel. Puedes unirte a la lista de espera y el área abrirá un grupo según la demanda.
             </p>
-            <button
-              onClick={() => navigate('/student/english/request-course')}
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Solicitar curso directamente →
-            </button>
+            {canEnroll && (
+              <button
+                onClick={() => navigate('/student/english/request-course')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                Unirme a lista de espera
+              </button>
+            )}
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <Card key={course.id} className="p-6 hover:shadow-lg transition-shadow">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">{course.nombre}</h3>
-                  {course.nivelIngles && getLevelBadge(course.nivelIngles)}
-                </div>
+            {courses.map((course) => {
+              const nivel = course.nivelIngles;
+              const cupoDisponible = (course.cupoMaximo || 0) - (course.cupoActual || 0);
+              const canEnrollThis = canEnroll && nivel === eligibleLevel;
 
-                <div className="space-y-2 mb-4">
-                  {course.subject && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Materia:</p>
-                      <p className="text-sm text-gray-600">
-                        {course.subject.clave} - {course.subject.nombre}
-                      </p>
-                    </div>
-                  )}
-                  {course.teacher && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Maestro:</p>
-                      <p className="text-sm text-gray-600">
-                        {course.teacher.nombre} {course.teacher.apellidoPaterno}
-                      </p>
-                    </div>
-                  )}
-                  {course.horario && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Horario:</p>
-                      <p className="text-sm text-gray-600">{course.horario}</p>
-                    </div>
-                  )}
-                  {course.aula && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Aula:</p>
-                      <p className="text-sm text-gray-600">{course.aula}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Cupos:</p>
-                    <p className="text-sm text-gray-600">
-                      {(course.cupoActual || 0)} / {(course.cupoMaximo || 0)} ({(course.cupoMaximo || 0) - (course.cupoActual || 0)} disponibles)
-                    </p>
+              return (
+                <Card key={course.id} className="p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-semibold text-gray-900">{course.nombre}</h3>
+                    {nivel != null && getLevelBadge(nivel)}
                   </div>
-                  {course.fechaInscripcionInicio && course.fechaInscripcionFin && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Inscripciones:</p>
-                      <p className="text-sm text-gray-600">
-                        Hasta {formatDate(course.fechaInscripcionFin)}
-                      </p>
-                    </div>
-                  )}
-                </div>
 
-                <button
-                  onClick={() => handleEnroll(course.id, course.nombre, course.nivelIngles || 1)}
-                  disabled={enrolling === course.id || (course.cupoActual || 0) >= (course.cupoMaximo || 0)}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {enrolling === course.id ? (
-                    <>
-                      <Loader size="sm" />
-                      Inscribiendo...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Inscribirme
-                    </>
-                  )}
-                </button>
-              </Card>
-            ))}
+                  <div className="space-y-2 mb-4">
+                    {course.subject && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Materia:</p>
+                        <p className="text-sm text-gray-600">
+                          {course.subject.clave} - {course.subject.nombre}
+                        </p>
+                      </div>
+                    )}
+                    {course.teacher && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Maestro:</p>
+                        <p className="text-sm text-gray-600">
+                          {course.teacher.nombre} {course.teacher.apellidoPaterno}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Cupos:</p>
+                      <p className="text-sm text-gray-600">{cupoDisponible} disponibles</p>
+                    </div>
+                    {course.fechaInscripcionFin && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Inscripciones hasta:</p>
+                        <p className="text-sm text-gray-600">{formatDate(course.fechaInscripcionFin)}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (nivel == null) {
+                        showToast('Este grupo no tiene nivel definido; contacta a servicios escolares.', 'error');
+                        return;
+                      }
+                      handleEnroll(course.id, course.nombre, nivel);
+                    }}
+                    disabled={!canEnrollThis || enrolling === course.id || cupoDisponible <= 0 || nivel == null}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {enrolling === course.id ? 'Inscribiendo...' : 'Inscribirme'}
+                  </button>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
     </Layout>
   );
 };
-

@@ -36,9 +36,9 @@ export const RequestEnglishCoursePage = () => {
       setEnglishStatus(status);
       
       // Check if student has completed all English requirements
-      if (status.cumpleRequisitoIngles && status.completedLevels?.length === 6) {
+      if (status.cumpleRequisitoIngles) {
         setHasCompletedAllRequirements(true);
-        setEnrollmentMessage('¡Felicidades! Ya has cumplido con todos los requisitos de inglés. Has completado todos los niveles (1-6) con un promedio aprobatorio. No es necesario inscribirte a más cursos.');
+        setEnrollmentMessage('¡Felicidades! Ya has cumplido con todos los requisitos de inglés. No es necesario inscribirte a más cursos.');
         return;
       }
       
@@ -62,6 +62,7 @@ export const RequestEnglishCoursePage = () => {
           'EN_CURSO': 'Ya estás cursando',
           'PENDIENTE_PAGO': 'Ya tienes una solicitud pendiente de pago',
           'PAGO_PENDIENTE_APROBACION': 'Ya tienes una solicitud de pago pendiente de aprobación',
+          'LISTA_ESPERA': 'Ya estás en lista de espera',
           'APROBADO': 'Ya completaste',
         };
         const statusMessage = statusMessages[activeCourse.estatus] || 'Ya tienes una solicitud activa';
@@ -159,6 +160,7 @@ export const RequestEnglishCoursePage = () => {
               'EN_CURSO': 'Ya estás cursando',
               'PENDIENTE_PAGO': 'Ya tienes una solicitud pendiente de pago',
               'PAGO_PENDIENTE_APROBACION': 'Ya tienes una solicitud de pago pendiente de aprobación',
+              'LISTA_ESPERA': 'Ya estás en lista de espera',
               'APROBADO': 'Ya completaste',
             };
             const statusMessage = statusMessages[activeCourse.estatus] || 'Ya tienes una solicitud activa';
@@ -185,6 +187,7 @@ export const RequestEnglishCoursePage = () => {
             'EN_CURSO': 'Ya estás cursando',
             'PENDIENTE_PAGO': 'Ya tienes una solicitud pendiente de pago',
             'PAGO_PENDIENTE_APROBACION': 'Ya tienes una solicitud de pago pendiente de aprobación',
+            'LISTA_ESPERA': 'Ya estás en lista de espera',
             'APROBADO': 'Ya completaste',
           };
           const statusMessage = statusMessages[activeCourse.estatus] || 'Ya tienes una solicitud activa';

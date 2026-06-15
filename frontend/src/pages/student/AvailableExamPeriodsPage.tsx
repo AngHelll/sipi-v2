@@ -3,35 +3,46 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { examPeriodsApi, examsApi } from '../../lib/api';
+import { getExamEligibility, hasPriorDiagnosticExam, type StudentEnglishStatusSnapshot } from '../../lib/englishEligibility';
 import { useToast } from '../../context/ToastContext';
-import { Card, Loader } from '../../components/ui';
+import { Card, Loader, Icon } from '../../components/ui';
 import type { AvailableExamPeriod } from '../../types';
 
 export const AvailableExamPeriodsPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [periods, setPeriods] = useState<AvailableExamPeriod[]>([]);
+  const [englishStatus, setEnglishStatus] = useState<StudentEnglishStatusSnapshot | null>(null);
+  const [examEligibility, setExamEligibility] = useState<ReturnType<typeof getExamEligibility> | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPeriods();
+    fetchData();
   }, []);
 
-  const fetchPeriods = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const result = await examPeriodsApi.getAvailablePeriods();
-      console.log('📊 Períodos recibidos del API:', result);
-      console.log('📊 Total de períodos:', result.total);
-      console.log('📊 Array de períodos:', result.periods);
-      console.log('📊 Períodos con estaDisponible=true:', result.periods.filter((p) => p.estaDisponible));
-      setPeriods(result.periods.filter((p) => p.estaDisponible));
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al cargar los períodos disponibles';
+      const [periodsResult, status] = await Promise.all([
+        examPeriodsApi.getAvailablePeriods(),
+        examsApi.getStudentEnglishStatusV2(),
+      ]);
+      const snapshot: StudentEnglishStatusSnapshot = {
+        cumpleRequisitoIngles: status.cumpleRequisitoIngles,
+        nivelInglesActual: status.nivelInglesActual,
+        pendingExam: status.pendingExam,
+        diagnosticExams: status.diagnosticExams,
+        englishCourses: status.englishCourses,
+      };
+      setEnglishStatus(snapshot);
+      setExamEligibility(getExamEligibility(snapshot));
+      setPeriods(periodsResult.periods.filter((p) => p.estaDisponible));
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+        'Error al cargar los períodos disponibles';
       showToast(errorMessage, 'error');
-      console.error('❌ Error fetching available periods:', err);
-      console.error('❌ Error response:', err.response?.data);
       setPeriods([]);
     } finally {
       setLoading(false);
@@ -39,20 +50,32 @@ export const AvailableExamPeriodsPage = () => {
   };
 
   const handleEnroll = async (periodId: string, periodName: string) => {
+    if (!examEligibility?.canRequest) {
+      showToast(examEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
+      return;
+    }
+
     if (!confirm(`¿Deseas inscribirte al período "${periodName}"?`)) {
       return;
     }
 
     try {
       setEnrolling(periodId);
-      await examsApi.createDiagnosticExam({
+      const response = await examsApi.createDiagnosticExam({
         examType: 'DIAGNOSTICO',
         periodId,
       });
-      showToast('Te has inscrito exitosamente al período de exámenes', 'success');
-      fetchPeriods(); // Refresh to update capacity
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al inscribirse al período';
+      const estatus = response.activity?.estatus;
+      const toastMessage =
+        estatus === 'PENDIENTE_PAGO'
+          ? 'Examen solicitado. Debes realizar el pago para completar tu inscripción.'
+          : 'Te has inscrito exitosamente al período de exámenes';
+      showToast(toastMessage, 'success');
+      navigate('/student/english/status');
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+        'Error al inscribirse al período';
       showToast(errorMessage, 'error');
     } finally {
       setEnrolling(null);
@@ -76,6 +99,9 @@ export const AvailableExamPeriodsPage = () => {
       minute: '2-digit',
     });
   };
+
+  const priorDiagnostic = englishStatus ? hasPriorDiagnosticExam(englishStatus) : false;
+  const canEnroll = examEligibility?.canRequest ?? false;
 
   if (loading) {
     return (
@@ -102,9 +128,21 @@ export const AvailableExamPeriodsPage = () => {
           </button>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Períodos de Exámenes Disponibles</h1>
           <p className="text-gray-600">
-            Selecciona un período de exámenes de diagnóstico disponible para inscribirte.
+            {priorDiagnostic
+              ? 'Para un segundo examen de diagnóstico debes inscribirte a un período publicado (puede tener costo).'
+              : 'Selecciona un período abierto o solicita el examen sin período para entrar a lista de espera.'}
           </p>
         </div>
+
+        {!canEnroll && examEligibility?.reason && (
+          <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
+            <Icon name="warning" size={24} className="text-orange-600 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-orange-900 mb-1">No puedes inscribirte ahora</h3>
+              <p className="text-sm text-orange-800">{examEligibility.reason}</p>
+            </div>
+          </div>
+        )}
 
         {periods.length === 0 ? (
           <Card className="p-8 text-center">
@@ -113,22 +151,18 @@ export const AvailableExamPeriodsPage = () => {
             </svg>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay períodos disponibles</h3>
             <p className="text-gray-600 mb-4">
-              Actualmente no hay períodos de exámenes abiertos para inscripción.
-              <br />
-              <span className="text-sm text-gray-500 mt-2 block">
-                Si estás interesado en realizar un examen de diagnóstico, puedes solicitarlo directamente.
-                Esto ayudará a que se abran nuevas fechas según la demanda.
-              </span>
+              {priorDiagnostic
+                ? 'No hay períodos de examen abiertos en este momento. Vuelve cuando el administrador publique uno.'
+                : 'No hay períodos abiertos. Puedes solicitar tu primer examen y quedar en lista de espera hasta que se asignen fechas.'}
             </p>
-            <button
-              onClick={() => navigate('/student/english/request-exam')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Solicitar examen de diagnóstico
-            </button>
+            {!priorDiagnostic && canEnroll && (
+              <button
+                onClick={() => navigate('/student/english/request-exam')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Entrar a lista de espera
+              </button>
+            )}
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -141,9 +175,7 @@ export const AvailableExamPeriodsPage = () => {
                   </span>
                 </div>
 
-                {period.descripcion && (
-                  <p className="text-gray-600 mb-4">{period.descripcion}</p>
-                )}
+                {period.descripcion && <p className="text-gray-600 mb-4">{period.descripcion}</p>}
 
                 <div className="space-y-3 mb-4">
                   <div>
@@ -164,11 +196,11 @@ export const AvailableExamPeriodsPage = () => {
                       {period.cuposDisponibles} de {period.cupoMaximo} disponibles
                     </p>
                   </div>
-                  {period.requierePago && (
+                  {period.requierePago && period.montoPago != null && (
                     <div>
                       <p className="text-sm font-medium text-gray-700">Costo:</p>
                       <p className="text-sm text-gray-600">
-                        ${period.montoPago?.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        ${period.montoPago.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                   )}
@@ -176,7 +208,7 @@ export const AvailableExamPeriodsPage = () => {
 
                 <button
                   onClick={() => handleEnroll(period.id, period.nombre)}
-                  disabled={enrolling === period.id || period.cuposDisponibles === 0}
+                  disabled={!canEnroll || enrolling === period.id || period.cuposDisponibles === 0}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {enrolling === period.id ? (
@@ -185,12 +217,7 @@ export const AvailableExamPeriodsPage = () => {
                       Inscribiendo...
                     </>
                   ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Inscribirme
-                    </>
+                    'Inscribirme'
                   )}
                 </button>
               </Card>
@@ -201,4 +228,3 @@ export const AvailableExamPeriodsPage = () => {
     </Layout>
   );
 };
-
