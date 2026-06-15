@@ -704,6 +704,29 @@ export const completeSpecialCourse = async (
     throw new Error('Curso especial no encontrado');
   }
 
+  if (activity.activityType !== 'SPECIAL_COURSE') {
+    throw new Error('Esta actividad no es un curso especial');
+  }
+
+  if (!['INSCRITO', 'EN_CURSO'].includes(activity.estatus)) {
+    throw new Error(`No se puede calificar un curso en estado ${activity.estatus}`);
+  }
+
+  if (activity.special_courses.requierePago && activity.special_courses.pagoAprobado !== true) {
+    throw new Error('No se puede calificar un curso con pago pendiente o rechazado');
+  }
+
+  if (
+    activity.special_courses.calificacion !== null &&
+    activity.special_courses.calificacion !== undefined
+  ) {
+    throw new Error('Este curso ya tiene calificación registrada');
+  }
+
+  if (activity.special_courses.completadoPorDiagnostico) {
+    throw new Error('Este curso fue acreditado por diagnóstico y no puede calificarse de nuevo');
+  }
+
   // Update course with grade
   await (prisma as any).special_courses.update({
     where: { id: activity.special_courses.id },

@@ -517,9 +517,9 @@ export const processExamResult = async (
     fechaExamen: exam.fechaExamen || new Date(),
   };
   
-  // If nivelIngles is provided, update it
-  if (nivelIngles !== undefined && nivelIngles !== null) {
-    if (nivelIngles < 1 || nivelIngles > 6) {
+  // If nivelIngles is provided (1-6), update it; 0 = skip a nivel 6 (no se guarda en exam)
+  if (nivelIngles !== undefined && nivelIngles !== null && nivelIngles >= 1) {
+    if (nivelIngles > 6) {
       throw new Error('El nivel de inglés debe estar entre 1 y 6');
     }
     updateData.nivelIngles = nivelIngles;
@@ -539,56 +539,32 @@ export const processExamResult = async (
   await updateActivityStatus(activityId, newStatus, processedBy);
 
   // If diagnostic exam for English, update student level
-  // Use provided nivelIngles or calculate from grade
-  // Special case: If nivelIngles is 0 and resultado >= 70, don't create course records
-  // This allows student to take level 6 as a real course
   if (exam.examType === 'DIAGNOSTICO') {
-    const finalNivel = nivelIngles !== undefined && nivelIngles !== null 
-      ? (nivelIngles === 0 ? null : nivelIngles)
-      : updatedExam.nivelIngles;
-    
-    // Special case: If nivelIngles is 0 (or null) and resultado >= 70,
-    // just update exam info but don't create course records
-    // Student can take level 6 as a real course
-    const shouldSkipCourseCreation = (nivelIngles === 0 || finalNivel === null) && resultado >= 70;
-    
-    if (shouldSkipCourseCreation) {
-      // Only update exam result and student's exam info, but don't create course records
-      // Don't set nivelInglesActual - student can take level 6 as real course
+    const explicitSkipToLevel6 = nivelIngles === 0 && resultado >= 70;
+
+    if (explicitSkipToLevel6) {
+      // Sin cursos fantasma: el alumno cursará el nivel 6 como curso real
       await prisma.students.update({
         where: { id: activity.studentId },
         data: {
+          nivelInglesActual: 6,
           fechaExamenDiagnostico: new Date(),
           porcentajeIngles: resultado,
-          // nivelInglesActual stays null - student can enroll in level 6 as real course
         },
       });
-      
-      // Don't recalculate averages since no courses were created
-      // Student will complete level 6 as a real course and then averages will be calculated
-    } else if (finalNivel !== null && finalNivel !== undefined && finalNivel > 0) {
-      // Normal flow: create course records
-      await ExamsValidators.updateStudentEnglishLevel(
-        activity.studentId, 
-        resultado, 
-        finalNivel,
-        calificacionesPorNivel
-      );
-      
-      // Recalculate averages after creating course records
-      await recalculateStudentAverages(activity.studentId).catch((error: unknown) => {
-        console.error('Error recalculating student averages after diagnostic exam:', error);
-      });
     } else {
-      // If no nivelIngles is set and grade < 70, calculate from grade
+      const placementNivel =
+        nivelIngles !== undefined && nivelIngles !== null && nivelIngles >= 1
+          ? nivelIngles
+          : undefined;
+
       await ExamsValidators.updateStudentEnglishLevel(
-        activity.studentId, 
+        activity.studentId,
         resultado,
-        undefined,
+        placementNivel,
         calificacionesPorNivel
       );
-      
-      // Recalculate averages after creating course records
+
       await recalculateStudentAverages(activity.studentId).catch((error: unknown) => {
         console.error('Error recalculating student averages after diagnostic exam:', error);
       });

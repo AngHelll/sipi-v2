@@ -203,20 +203,20 @@ export class SpecialCoursesValidators {
   ): Promise<void> {
     const student = await EntityValidators.validateStudentExists(studentId);
 
-    // Update certificado level if this is the highest level completed
-    const shouldUpdateCertificado = !student.nivelInglesCertificado || 
+    const shouldUpdateCertificado = !student.nivelInglesCertificado ||
                                     completedLevel > student.nivelInglesCertificado;
 
-    if (shouldUpdateCertificado) {
-      await prisma.students.update({
-        where: { id: studentId },
-        data: {
-          nivelInglesCertificado: completedLevel,
-          porcentajeIngles: finalGrade,
-          cumpleRequisitoIngles: finalGrade >= 70,
-        },
-      });
-    }
+    // Tras aprobar un curso real, el alumno avanza al siguiente nivel (cap 6)
+    const nextNivelActual = completedLevel < 6 ? completedLevel + 1 : 6;
+
+    await prisma.students.update({
+      where: { id: studentId },
+      data: {
+        ...(shouldUpdateCertificado ? { nivelInglesCertificado: completedLevel } : {}),
+        porcentajeIngles: finalGrade,
+        nivelInglesActual: nextNivelActual,
+      },
+    });
   }
 }
 

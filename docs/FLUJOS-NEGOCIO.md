@@ -34,8 +34,8 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 #### Flujo de Procesamiento (Admin/Teacher)
 1. Admin visualiza inscripciones: `GET /api/academic-activities/exams`
 2. Admin procesa resultado: `PUT /api/academic-activities/exams/:id/result` (solo `INSCRITO`/`EN_CURSO`, pago aprobado si aplica, sin resultado previo)
-3. Sistema actualiza calificación y estatus (`APROBADO` ≥70, `EVALUADO` <70 — estados **terminales** para nuevas solicitudes)
-4. Sistema asigna nivel de inglés al estudiante según el resultado
+3. Placement: si no se envía `nivelIngles`, se calcula por bandas de calificación; `nivelIngles: 0` con ≥70 coloca al alumno en nivel 6 sin cursos fantasma.
+4. Sistema actualiza calificación y estatus (`APROBADO` ≥70, `EVALUADO` <70 — estados **terminales** para nuevas solicitudes)
 
 #### Pago rechazado (examen)
 - Admin: `PUT .../exams/:id/reject-payment` — deja `PENDIENTE_PAGO` con `pagoAprobado: false` y observaciones con el motivo.
@@ -67,6 +67,10 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 3. Admin asigna el grupo a cada solicitud: `PUT /api/academic-activities/special-courses/:id/assign-group` body `{ groupId, requierePago }`.
    - Con pago → `PENDIENTE_PAGO` (el cupo se consume al aprobar el pago).
    - Sin pago → `INSCRITO` directo (consume cupo de inmediato).
+
+#### Calificación de Curso (Admin/Teacher)
+1. `PUT /api/academic-activities/special-courses/:id/complete` — solo en `INSCRITO`/`EN_CURSO`, pago aprobado si aplica, sin calificación previa; no aplica a cursos acreditados por diagnóstico.
+2. Al aprobar (≥70) un curso real de inglés, `nivelInglesActual` avanza al siguiente nivel (máx. 6).
 
 #### Cancelación de Solicitud
 - Estudiante: `PUT /api/academic-activities/special-courses/:id/cancel` — solo sus propias, en `LISTA_ESPERA`, `PENDIENTE_PAGO` o `INSCRITO`, sin calificación.

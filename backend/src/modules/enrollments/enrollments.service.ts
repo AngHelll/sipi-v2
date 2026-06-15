@@ -878,7 +878,9 @@ export const getEnrollmentsByGroup = async (
       groupId: activity.special_courses?.groupId || groupId,
       calificacion: activity.special_courses?.calificacion ? activity.special_courses.calificacion.toNumber() : null,
       calificacionFinal: activity.special_courses?.calificacion ? activity.special_courses.calificacion.toNumber() : null,
-      estatus: activity.special_courses?.estatus || activity.estatus || 'INSCRITO',
+      estatus: activity.estatus || 'INSCRITO',
+      requierePago: activity.special_courses?.requierePago || false,
+      pagoAprobado: activity.special_courses?.pagoAprobado ?? null,
       fechaInscripcion: activity.fechaInscripcion ? activity.fechaInscripcion.toISOString() : undefined,
       porcentajeAsistencia: undefined, // Special courses don't have attendance tracking
       asistencias: 0,

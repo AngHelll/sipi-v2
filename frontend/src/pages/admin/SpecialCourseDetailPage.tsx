@@ -225,6 +225,11 @@ export const SpecialCourseDetailPage = () => {
     );
   }
 
+  const canGradeCourse =
+    ['INSCRITO', 'EN_CURSO'].includes(course.estatus) &&
+    (course.course?.calificacion === null || course.course?.calificacion === undefined) &&
+    (!course.course?.requierePago || course.course?.pagoAprobado === true);
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -456,10 +461,20 @@ export const SpecialCourseDetailPage = () => {
             <div>
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>Nota:</strong> Este curso aún no ha sido calificado. El docente asignado al grupo registra la calificación al completar el curso; como administrador también puedes registrarla aquí.
+                  <strong>Nota:</strong>{' '}
+                  {canGradeCourse
+                    ? 'Este curso aún no ha sido calificado. El docente asignado al grupo registra la calificación al completar el curso; como administrador también puedes registrarla aquí.'
+                    : course.estatus === 'LISTA_ESPERA'
+                    ? 'No se puede calificar: la solicitud está en lista de espera (sin grupo asignado).'
+                    : course.estatus === 'PENDIENTE_PAGO'
+                    ? 'No se puede calificar hasta que el pago sea aprobado.'
+                    : course.course?.requierePago && course.course?.pagoAprobado !== true
+                    ? 'No se puede calificar: el pago está pendiente o fue rechazado.'
+                    : 'Este curso no está en un estado que permita calificación.'}
                 </p>
               </div>
-              {grading ? (
+              {canGradeCourse && (
+                grading ? (
                 <div className="mt-4 flex items-end gap-3">
                   <div className="flex-1 max-w-xs">
                     <FormField
@@ -498,7 +513,7 @@ export const SpecialCourseDetailPage = () => {
                   <Icon name="edit" size={18} />
                   Registrar Calificación
                 </button>
-              )}
+              ))}
             </div>
           )}
         </div>

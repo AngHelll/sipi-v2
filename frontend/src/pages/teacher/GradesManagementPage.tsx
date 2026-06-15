@@ -252,6 +252,14 @@ const GradeRow = ({ enrollment, onUpdate, updating }: GradeRowProps) => {
       : ''
   );
 
+  const isSpecialCourse = (enrollment as { isSpecialCourse?: boolean }).isSpecialCourse === true;
+  const canGrade =
+    !isSpecialCourse ||
+    (['INSCRITO', 'EN_CURSO'].includes(enrollment.estatus || '') &&
+      (enrollment.calificacion === null || enrollment.calificacion === undefined) &&
+      (!(enrollment as { requierePago?: boolean }).requierePago ||
+        (enrollment as { pagoAprobado?: boolean | null }).pagoAprobado === true));
+
   const handleSave = async () => {
     const grade = gradeInput.trim() === '' ? null : parseFloat(gradeInput);
     if (grade !== null && (isNaN(grade) || grade < 0 || grade > 100)) {
@@ -331,7 +339,7 @@ const GradeRow = ({ enrollment, onUpdate, updating }: GradeRowProps) => {
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-        {!editMode && (
+        {!editMode && canGrade && (
           <button
             onClick={() => setEditMode(true)}
             disabled={updating}
@@ -341,6 +349,11 @@ const GradeRow = ({ enrollment, onUpdate, updating }: GradeRowProps) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </button>
+        )}
+        {!editMode && isSpecialCourse && !canGrade && (
+          <span className="text-xs text-gray-400" title="Pago pendiente o curso no inscrito">
+            No calificable
+          </span>
         )}
       </td>
     </tr>
