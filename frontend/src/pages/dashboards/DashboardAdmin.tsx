@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { studentsApi, teachersApi, subjectsApi, groupsApi } from '../../lib/api';
+import { getCached } from '../../lib/requestCache';
 import { useToast } from '../../context/ToastContext';
 import { PageLoader } from '../../components/ui';
 import {
@@ -67,141 +68,94 @@ export const DashboardAdmin = () => {
     fetchDashboardData();
   }, []);
 
-  // Helper function to fetch all pages of students
   const fetchAllStudents = async (totalPages: number): Promise<any[]> => {
     const allStudents: any[] = [];
-    const promises = [];
-    
     for (let page = 1; page <= totalPages; page++) {
-      promises.push(studentsApi.getAll({ limit: 100, page }));
+      const result = await studentsApi.getAll({ limit: 100, page });
+      allStudents.push(...result.students);
     }
-    
-    const results = await Promise.allSettled(promises);
-    results.forEach((result) => {
-      if (result.status === 'fulfilled') {
-        allStudents.push(...result.value.students);
-      }
-    });
-    
     return allStudents;
   };
 
-  // Helper function to fetch all pages of groups
   const fetchAllGroups = async (totalPages: number): Promise<any[]> => {
     const allGroups: any[] = [];
-    const promises = [];
-    
     for (let page = 1; page <= totalPages; page++) {
-      promises.push(groupsApi.getAll({ limit: 100, page }));
+      const result = await groupsApi.getAll({ limit: 100, page });
+      allGroups.push(...result.groups);
     }
-    
-    const results = await Promise.allSettled(promises);
-    results.forEach((result) => {
-      if (result.status === 'fulfilled') {
-        allGroups.push(...result.value.groups);
-      }
-    });
-    
     return allGroups;
   };
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      setStats(null); // Reset stats
+      setStats(null);
 
-      // Fetch totals first (quick)
-      const [studentsRes, teachersRes, subjectsRes, groupsRes] = await Promise.allSettled([
-        studentsApi.getAll({ limit: 100, page: 1 }),
-        teachersApi.getAll({ limit: 100, page: 1 }),
-        subjectsApi.getAll({ limit: 100, page: 1 }),
-        groupsApi.getAll({ limit: 100, page: 1 }),
-      ]);
+      const dashboardStats = await getCached('admin-dashboard-stats', 2 * 60 * 1000, async () => {
+        const [studentsRes, teachersRes, subjectsRes, groupsRes] = await Promise.allSettled([
+          studentsApi.getAll({ limit: 100, page: 1 }),
+          teachersApi.getAll({ limit: 100, page: 1 }),
+          subjectsApi.getAll({ limit: 100, page: 1 }),
+          groupsApi.getAll({ limit: 100, page: 1 }),
+        ]);
 
-      // Get totals from pagination
-      const totalStudents = studentsRes.status === 'fulfilled' ? studentsRes.value.pagination.total : 0;
-      const totalTeachers = teachersRes.status === 'fulfilled' ? teachersRes.value.pagination.total : 0;
-      const totalSubjects = subjectsRes.status === 'fulfilled' ? subjectsRes.value.pagination.total : 0;
-      const totalGroups = groupsRes.status === 'fulfilled' ? groupsRes.value.pagination.total : 0;
+        const totalStudents = studentsRes.status === 'fulfilled' ? studentsRes.value.pagination.total : 0;
+        const totalTeachers = teachersRes.status === 'fulfilled' ? teachersRes.value.pagination.total : 0;
+        const totalSubjects = subjectsRes.status === 'fulfilled' ? subjectsRes.value.pagination.total : 0;
+        const totalGroups = groupsRes.status === 'fulfilled' ? groupsRes.value.pagination.total : 0;
 
-      // Log errors for debugging
-      if (studentsRes.status === 'rejected') {
-        console.error('Error fetching students:', studentsRes.reason);
-        showToast('Error al cargar estudiantes', 'error');
-      }
-      if (teachersRes.status === 'rejected') {
-        console.error('Error fetching teachers:', teachersRes.reason);
-        showToast('Error al cargar maestros', 'error');
-      }
-      if (subjectsRes.status === 'rejected') {
-        console.error('Error fetching subjects:', subjectsRes.reason);
-        showToast('Error al cargar materias', 'error');
-      }
-      if (groupsRes.status === 'rejected') {
-        console.error('Error fetching groups:', groupsRes.reason);
-        showToast('Error al cargar grupos', 'error');
-      }
+        let allStudents: any[] = [];
+        let allGroups: any[] = [];
 
-      // Fetch all students and groups for detailed statistics
-      let allStudents: any[] = [];
-      let allGroups: any[] = [];
-
-      if (studentsRes.status === 'fulfilled') {
-        if (studentsRes.value.pagination.totalPages === 1) {
-          // Single page, use existing data
-          allStudents = studentsRes.value.students;
-        } else {
-          // Multiple pages, fetch all
-          allStudents = await fetchAllStudents(studentsRes.value.pagination.totalPages);
+        if (studentsRes.status === 'fulfilled') {
+          allStudents =
+            studentsRes.value.pagination.totalPages === 1
+              ? studentsRes.value.students
+              : await fetchAllStudents(studentsRes.value.pagination.totalPages);
         }
-      }
 
-      if (groupsRes.status === 'fulfilled') {
-        if (groupsRes.value.pagination.totalPages === 1) {
-          // Single page, use existing data
-          allGroups = groupsRes.value.groups;
-        } else {
-          // Multiple pages, fetch all
-          allGroups = await fetchAllGroups(groupsRes.value.pagination.totalPages);
+        if (groupsRes.status === 'fulfilled') {
+          allGroups =
+            groupsRes.value.pagination.totalPages === 1
+              ? groupsRes.value.groups
+              : await fetchAllGroups(groupsRes.value.pagination.totalPages);
         }
-      }
-      
-      // Calculate statistics using all data
-      const activeStudents = allStudents.filter(s => s.estatus === 'ACTIVO').length;
-      const inactiveStudents = allStudents.filter(s => s.estatus === 'INACTIVO').length;
-      const graduatedStudents = allStudents.filter(s => s.estatus === 'EGRESADO').length;
 
-      // Count by carrera
-      const studentsByCarrera: Record<string, number> = {};
-      allStudents.forEach(student => {
-        studentsByCarrera[student.carrera] = (studentsByCarrera[student.carrera] || 0) + 1;
+        const activeStudents = allStudents.filter((s) => s.estatus === 'ACTIVO').length;
+        const inactiveStudents = allStudents.filter((s) => s.estatus === 'INACTIVO').length;
+        const graduatedStudents = allStudents.filter((s) => s.estatus === 'EGRESADO').length;
+
+        const studentsByCarrera: Record<string, number> = {};
+        allStudents.forEach((student) => {
+          studentsByCarrera[student.carrera] = (studentsByCarrera[student.carrera] || 0) + 1;
+        });
+
+        const studentsBySemestre: Record<number, number> = {};
+        allStudents.forEach((student) => {
+          studentsBySemestre[student.semestre] = (studentsBySemestre[student.semestre] || 0) + 1;
+        });
+
+        const groupsByPeriodo: Record<string, number> = {};
+        allGroups.forEach((group) => {
+          groupsByPeriodo[group.periodo] = (groupsByPeriodo[group.periodo] || 0) + 1;
+        });
+
+        return {
+          totalStudents,
+          totalTeachers,
+          totalSubjects,
+          totalGroups,
+          activeStudents,
+          inactiveStudents,
+          graduatedStudents,
+          studentsByCarrera,
+          studentsBySemestre,
+          groupsByPeriodo,
+          recentEnrollments: [] as any[],
+        } satisfies DashboardStats;
       });
 
-      // Count by semestre
-      const studentsBySemestre: Record<number, number> = {};
-      allStudents.forEach(student => {
-        studentsBySemestre[student.semestre] = (studentsBySemestre[student.semestre] || 0) + 1;
-      });
-
-      // Count by periodo
-      const groupsByPeriodo: Record<string, number> = {};
-      allGroups.forEach(group => {
-        groupsByPeriodo[group.periodo] = (groupsByPeriodo[group.periodo] || 0) + 1;
-      });
-
-      setStats({
-        totalStudents,
-        totalTeachers,
-        totalSubjects,
-        totalGroups,
-        activeStudents,
-        inactiveStudents,
-        graduatedStudents,
-        studentsByCarrera,
-        studentsBySemestre,
-        groupsByPeriodo,
-        recentEnrollments: [],
-      });
+      setStats(dashboardStats);
     } catch (err: any) {
       console.error('Unexpected error fetching dashboard data:', err);
       showToast('Error al cargar los datos del dashboard', 'error');

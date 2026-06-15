@@ -1,6 +1,7 @@
 // API client for backend communication with improved error handling and retries
 import axios, { type AxiosInstance, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type { LoginCredentials, AuthResponse, User } from '../types';
+import { getCached, invalidateCached } from './requestCache';
 
 // Retry configuration
 const MAX_RETRIES = 3;
@@ -1007,7 +1008,7 @@ export const examsApi = {
   /**
    * Get student English status V2 (STUDENT only) - includes V2 exams and courses
    */
-  getStudentEnglishStatusV2: async (): Promise<{
+  getStudentEnglishStatusV2: async (options?: { fresh?: boolean }): Promise<{
     student: {
       id: string;
       matricula: string;
@@ -1073,8 +1074,13 @@ export const examsApi = {
       percentage: number;
     };
   }> => {
-    const response = await api.get('/academic-activities/exams/student/english-status');
-    return response.data;
+    if (options?.fresh) {
+      invalidateCached('english-status-v2');
+    }
+    return getCached('english-status-v2', 20_000, async () => {
+      const response = await api.get('/academic-activities/exams/student/english-status');
+      return response.data;
+    });
   },
 };
 

@@ -1,7 +1,7 @@
 // Period selector component
 import { useState, useEffect } from 'react';
 import { FormField } from './FormField';
-import { groupsApi } from '../../lib/api';
+import { fetchUniqueGroupPeriods } from '../../lib/groupPeriods';
 
 interface PeriodSelectorProps {
   value: string;
@@ -36,41 +36,10 @@ export const PeriodSelector = ({
   const fetchPeriods = async () => {
     try {
       setLoading(true);
-      // Fetch all groups to get unique periods
-      const allPeriods: string[] = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        const response = await groupsApi.getAll({ limit: 100, page });
-        const periodos = response.groups
-          .map(g => g.periodo)
-          .filter(Boolean) as string[];
-        allPeriods.push(...periodos);
-        
-        hasMore = page < response.pagination.totalPages;
-        page++;
-        
-        if (hasMore) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
-
-      // Sort periods in reverse order (most recent first)
-      const uniquePeriods = [...new Set(allPeriods)].sort().reverse();
-      setPeriods(uniquePeriods);
+      setPeriods(await fetchUniqueGroupPeriods());
     } catch (err) {
       console.error('Error fetching periods:', err);
-      // Fallback: try with just first page
-      try {
-        const response = await groupsApi.getAll({ limit: 100, page: 1 });
-        const periodos = [...new Set(
-          response.groups.map(g => g.periodo).filter(Boolean) as string[]
-        )].sort().reverse();
-        setPeriods(periodos);
-      } catch (fallbackErr) {
-        console.error('Error fetching periods (fallback):', fallbackErr);
-      }
+      setPeriods([]);
     } finally {
       setLoading(false);
     }

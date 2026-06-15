@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { teachersApi, exportApi } from '../../lib/api';
+import { getCached } from '../../lib/requestCache';
 import { useToast } from '../../context/ToastContext';
 import { ConfirmDialog, Loader, TeacherCard } from '../../components/ui';
 import type { Teacher, TeachersListResponse } from '../../types';
@@ -62,38 +63,14 @@ export const TeachersListPage = () => {
 
   const fetchUniqueDepartamentos = async () => {
     try {
-      // Fetch all pages to get unique departamentos
-      // Add delay between requests to avoid rate limiting
-      const allDepartamentos: string[] = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        const response = await teachersApi.getAll({ limit: 100, page });
-        const departamentos = response.teachers.map(t => t.departamento);
-        allDepartamentos.push(...departamentos);
-        
-        hasMore = page < response.pagination.totalPages;
-        page++;
-        
-        // Add small delay between requests to avoid rate limiting
-        if (hasMore) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
-        }
-      }
-
-      const uniqueDepartamentos = [...new Set(allDepartamentos)].sort();
-      setUniqueDepartamentos(uniqueDepartamentos);
+      const departamentos = await getCached('teacher-departamentos', 5 * 60 * 1000, async () => {
+        const response = await teachersApi.getAll({ limit: 100, page: 1 });
+        return [...new Set(response.teachers.map((t) => t.departamento))].sort();
+      });
+      setUniqueDepartamentos(departamentos);
     } catch (err) {
       console.error('Error fetching departamentos:', err);
-      // Fallback: try with just first page
-      try {
-        const response = await teachersApi.getAll({ limit: 100, page: 1 });
-        const departamentos = [...new Set(response.teachers.map(t => t.departamento))].sort();
-        setUniqueDepartamentos(departamentos);
-      } catch (fallbackErr) {
-        console.error('Error fetching departamentos (fallback):', fallbackErr);
-      }
+      setUniqueDepartamentos([]);
     }
   };
 

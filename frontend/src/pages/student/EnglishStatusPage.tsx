@@ -97,7 +97,7 @@ export const EnglishStatusPage = () => {
       setLoading(true);
       setError(null);
       // Use V2 endpoint that includes exams and courses from new architecture
-      const data = await examsApi.getStudentEnglishStatusV2();
+      const data = await examsApi.getStudentEnglishStatusV2({ fresh: true });
       setStatus(data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Error al cargar el estado de inglés');

@@ -23,11 +23,12 @@ export const loginLimiter = rateLimit({
  * General API rate limiter
  * More permissive limits for development, stricter for production
  * Development: 500 requests per 15 minutes per IP
- * Production: 100 requests per 15 minutes per IP
+ * Production: 400 requests per 15 minutes per IP
+ * (100 was too low for SPA admin lists that paginate filter options)
  */
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 100 : 500, // More permissive in development
+  max: process.env.NODE_ENV === 'production' ? 400 : 500,
   message: {
     error: 'Demasiadas solicitudes. Por favor intenta de nuevo más tarde.',
   },

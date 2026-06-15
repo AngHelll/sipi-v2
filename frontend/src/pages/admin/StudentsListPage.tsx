@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
-import { studentsApi, exportApi } from '../../lib/api';
+import { studentsApi, exportApi, careersApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Icon } from '../../components/ui/Icon';
@@ -69,38 +69,11 @@ export const StudentsListPage = () => {
 
   const fetchUniqueCarreras = async () => {
     try {
-      // Fetch all pages to get unique carreras
-      // Add delay between requests to avoid rate limiting
-      const allCarreras: string[] = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        const response = await studentsApi.getAll({ limit: 100, page });
-        const carreras = response.students.map(s => s.carrera);
-        allCarreras.push(...carreras);
-        
-        hasMore = page < response.pagination.totalPages;
-        page++;
-        
-        // Add small delay between requests to avoid rate limiting
-        if (hasMore) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
-        }
-      }
-
-      const uniqueCarreras = [...new Set(allCarreras)].sort();
-      setUniqueCarreras(uniqueCarreras);
+      const { careers } = await careersApi.getAll({ estatus: 'ACTIVA' });
+      setUniqueCarreras(careers.map((c) => c.nombre).sort());
     } catch (err) {
       console.error('Error fetching carreras:', err);
-      // Fallback: try with just first page
-      try {
-        const response = await studentsApi.getAll({ limit: 100, page: 1 });
-        const carreras = [...new Set(response.students.map(s => s.carrera))].sort();
-        setUniqueCarreras(carreras);
-      } catch (fallbackErr) {
-        console.error('Error fetching carreras (fallback):', fallbackErr);
-      }
+      setUniqueCarreras([]);
     }
   };
 

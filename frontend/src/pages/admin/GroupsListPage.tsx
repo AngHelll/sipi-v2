@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { groupsApi, subjectsApi, exportApi } from '../../lib/api';
+import { fetchUniqueGroupPeriods } from '../../lib/groupPeriods';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { ConfirmDialog, Loader, GroupCard } from '../../components/ui';
@@ -68,58 +69,16 @@ export const GroupsListPage = () => {
 
   const fetchFilterOptions = async () => {
     try {
-      // Fetch all pages for subjects
-      // Add delay between requests to avoid rate limiting
-      const allSubjects: any[] = [];
-      let subjectsPage = 1;
-      let subjectsHasMore = true;
-
-      while (subjectsHasMore) {
-        const subjectsRes = await subjectsApi.getAll({ limit: 100, page: subjectsPage });
-        allSubjects.push(...subjectsRes.subjects);
-        subjectsHasMore = subjectsPage < subjectsRes.pagination.totalPages;
-        subjectsPage++;
-        
-        // Add small delay between requests to avoid rate limiting
-        if (subjectsHasMore) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
-        }
-      }
-
-      // Fetch all pages for groups to get unique periodos
-      const allGroups: any[] = [];
-      let groupsPage = 1;
-      let groupsHasMore = true;
-
-      while (groupsHasMore) {
-        const groupsRes = await groupsApi.getAll({ limit: 100, page: groupsPage });
-        allGroups.push(...groupsRes.groups);
-        groupsHasMore = groupsPage < groupsRes.pagination.totalPages;
-        groupsPage++;
-        
-        // Add small delay between requests to avoid rate limiting
-        if (groupsHasMore) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
-        }
-      }
-
-      setSubjects(allSubjects);
-      const periodos = [...new Set(allGroups.map(g => g.periodo))].sort().reverse();
+      const [subjectsRes, periodos] = await Promise.all([
+        subjectsApi.getAll({ limit: 100, page: 1 }),
+        fetchUniqueGroupPeriods(),
+      ]);
+      setSubjects(subjectsRes.subjects);
       setUniquePeriodos(periodos);
     } catch (err) {
       console.error('Error fetching filter options:', err);
-      // Fallback: try with just first page
-      try {
-        const [subjectsRes, groupsRes] = await Promise.all([
-          subjectsApi.getAll({ limit: 100, page: 1 }),
-          groupsApi.getAll({ limit: 100, page: 1 }),
-        ]);
-        setSubjects(subjectsRes.subjects);
-        const periodos = [...new Set(groupsRes.groups.map(g => g.periodo))].sort().reverse();
-        setUniquePeriodos(periodos);
-      } catch (fallbackErr) {
-        console.error('Error fetching filter options (fallback):', fallbackErr);
-      }
+      setSubjects([]);
+      setUniquePeriodos([]);
     }
   };
 
