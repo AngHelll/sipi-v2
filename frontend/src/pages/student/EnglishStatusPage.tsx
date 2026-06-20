@@ -10,6 +10,35 @@ import { useToast } from '../../context/ToastContext';
 /** Estados en los que el alumno puede cancelar su solicitud */
 const CANCELABLE_STATUSES = ['LISTA_ESPERA', 'PENDIENTE_PAGO', 'INSCRITO'];
 
+/** Ciclo de vida para agrupar exámenes y cursos del alumno */
+type Lifecycle = 'solicitado' | 'inscrito' | 'historial';
+const SOLICITADO_STATUSES = ['LISTA_ESPERA', 'PENDIENTE_PAGO', 'PAGO_PENDIENTE_APROBACION', 'PAGO_APROBADO'];
+const INSCRITO_STATUSES = ['INSCRITO', 'EN_CURSO'];
+
+const lifecycleOf = (estatus: string): Lifecycle => {
+  if (SOLICITADO_STATUSES.includes(estatus)) return 'solicitado';
+  if (INSCRITO_STATUSES.includes(estatus)) return 'inscrito';
+  return 'historial';
+};
+
+/** Item normalizado (examen o curso) para la vista por ciclo de vida */
+interface EnglishItem {
+  kind: 'examen' | 'curso';
+  id: string;
+  titulo: string;
+  detalle: string | null;
+  estatus: string;
+  calificacion: number | null;
+  fechaInscripcion: string;
+  requierePago: boolean;
+  pagoAprobado: boolean | null;
+  montoPago: number | null;
+  observaciones: string | null;
+  completadoPorDiagnostico: boolean;
+  cancelable: boolean;
+  lifecycle: Lifecycle;
+}
+
 interface EnglishStatus {
   student: {
     id: string;
@@ -85,6 +114,7 @@ export const EnglishStatusPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [showHistorial, setShowHistorial] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -186,6 +216,106 @@ export const EnglishStatusPage = () => {
 
   const examEligibility = getExamEligibility(status);
   const courseEligibility = getCourseEligibility(status);
+
+  const examItems: EnglishItem[] = status.diagnosticExams.map((e) => ({
+    kind: 'examen',
+    id: e.id,
+    titulo: 'Examen de diagnóstico',
+    detalle: e.period ? `Período: ${e.period.nombre}` : e.subject || null,
+    estatus: e.estatus,
+    calificacion: e.calificacion,
+    fechaInscripcion: e.fechaInscripcion,
+    requierePago: e.requierePago,
+    pagoAprobado: e.pagoAprobado,
+    montoPago: e.montoPago,
+    observaciones: e.observaciones ?? null,
+    completadoPorDiagnostico: false,
+    cancelable: CANCELABLE_STATUSES.includes(e.estatus) && e.calificacion === null,
+    lifecycle: lifecycleOf(e.estatus),
+  }));
+
+  const courseItems: EnglishItem[] = status.englishCourses.map((c) => ({
+    kind: 'curso',
+    id: c.id,
+    titulo: `Curso de inglés${c.nivelIngles ? ` — Nivel ${c.nivelIngles}` : ''}`,
+    detalle: c.subject || null,
+    estatus: c.estatus,
+    calificacion: c.calificacion,
+    fechaInscripcion: c.fechaInscripcion,
+    requierePago: false,
+    pagoAprobado: c.pagoAprobado,
+    montoPago: null,
+    observaciones: null,
+    completadoPorDiagnostico: c.completadoPorDiagnostico,
+    cancelable:
+      CANCELABLE_STATUSES.includes(c.estatus) && c.calificacion === null && !c.completadoPorDiagnostico,
+    lifecycle: lifecycleOf(c.estatus),
+  }));
+
+  const allItems = [...examItems, ...courseItems];
+  const solicitadoItems = allItems.filter((i) => i.lifecycle === 'solicitado');
+  const inscritoItems = allItems.filter((i) => i.lifecycle === 'inscrito');
+  const historialItems = allItems.filter((i) => i.lifecycle === 'historial');
+
+  const renderItem = (item: EnglishItem) => {
+    const paymentRejected = item.estatus === 'PENDIENTE_PAGO' && item.pagoAprobado === false;
+    return (
+      <div
+        key={`${item.kind}-${item.id}`}
+        className="flex items-start justify-between gap-4 py-4 border-b border-gray-100 last:border-b-0"
+      >
+        <div className="flex items-start gap-3 min-w-0">
+          <Icon
+            name={item.kind === 'examen' ? 'file-text' : 'book'}
+            size={20}
+            className={`mt-0.5 shrink-0 ${item.kind === 'examen' ? 'text-blue-500' : 'text-green-500'}`}
+          />
+          <div className="min-w-0">
+            <div className="font-medium text-gray-900">{item.titulo}</div>
+            {item.detalle && <div className="text-xs text-gray-500">{item.detalle}</div>}
+            <div className="text-xs text-gray-400">
+              Solicitado: {new Date(item.fechaInscripcion).toLocaleDateString('es-MX')}
+            </div>
+            {item.completadoPorDiagnostico && (
+              <div className="text-xs text-blue-600 mt-1">✓ Acreditado por diagnóstico</div>
+            )}
+            {item.estatus === 'PENDIENTE_PAGO' && !paymentRejected && item.montoPago != null && (
+              <div className="text-xs text-orange-700 mt-1">
+                Monto a pagar: ${item.montoPago.toFixed(2)} — lleva tu comprobante a Servicio Estudiantil.
+              </div>
+            )}
+            {paymentRejected && (
+              <div className="text-xs text-red-700 mt-1">
+                {item.observaciones || 'Pago rechazado. Cancela y vuelve a solicitar con el comprobante correcto.'}
+              </div>
+            )}
+            {item.estatus === 'LISTA_ESPERA' && (
+              <div className="text-xs text-indigo-700 mt-1">
+                En lista de espera. El administrador te asignará {item.kind === 'examen' ? 'período' : 'grupo'} cuando haya cupo.
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          {getStatusBadge(item.estatus)}
+          {item.calificacion !== null && (
+            <span className={`text-sm ${getGradeColor(item.calificacion)}`}>
+              {item.calificacion.toFixed(1)}
+            </span>
+          )}
+          {item.cancelable && (
+            <button
+              onClick={() => (item.kind === 'examen' ? handleCancelExam(item.id) : handleCancelCourse(item.id))}
+              disabled={cancellingId === item.id}
+              className="text-red-600 hover:text-red-800 disabled:opacity-50 text-sm font-medium"
+            >
+              {cancellingId === item.id ? 'Cancelando...' : 'Cancelar'}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Layout>
@@ -466,166 +596,88 @@ export const EnglishStatusPage = () => {
           </div>
         </Card>
 
-        {/* Diagnostic Exams */}
-        <Card className="p-6 mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Exámenes de Diagnóstico</h2>
-            {status.diagnosticExams.length === 0 && (
-              <button
-                onClick={() => navigate('/student/english/available-exam-periods')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-              >
-                Ver Períodos Disponibles
-              </button>
-            )}
-          </div>
-          {status.diagnosticExams.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calificación</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {status.diagnosticExams.map((exam) => (
-                    <tr key={exam.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div>
-                          <div className="font-medium">{exam.subject}</div>
-                          {exam.period && (
-                            <div className="text-xs text-gray-500">Período: {exam.period.nombre}</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        <div>
-                          <div>Inscripción: {new Date(exam.fechaInscripcion).toLocaleDateString('es-MX')}</div>
-                          {exam.fechaExamen && (
-                            <div className="text-xs">Examen: {new Date(exam.fechaExamen).toLocaleDateString('es-MX')}</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getGradeColor(exam.calificacion)}`}>
-                        {exam.calificacion !== null ? exam.calificacion.toFixed(1) : 'Sin calificar'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(exam.estatus)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {CANCELABLE_STATUSES.includes(exam.estatus) && exam.calificacion === null && (
-                          <button
-                            onClick={() => handleCancelExam(exam.id)}
-                            disabled={cancellingId === exam.id}
-                            className="text-red-600 hover:text-red-800 disabled:opacity-50 text-sm font-medium"
-                          >
-                            {cancellingId === exam.id ? 'Cancelando...' : 'Cancelar'}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Solicitudes en proceso (solicitado / en espera) */}
+        {solicitadoItems.length > 0 && (
+          <Card className="p-6 mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="text-xl font-semibold text-gray-900">Solicitudes en proceso</h2>
+              <Badge className="bg-indigo-100 text-indigo-800">{solicitadoItems.length}</Badge>
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">No tienes exámenes de diagnóstico registrados.</p>
-              <div className="flex gap-3 justify-center">
+            <p className="text-sm text-gray-500 mb-2">
+              Solicitudes de examen o curso en lista de espera o pendientes de pago.
+            </p>
+            {solicitadoItems.map(renderItem)}
+          </Card>
+        )}
+
+        {/* Inscripciones activas (inscrito / en curso) */}
+        {inscritoItems.length > 0 && (
+          <Card className="p-6 mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="text-xl font-semibold text-gray-900">Inscripciones activas</h2>
+              <Badge className="bg-blue-100 text-blue-800">{inscritoItems.length}</Badge>
+            </div>
+            <p className="text-sm text-gray-500 mb-2">
+              Exámenes y cursos en los que ya estás inscrito.
+            </p>
+            {inscritoItems.map(renderItem)}
+          </Card>
+        )}
+
+        {/* Empty-state: sin actividad de inglés todavía */}
+        {allItems.length === 0 && (
+          <Card className="p-8 mb-8 text-center">
+            <Icon name="book" size={40} className="text-gray-300 mx-auto mb-3" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">
+              Aún no tienes exámenes ni cursos de inglés
+            </h2>
+            <p className="text-gray-600 mb-4 max-w-xl mx-auto">
+              Cuando solicites un examen de diagnóstico o un curso, aparecerán aquí con su estatus
+              (lista de espera, pendiente de pago, inscrito) para que sigas su avance.
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              {examEligibility.canRequest && (
                 <button
                   onClick={() => navigate('/student/english/available-exam-periods')}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Ver Períodos Disponibles
+                  Solicitar examen de diagnóstico
                 </button>
+              )}
+              {courseEligibility.canRequest && (
                 <button
-                  onClick={() => navigate('/student/english/request-exam')}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => navigate('/student/english/request-course')}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  Solicitar Examen Directamente
+                  Solicitar curso de inglés
                 </button>
-              </div>
+              )}
             </div>
-          )}
-        </Card>
+          </Card>
+        )}
 
-        {/* English Courses */}
-        {status.englishCourses.length > 0 && (
+        {/* Historial (terminales / cancelados) */}
+        {historialItems.length > 0 && (
           <Card className="p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Cursos de Inglés</h2>
-            {/* Payment pending notification */}
-            {status.englishCourses.some(c => c.estatus === 'PENDIENTE_PAGO' && c.pagoAprobado === null) && (
-              <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <Icon name="warning" size={24} className="text-orange-600 mt-0.5" />
-                  <div>
-                    <h3 className="font-semibold text-orange-900 mb-1">Curso Pendiente de Pago</h3>
-                    <p className="text-sm text-orange-800">
-                      Tienes cursos de inglés que requieren pago. Debes realizar el pago y llevar el comprobante físico a Servicio Estudiantil para completar tu inscripción.
-                    </p>
-                  </div>
-                </div>
+            <button
+              type="button"
+              onClick={() => setShowHistorial((v) => !v)}
+              className="w-full flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-gray-900">Historial</h2>
+                <Badge className="bg-gray-100 text-gray-700">{historialItems.length}</Badge>
+              </div>
+              <Icon name={showHistorial ? 'chevron-up' : 'chevron-down'} size={20} className="text-gray-500" />
+            </button>
+            {showHistorial && (
+              <div className="mt-2">
+                <p className="text-sm text-gray-500 mb-2">
+                  Exámenes y cursos finalizados, evaluados o cancelados.
+                </p>
+                {historialItems.map(renderItem)}
               </div>
             )}
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nivel</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pago</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calificación</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {status.englishCourses.map((course) => (
-                    <tr key={course.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        <div>
-                          <div>Nivel {course.nivelIngles || '-'}</div>
-                          {course.completadoPorDiagnostico && (
-                            <div className="text-xs text-blue-600">✓ Completado por diagnóstico</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{course.subject}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(course.fechaInscripcion).toLocaleDateString('es-MX')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {course.pagoAprobado === null ? (
-                          <Badge className="bg-yellow-100 text-yellow-800">Pendiente</Badge>
-                        ) : course.pagoAprobado ? (
-                          <Badge className="bg-green-100 text-green-800">Aprobado</Badge>
-                        ) : (
-                          <Badge className="bg-red-100 text-red-800">Rechazado</Badge>
-                        )}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getGradeColor(course.calificacion)}`}>
-                        {course.calificacion !== null ? course.calificacion.toFixed(1) : 'Sin calificar'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(course.estatus)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {CANCELABLE_STATUSES.includes(course.estatus) && course.calificacion === null && !course.completadoPorDiagnostico && (
-                          <button
-                            onClick={() => handleCancelCourse(course.id)}
-                            disabled={cancellingId === course.id}
-                            className="text-red-600 hover:text-red-800 disabled:opacity-50 text-sm font-medium"
-                          >
-                            {cancellingId === course.id ? 'Cancelando...' : 'Cancelar'}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </Card>
         )}
 
