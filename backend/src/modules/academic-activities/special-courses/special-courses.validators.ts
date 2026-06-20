@@ -3,6 +3,7 @@
 import prisma from '../../../config/database';
 import { EntityValidators } from '../../../shared/validators/entity.validators';
 import { StudentCalculators } from '../../students/students.validators';
+import { GroupValidators } from '../../groups/groups.validators';
 
 /**
  * SpecialCoursesValidators
@@ -132,6 +133,9 @@ export class SpecialCoursesValidators {
         cupoActual: true,
         cupoMaximo: true,
         estatus: true,
+        deletedAt: true,
+        fechaInscripcionInicio: true,
+        fechaInscripcionFin: true,
       } as any,
     }) as any;
 
@@ -150,12 +154,10 @@ export class SpecialCoursesValidators {
       }
     }
 
-    if (group.estatus === 'CERRADO' || group.estatus === 'CANCELADO' || group.estatus === 'FINALIZADO') {
-      throw new Error(`El grupo no está disponible para inscripciones (estatus: ${group.estatus})`);
-    }
-
-    if (group.cupoActual >= group.cupoMaximo) {
-      throw new Error('El grupo seleccionado ya no tiene cupos disponibles');
+    // Canonical availability rule shared with the student listing endpoint
+    const availability = GroupValidators.englishGroupAvailability(group, new Date());
+    if (!availability.available) {
+      throw new Error(availability.reason || 'El grupo no está disponible para inscripciones');
     }
   }
 

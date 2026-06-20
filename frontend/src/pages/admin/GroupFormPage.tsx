@@ -147,17 +147,25 @@ export const GroupFormPage = () => {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    const { name, value } = e.target;
-    
+    const target = e.target;
+    const { name, value } = target;
+    const isCheckbox = target instanceof HTMLInputElement && target.type === 'checkbox';
+    const nextValue: string | boolean = isCheckbox ? target.checked : value;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: nextValue,
     }));
 
     setTouchedFields((prev) => ({
       ...prev,
       [name]: true,
     }));
+
+    // Clear the English level error when the group is no longer an English course
+    if (isCheckbox && name === 'esCursoIngles' && nextValue === false) {
+      setFormErrors((prev) => ({ ...prev, nivelIngles: null }));
+    }
 
     const validator = validators[name as keyof typeof validators];
     if (validator) {
@@ -184,13 +192,24 @@ export const GroupFormPage = () => {
       }
     });
 
+    // English groups must have a level (1-6); otherwise students never see them
+    if (formData.esCursoIngles) {
+      const nivel = parseInt(String(formData.nivelIngles), 10);
+      if (!String(formData.nivelIngles).trim() || Number.isNaN(nivel) || nivel < 1 || nivel > 6) {
+        errors.nivelIngles = 'El nivel de inglés es obligatorio (1-6) para un grupo de inglés';
+        isValid = false;
+      }
+    }
+
     setFormErrors(errors);
-    setTouchedFields(
-      Object.keys(validators).reduce((acc, key) => {
+    setTouchedFields((prev) => ({
+      ...prev,
+      ...Object.keys(validators).reduce((acc, key) => {
         acc[key] = true;
         return acc;
-      }, {} as Record<string, boolean>)
-    );
+      }, {} as Record<string, boolean>),
+      nivelIngles: true,
+    }));
 
     return isValid;
   };
@@ -488,7 +507,7 @@ export const GroupFormPage = () => {
             {formData.esCursoIngles && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
-                  label="Nivel de Inglés"
+                  label="Nivel de Inglés *"
                   name="nivelIngles"
                   type="number"
                   value={formData.nivelIngles}
@@ -497,7 +516,7 @@ export const GroupFormPage = () => {
                   max={6}
                   error={formErrors.nivelIngles}
                   touched={touchedFields.nivelIngles}
-                  helpText="Nivel del curso (1-6)"
+                  helpText="Obligatorio para cursos de inglés (1-6)"
                 />
 
                 <FormField

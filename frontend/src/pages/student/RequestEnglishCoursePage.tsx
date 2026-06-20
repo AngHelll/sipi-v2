@@ -83,11 +83,11 @@ export const RequestEnglishCoursePage = () => {
       // Filter courses by current level
       // Note: We fetch all available courses first, then filter by level
       if (currentLevel !== null) {
-        const filtered = result.courses.filter(course => course.nivelIngles === currentLevel);
+        const filtered = result.courses.filter(course => course.nivelIngles === currentLevel || course.nivelIngles == null);
         setFilteredCourses(filtered);
       } else {
-        // If no level, only show level 1 courses
-        const filtered = result.courses.filter(course => course.nivelIngles === 1);
+        // If no level, show level 1 courses (and any group without level set)
+        const filtered = result.courses.filter(course => course.nivelIngles === 1 || course.nivelIngles == null);
         setFilteredCourses(filtered);
         
         // Debug: Log if no level 1 courses found
@@ -106,11 +106,11 @@ export const RequestEnglishCoursePage = () => {
   // Update filtered courses when current level changes
   useEffect(() => {
     if (currentLevel !== null && availableCourses.length > 0) {
-      const filtered = availableCourses.filter(course => course.nivelIngles === currentLevel);
+      const filtered = availableCourses.filter(course => course.nivelIngles === currentLevel || course.nivelIngles == null);
       setFilteredCourses(filtered);
     } else if (currentLevel === null && availableCourses.length > 0) {
-      // If no level, only show level 1 courses
-      const filtered = availableCourses.filter(course => course.nivelIngles === 1);
+      // If no level, show level 1 courses (and any group without level set)
+      const filtered = availableCourses.filter(course => course.nivelIngles === 1 || course.nivelIngles == null);
       setFilteredCourses(filtered);
       
       // Debug: Log available courses to help diagnose why level 1 might not be showing

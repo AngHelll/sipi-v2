@@ -42,7 +42,11 @@ export const AvailableEnglishCoursesPage = () => {
       setCourseEligibility(eligibility);
 
       const level = getEligibleCourseLevel(snapshot);
-      const filtered = (coursesResult.courses || []).filter((c) => c.nivelIngles === level);
+      // Mostrar grupos del nivel del alumno y también los mal configurados sin
+      // nivel (se muestran deshabilitados con aviso) para no ocultarlos en silencio.
+      const filtered = (coursesResult.courses || []).filter(
+        (c) => c.nivelIngles === level || c.nivelIngles == null
+      );
       setCourses(filtered);
     } catch (err: unknown) {
       const errorMessage =

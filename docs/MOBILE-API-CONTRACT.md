@@ -5,6 +5,7 @@ Contrato compartido entre el backend `sipi-v2` y los clientes móviles (`sipi-mo
 - **Base URL producción**: `https://sipi.ak-solutions.app`
 - **Prefijo API**: `/api` (excepto `GET /health`)
 - **Auth**: cookie HTTP-only `token` (JWT). `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. Un `401` en cualquier endpoint invalida la sesión local.
+- **Sesión**: cookie con `httpOnly`, `secure` (producción) y `sameSite: strict`. El cliente debe enviar cookies en cada request (`URLSession` / equivalente con almacenamiento de cookies del sistema).
 
 ---
 
@@ -67,7 +68,9 @@ Este endpoint es la fuente de verdad del requisito 70% (`cumpleRequisitoIngles`,
 | Demanda lista de espera exámenes | `GET /api/academic-activities/exams/waitlist/summary` | ADMIN |
 | Asignar período desde lista de espera | `PUT /api/academic-activities/exams/:id/assign-period` body `{ "periodId" }` | ADMIN |
 
-Reglas de contrato (exámenes, 2026-06-11):
+Reglas de contrato (exámenes, 2026-06-11; asignación admin actualizada 2026-06-15):
+
+- **`assign-period` (ADMIN, lista de espera)**: la solicitud debe estar en `LISTA_ESPERA`, **sin** `periodId` previo. El período destino debe estar `ABIERTO` con cupo disponible. **No** se exige que la ventana pública de inscripciones esté activa (el admin puede asignar fuera de fechas de inscripción alumno).
 
 - **`nivelIngles` ya no se acepta** en `POST .../exams`: el placement lo define el admin/maestro al procesar el resultado.
 - **Primer diagnóstico sin `periodId`** → `LISTA_ESPERA` (gratuito, sin cupo de período hasta asignar).
@@ -82,7 +85,7 @@ Estados de pago del examen: `PENDIENTE_PAGO` → (admin aprueba) → inscripció
 
 | Acción | Endpoint | Rol |
 |--------|----------|-----|
-| Ver grupos de inglés disponibles | `GET /api/groups/available/english-courses` | STUDENT, ADMIN |
+| Ver grupos de inglés disponibles | `GET /api/groups/available/english-courses` | STUDENT |
 | Solicitar curso (grupo publicado) | `POST /api/academic-activities/special-courses` body `{ "courseType": "INGLES", "nivelIngles": N, "groupId": "..." }` | STUDENT |
 | Unirse a lista de espera (sin grupo) | `POST /api/academic-activities/special-courses` body `{ "courseType": "INGLES", "nivelIngles": N }` (sin `groupId`) | STUDENT |
 | Cancelar solicitud | `PUT /api/academic-activities/special-courses/:id/cancel` | STUDENT (propias, sin calificación) / ADMIN (`motivo` requerido) |
@@ -90,9 +93,12 @@ Estados de pago del examen: `PENDIENTE_PAGO` → (admin aprueba) → inscripció
 | Asignar grupo desde lista de espera | `PUT /api/academic-activities/special-courses/:id/assign-group` body `{ "groupId", "requierePago" }` | ADMIN |
 | Registrar nivel inicial (equivalencia) | `POST /api/academic-activities/special-courses/initial-level` body `{ "studentId", "nivel", "calificacion" }` | ADMIN |
 
-Reglas de contrato (2026-06-11):
+Reglas de contrato (cursos, 2026-06-11; asignación admin 2026-06-15):
 
+- **`assign-group` (ADMIN, lista de espera)**: la solicitud debe estar en `LISTA_ESPERA`. El grupo debe coincidir en tipo/nivel de inglés, no estar `CERRADO`/`CANCELADO`/`FINALIZADO`, y tener cupo. Para listar opciones de grupo en admin usar `GET /api/groups` (con filtros); **no** usar `GET /api/groups/available/english-courses` (ese endpoint es para el alumno al solicitar curso).
 - **`requierePago` ya no se acepta** en el body de `POST .../special-courses`: la política de pago la decide el servidor (con grupo → `PENDIENTE_PAGO`; sin grupo → `LISTA_ESPERA` sin pago).
+- **Los grupos de inglés siempre traen `nivelIngles` (1-6)** (2026-06-20): el backend exige el nivel al crear/editar un grupo con `esCursoIngles=true`, por lo que los clientes pueden filtrar `GET /api/groups/available/english-courses` por nivel sin descartar grupos por nivel ausente.
+- **Regla canónica de "grupo disponible"** (2026-06-20): un grupo aparece en `GET /api/groups/available/english-courses` **si y solo si** cumple TODO: `esCursoIngles=true`, `estatus = ABIERTO` (no `EN_CURSO`/`CERRADO`/`CANCELADO`/`FINALIZADO`), ventana de inscripción vigente (`fechaInscripcionInicio ≤ ahora ≤ fechaInscripcionFin`, o sin fechas) y cupo libre (`cupoActual < cupoMaximo`). El `POST .../special-courses` aplica **exactamente la misma regla**: lo que se lista es lo que se puede solicitar. Si el grupo dejó de estar disponible entre el listado y el envío, el POST responde **`400`** con `error` explicando el motivo (estatus, ventana cerrada o sin cupo) — el cliente debe refrescar el listado, **no** reintentar a ciegas.
 - Nuevo estatus de actividad: **`LISTA_ESPERA`** — solicitud de curso sin grupo publicado. Los clientes deben mostrarlo como "en lista de espera" (no como inscripción activa) y permitir cancelarla.
 - El avance del curso (calificación, aprobado) se refleja en `english-status.englishCourses`.
 
@@ -131,10 +137,54 @@ Roles TEACHER/ADMIN en móvil (futuro): listados `GET .../exams`, `GET .../speci
 
 ---
 
-## 5. Versionado y compatibilidad
+## 5. Límites de tasa (rate limiting) y comportamiento del cliente
+
+Desde 2026-06-15 el backend aplica límites por IP (detrás de Cloudflare Tunnel / reverse proxy). Los clientes móviles deben tratarlos como parte del contrato, no como error transitorio a reintentar en bucle.
+
+### Límites vigentes (producción)
+
+| Ámbito | Ventana | Máximo | Notas |
+|--------|---------|--------|-------|
+| `POST /api/auth/login` | 15 min | 5 intentos fallidos | Los logins exitosos **no** cuentan (`skipSuccessfulRequests`) |
+| Resto de `/api/*` | 15 min | 400 requests | Incluye navegación con muchas pantallas o paginación |
+| Desarrollo | 15 min | 500 requests / 20 logins | Solo si el cliente apunta a un backend local |
+
+`GET /health` queda **fuera** del limitador general.
+
+### Respuesta `429 Too Many Requests`
+
+Cuerpo JSON típico:
+
+```json
+{ "error": "Demasiadas solicitudes. Por favor intenta de nuevo más tarde." }
+```
+
+Login bloqueado:
+
+```json
+{ "error": "Demasiados intentos de inicio de sesión. Por favor intenta de nuevo en 15 minutos." }
+```
+
+Headers estándar `RateLimit-*` (p. ej. `RateLimit-Remaining`, `RateLimit-Reset`) informan cuota restante.
+
+### Obligaciones del cliente móvil
+
+1. **No reintentar automáticamente** un `429` (a diferencia de errores de red o `5xx`). Mostrar mensaje al usuario y esperar al reset del límite o a una acción explícita.
+2. **Evitar ráfagas** al abrir pestañas o listas: no disparar en paralelo decenas de `GET` idénticos al montar varias pantallas.
+3. **Caché en memoria** (recomendado, alineado con la web):
+   - `GET .../exams/student/english-status` — TTL ~20 s entre navegaciones; **invalidar y volver a pedir** tras crear/cancelar examen o curso.
+   - Catálogos estables (`GET /api/careers`, listas de períodos derivadas de `GET /api/groups` paginado) — TTL ~5 min o invalidar tras mutaciones admin.
+4. **Paginación**: preferir `page` + `limit` del servidor en lugar de recorrer todas las páginas en cada apertura de filtro (patrón que disparaba 429 en web admin).
+5. **`401`**: limpiar sesión local y redirigir a login (sin reintentos con la misma cookie).
+
+No hay endpoints nuevos por esta optimización: es política de consumo sobre los mismos contratos de las secciones 2–3.
+
+---
+
+## 6. Versionado y compatibilidad
 
 - Cambios incompatibles en endpoints canónicos se anunciarán en este documento antes de desplegarse.
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-06-11 (lista de espera exámenes, sin nivel en solicitud, retake vía período, pago rechazado)
+**Última actualización**: 2026-06-20 (grupos de inglés siempre con `nivelIngles`; regla canónica de "grupo disponible" compartida entre listado y solicitud; contrato aplicable a iOS y Android)

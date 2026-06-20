@@ -315,6 +315,7 @@ export const createGroup = async (
   // Apply business rule validations using validators
   await GroupValidators.validateSubjectExists(subjectId);
   await GroupValidators.validateTeacherExists(teacherId);
+  GroupValidators.validateEnglishLevel(esCursoIngles, nivelIngles);
 
   // Generate UUID for group
   const groupId = randomUUID();
@@ -344,7 +345,7 @@ export const createGroup = async (
       },
   } as const;
 
-  // Prepare data for creation
+  // Prepare data for creation, honoring captured group configuration
   const createData: Prisma.groupsUncheckedCreateInput = {
     id: groupId,
     subjectId,
@@ -352,12 +353,21 @@ export const createGroup = async (
     nombre,
     periodo,
     codigo,
-    cupoMaximo: 30,
-    cupoMinimo: 5,
+    cupoMaximo: data.cupoMaximo ?? 30,
+    cupoMinimo: data.cupoMinimo ?? 5,
     cupoActual: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
+
+  // Optional group configuration captured by the admin
+  if (data.horario !== undefined) createData.horario = data.horario;
+  if (data.aula !== undefined) createData.aula = data.aula;
+  if (data.edificio !== undefined) createData.edificio = data.edificio;
+  if (data.modalidad !== undefined) createData.modalidad = data.modalidad;
+  if (data.estatus !== undefined) createData.estatus = data.estatus;
+  if (data.fechaInicio) createData.fechaInicio = new Date(data.fechaInicio);
+  if (data.fechaFin) createData.fechaFin = new Date(data.fechaFin);
 
   // Add optional fields for English courses
   if (nivelIngles !== undefined) createData.nivelIngles = nivelIngles;
@@ -480,6 +490,13 @@ export const updateGroup = async (
     }
   }
 
+  // Enforce English level on the effective post-update state
+  const effectiveEsCursoIngles =
+    data.esCursoIngles !== undefined ? data.esCursoIngles : existingGroup.esCursoIngles;
+  const effectiveNivelIngles =
+    data.nivelIngles !== undefined ? data.nivelIngles : existingGroup.nivelIngles;
+  GroupValidators.validateEnglishLevel(effectiveEsCursoIngles, effectiveNivelIngles);
+
     // Build update data (only include provided fields)
     const updateData: Record<string, unknown> = {};
     if (data.nombre !== undefined) updateData.nombre = data.nombre;
@@ -493,6 +510,12 @@ export const updateGroup = async (
     if (data.edificio !== undefined) updateData.edificio = data.edificio;
     if (data.modalidad !== undefined) updateData.modalidad = data.modalidad;
     if (data.estatus !== undefined) updateData.estatus = data.estatus;
+    if (data.fechaInicio !== undefined) {
+      updateData.fechaInicio = data.fechaInicio ? new Date(data.fechaInicio) : null;
+    }
+    if (data.fechaFin !== undefined) {
+      updateData.fechaFin = data.fechaFin ? new Date(data.fechaFin) : null;
+    }
     // Campos para cursos de inglés
     if (data.nivelIngles !== undefined) updateData.nivelIngles = data.nivelIngles;
     if (data.fechaInscripcionInicio !== undefined) {
@@ -570,29 +593,12 @@ export const updateGroup = async (
 export const getAvailableEnglishCourses = async (): Promise<GroupResponseDto[]> => {
   const now = new Date();
 
-  // Build where clause with optional date conditions
-  // If dates are not set (null), the course should still be available
-  // Logic: Course is available if:
-  // - fechaInscripcionInicio is null OR fechaInscripcionInicio <= now (inscriptions have started or no start date)
-  // - fechaInscripcionFin is null OR fechaInscripcionFin >= now (inscriptions haven't ended or no end date)
+  // Prefiltro barato e indexado; la disponibilidad real (estatus, ventana de
+  // inscripción y cupo) se evalúa con la regla canónica compartida con el
+  // validador del POST, para que listar e inscribir usen el mismo criterio.
   const whereClause: any = {
     esCursoIngles: true,
-    estatus: 'ABIERTO',
     deletedAt: null,
-    AND: [
-      {
-        OR: [
-          { fechaInscripcionInicio: null },
-          { fechaInscripcionInicio: { lte: now } },
-        ],
-      },
-      {
-        OR: [
-          { fechaInscripcionFin: null },
-          { fechaInscripcionFin: { gte: now } },
-        ],
-      },
-    ],
   };
 
   const groups = await prisma.groups.findMany({
@@ -621,8 +627,10 @@ export const getAvailableEnglishCourses = async (): Promise<GroupResponseDto[]> 
     },
   });
 
-  // Filter groups with available capacity (Prisma doesn't support computed fields in where)
-  const availableGroups = groups.filter((group) => group.cupoActual < group.cupoMaximo);
+  // Apply the canonical availability rule (estatus, inscription window, cupo)
+  const availableGroups = groups.filter(
+    (group) => GroupValidators.englishGroupAvailability(group, now).available
+  );
 
   return availableGroups.map((group) => {
     // Ensure subjects and teachers relations exist
