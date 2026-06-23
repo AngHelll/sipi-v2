@@ -95,8 +95,9 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 
 | Cliente | Inglés V2 |
 |---------|-----------|
-| Web React | Sí — inglés solo en sus pantallas (exámenes, cursos especiales, pagos); el formulario genérico de inscripciones es exclusivo de materias regulares |
-| iOS | Pendiente (`academic-activities`) |
+| Web React | Sí — inglés solo en sus pantallas; hub "Mi Inglés" del alumno por ciclo de vida (solicitado / inscrito / historial) y explorador de cursos disponibles; el formulario genérico de inscripciones es exclusivo de materias regulares |
+| iOS (`sipi-mobile-ios`) | En progreso — estatus 70% del alumno vía `english-status`; **pendiente** solicitar examen/curso |
+| Android (`sipi-mobile-android`) | En progreso — tabs STUDENT (Inglés/Perfil/Inscripciones) y directorio de grupos; **pendiente** solicitar examen/curso |
 
 ---
 
@@ -130,8 +131,7 @@ Más detalle: [REGLAS-NEGOCIO-ENROLLMENTS.md](REGLAS-NEGOCIO-ENROLLMENTS.md) (re
 1. ~~Migración Prisma V2~~
 2. ~~Deprecar `/api/enrollments/english` y eliminar código legacy~~
 3. ~~Cierre capa web: inglés solo en pantallas V2, typecheck en CI~~
-4. iOS contra `academic-activities` — contrato en [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
-5. Android (seguimiento para alumnos) — mismo contrato
-6. Opcional: otra `SpecialCourseType` cuando exista requisito de negocio
+4. iOS y Android contra `academic-activities` (mismo contrato): estatus de inglés **hecho**; **pendiente** solicitar examen/curso. Contrato en [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
+5. Opcional: otra `SpecialCourseType` cuando exista requisito de negocio
 
 Detalle por capas y próximos pasos: [ROADMAP.md](ROADMAP.md)
