@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { enrollmentsApi, studentsApi, groupsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { FormField, StatusSelector, PageLoader, ButtonLoader } from '../../components/ui';
+import { FormField, StatusSelector, PageLoader, ButtonLoader, ConfirmDialog } from '../../components/ui';
 import type { Student, Group } from '../../types';
 
 export const EnrollmentFormPage = () => {
@@ -18,6 +18,7 @@ export const EnrollmentFormPage = () => {
   const groupIdFromQuery = searchParams.get('groupId');
 
   const [loading, setLoading] = useState(false);
+  const [confirmSubmit, setConfirmSubmit] = useState<{ message: string } | null>(null);
   const [fetching, setFetching] = useState(isEdit);
   const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
@@ -500,15 +501,15 @@ export const EnrollmentFormPage = () => {
         showToast(`Transición inválida: no se puede cambiar de ${originalEnrollment.estatus} a ${formData.estatus}`, 'error');
         return;
       }
+    }
 
-      // RB-032: Require confirmation for critical transitions
+    // RB-032: Require confirmation for critical transitions
+    const pendingConfirmations: string[] = [];
+    if (isEdit && originalEnrollment && formData.estatus !== originalEnrollment.estatus) {
       if (formData.estatus === 'BAJA' || formData.estatus === 'CANCELADO') {
-        const confirmed = window.confirm(
-          `¿Estás seguro de cambiar el estatus a ${formData.estatus}? Esta acción puede afectar el historial académico.`
+        pendingConfirmations.push(
+          `Cambiarás el estatus a ${formData.estatus}, lo que puede afectar el historial académico.`
         );
-        if (!confirmed) {
-          return;
-        }
       }
     }
 
@@ -518,15 +519,20 @@ export const EnrollmentFormPage = () => {
         showToast('Solo se puede cambiar de grupo si el estatus es INSCRITO o EN_CURSO', 'error');
         return;
       }
-
-      const confirmed = window.confirm(
-        '¿Estás seguro de cambiar el grupo? Esto moverá la inscripción y actualizará los cupos de ambos grupos.'
+      pendingConfirmations.push(
+        'Cambiarás el grupo: esto moverá la inscripción y actualizará los cupos de ambos grupos.'
       );
-      if (!confirmed) {
-        return;
-      }
     }
 
+    if (pendingConfirmations.length > 0) {
+      setConfirmSubmit({ message: `${pendingConfirmations.join('\n\n')}\n\n¿Deseas continuar?` });
+      return;
+    }
+
+    await performSubmit();
+  };
+
+  const performSubmit = async () => {
     try {
       setLoading(true);
 
@@ -1042,6 +1048,20 @@ export const EnrollmentFormPage = () => {
           </div>
         </form>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmSubmit !== null}
+        title="Confirmar cambios"
+        message={confirmSubmit?.message ?? ''}
+        confirmText="Sí, continuar"
+        cancelText="Revisar"
+        variant="warning"
+        onConfirm={() => {
+          setConfirmSubmit(null);
+          performSubmit();
+        }}
+        onCancel={() => setConfirmSubmit(null)}
+      />
     </Layout>
   );
 };
