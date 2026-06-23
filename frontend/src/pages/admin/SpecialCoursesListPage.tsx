@@ -260,12 +260,8 @@ export const SpecialCoursesListPage = () => {
               options={[
                 { value: '', label: 'Todos' },
                 { value: 'INGLES', label: 'Inglés' },
-                { value: 'VERANO', label: 'Verano' },
-                { value: 'EXTRACURRICULAR', label: 'Extracurricular' },
-                { value: 'TALLER', label: 'Taller' },
-                { value: 'SEMINARIO', label: 'Seminario' },
-                { value: 'DIPLOMADO', label: 'Diplomado' },
-                { value: 'CERTIFICACION', label: 'Certificación' },
+                // Otros SpecialCourseType (verano, taller, etc.) viven solo en schema:
+                // no se exponen en la UI hasta que tengan caso de negocio (Capa 0).
               ]}
             />
 

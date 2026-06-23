@@ -5,7 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { examPeriodsApi, examsApi } from '../../lib/api';
 import { getExamEligibility, hasPriorDiagnosticExam, type StudentEnglishStatusSnapshot } from '../../lib/englishEligibility';
 import { useToast } from '../../context/ToastContext';
-import { Card, Loader, Icon } from '../../components/ui';
+import { Card, Loader, Icon, ConfirmDialog } from '../../components/ui';
 import type { AvailableExamPeriod } from '../../types';
 
 export const AvailableExamPeriodsPage = () => {
@@ -17,6 +17,11 @@ export const AvailableExamPeriodsPage = () => {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const [waitlisting, setWaitlisting] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    | { type: 'enroll'; periodId: string; periodName: string }
+    | { type: 'waitlist' }
+    | null
+  >(null);
 
   useEffect(() => {
     fetchData();
@@ -50,16 +55,15 @@ export const AvailableExamPeriodsPage = () => {
     }
   };
 
-  const handleEnroll = async (periodId: string, periodName: string) => {
+  const requestEnroll = (periodId: string, periodName: string) => {
     if (!examEligibility?.canRequest) {
       showToast(examEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
       return;
     }
+    setConfirmAction({ type: 'enroll', periodId, periodName });
+  };
 
-    if (!confirm(`¿Deseas inscribirte al período "${periodName}"?`)) {
-      return;
-    }
-
+  const performEnroll = async (periodId: string) => {
     try {
       setEnrolling(periodId);
       const response = await examsApi.createDiagnosticExam({
@@ -85,18 +89,15 @@ export const AvailableExamPeriodsPage = () => {
 
   // Lista de espera: el primer diagnóstico sin período se solicita sin periodId y
   // el backend lo deja en LISTA_ESPERA (gratuito). No aplica para un retake.
-  const handleJoinWaitlist = async () => {
+  const requestWaitlist = () => {
     if (!examEligibility?.canRequest) {
       showToast(examEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
       return;
     }
-    if (
-      !confirm(
-        'No hay período abierto. ¿Deseas entrar a la lista de espera? Tu primer diagnóstico es gratuito y el administrador te asignará fechas cuando publique un período.'
-      )
-    ) {
-      return;
-    }
+    setConfirmAction({ type: 'waitlist' });
+  };
+
+  const performWaitlist = async () => {
     try {
       setWaitlisting(true);
       await examsApi.createDiagnosticExam({ examType: 'DIAGNOSTICO' });
@@ -109,6 +110,17 @@ export const AvailableExamPeriodsPage = () => {
       showToast(errorMessage, 'error');
     } finally {
       setWaitlisting(false);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmAction) return;
+    const action = confirmAction;
+    setConfirmAction(null);
+    if (action.type === 'enroll') {
+      await performEnroll(action.periodId);
+    } else {
+      await performWaitlist();
     }
   };
 
@@ -187,7 +199,7 @@ export const AvailableExamPeriodsPage = () => {
             </p>
             {!priorDiagnostic && canEnroll && (
               <button
-                onClick={handleJoinWaitlist}
+                onClick={requestWaitlist}
                 disabled={waitlisting}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -238,7 +250,7 @@ export const AvailableExamPeriodsPage = () => {
                 </div>
 
                 <button
-                  onClick={() => handleEnroll(period.id, period.nombre)}
+                  onClick={() => requestEnroll(period.id, period.nombre)}
                   disabled={!canEnroll || enrolling === period.id || period.cuposDisponibles === 0}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
@@ -256,6 +268,21 @@ export const AvailableExamPeriodsPage = () => {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmAction !== null}
+        title={confirmAction?.type === 'waitlist' ? 'Entrar a lista de espera' : 'Confirmar inscripción'}
+        message={
+          confirmAction?.type === 'enroll'
+            ? `¿Deseas inscribirte al período "${confirmAction.periodName}"?`
+            : 'No hay período abierto. ¿Deseas entrar a la lista de espera? Tu primer diagnóstico es gratuito y el administrador te asignará fechas cuando publique un período.'
+        }
+        confirmText={confirmAction?.type === 'waitlist' ? 'Entrar' : 'Inscribirme'}
+        cancelText="Cancelar"
+        variant="info"
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmAction(null)}
+      />
     </Layout>
   );
 };

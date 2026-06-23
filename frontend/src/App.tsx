@@ -52,6 +52,7 @@ function App() {
         <AuthProvider>
           <InactivityTimeoutHandler />
           <BrowserRouter>
+            <Suspense fallback={<PageLoader text="Cargando..." />}>
             <Routes>
           {/* Public route */}
           <Route path="/login" element={<LoginPage />} />
@@ -69,9 +70,7 @@ function App() {
             path="/dashboard/student"
             element={
               <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
-                <Suspense fallback={<PageLoader text="Cargando dashboard..." />}>
-                  <DashboardStudent />
-                </Suspense>
+                <DashboardStudent />
               </ProtectedRoute>
             }
           />
@@ -79,9 +78,7 @@ function App() {
             path="/dashboard/teacher"
             element={
               <ProtectedRoute allowedRoles={[UserRole.TEACHER]}>
-                <Suspense fallback={<PageLoader text="Cargando dashboard..." />}>
-                  <DashboardTeacher />
-                </Suspense>
+                <DashboardTeacher />
               </ProtectedRoute>
             }
           />
@@ -89,9 +86,7 @@ function App() {
             path="/dashboard/admin"
             element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                <Suspense fallback={<PageLoader text="Cargando dashboard..." />}>
-                  <DashboardAdmin />
-                </Suspense>
+                <DashboardAdmin />
               </ProtectedRoute>
             }
           />
@@ -101,9 +96,7 @@ function App() {
             path="/admin/students"
             element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                <Suspense fallback={<PageLoader text="Cargando..." />}>
-                  <StudentsListPage />
-                </Suspense>
+                <StudentsListPage />
               </ProtectedRoute>
             }
           />
@@ -215,9 +208,7 @@ function App() {
             path="/admin/enrollments"
             element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                <Suspense fallback={<PageLoader text="Cargando..." />}>
-                  <AdminEnrollmentsListPage />
-                </Suspense>
+                <AdminEnrollmentsListPage />
               </ProtectedRoute>
             }
           />
@@ -369,6 +360,7 @@ function App() {
               {/* 404 Not Found */}
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </AuthProvider>
       </ToastProvider>

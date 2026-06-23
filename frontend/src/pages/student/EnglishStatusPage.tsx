@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { examsApi, specialCoursesApi } from '../../lib/api';
 import { getCourseEligibility, getExamEligibility } from '../../lib/englishEligibility';
-import { Loader, Card, Badge, Icon } from '../../components/ui';
+import { Loader, Card, Badge, Icon, ConfirmDialog } from '../../components/ui';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 
@@ -117,6 +117,7 @@ export const EnglishStatusPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<{ kind: 'examen' | 'curso'; id: string } | null>(null);
   const [showHistorial, setShowHistorial] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -158,7 +159,6 @@ export const EnglishStatusPage = () => {
   };
 
   const handleCancelExam = async (activityId: string) => {
-    if (!window.confirm('¿Seguro que quieres cancelar tu solicitud de examen de diagnóstico?')) return;
     try {
       setCancellingId(activityId);
       await examsApi.cancelExam(activityId);
@@ -172,7 +172,6 @@ export const EnglishStatusPage = () => {
   };
 
   const handleCancelCourse = async (activityId: string) => {
-    if (!window.confirm('¿Seguro que quieres cancelar tu solicitud de curso de inglés?')) return;
     try {
       setCancellingId(activityId);
       await specialCoursesApi.cancelCourse(activityId);
@@ -182,6 +181,17 @@ export const EnglishStatusPage = () => {
       showToast(err.response?.data?.error || 'Error al cancelar la solicitud', 'error');
     } finally {
       setCancellingId(null);
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelTarget) return;
+    const { kind, id } = cancelTarget;
+    setCancelTarget(null);
+    if (kind === 'examen') {
+      await handleCancelExam(id);
+    } else {
+      await handleCancelCourse(id);
     }
   };
 
@@ -308,7 +318,7 @@ export const EnglishStatusPage = () => {
           )}
           {item.cancelable && (
             <button
-              onClick={() => (item.kind === 'examen' ? handleCancelExam(item.id) : handleCancelCourse(item.id))}
+              onClick={() => setCancelTarget({ kind: item.kind, id: item.id })}
               disabled={cancellingId === item.id}
               className="text-red-600 hover:text-red-800 disabled:opacity-50 text-sm font-medium"
             >
@@ -434,7 +444,7 @@ export const EnglishStatusPage = () => {
                 <div className="mt-4">
                   <button
                     type="button"
-                    onClick={() => handleCancelExam(pe.id)}
+                    onClick={() => setCancelTarget({ kind: 'examen', id: pe.id })}
                     disabled={cancellingId === pe.id}
                     className="px-4 py-2 text-sm font-medium text-red-700 border border-red-300 rounded-lg hover:bg-red-50 disabled:opacity-50"
                   >
@@ -701,6 +711,21 @@ export const EnglishStatusPage = () => {
         </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={cancelTarget !== null}
+        title="Cancelar solicitud"
+        message={
+          cancelTarget?.kind === 'examen'
+            ? '¿Seguro que quieres cancelar tu solicitud de examen de diagnóstico?'
+            : '¿Seguro que quieres cancelar tu solicitud de curso de inglés?'
+        }
+        confirmText="Sí, cancelar"
+        cancelText="No"
+        variant="danger"
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setCancelTarget(null)}
+      />
     </Layout>
   );
 };

@@ -9,7 +9,7 @@ import {
   type StudentEnglishStatusSnapshot,
 } from '../../lib/englishEligibility';
 import { useToast } from '../../context/ToastContext';
-import { Card, Loader, Icon } from '../../components/ui';
+import { Card, Loader, Icon, ConfirmDialog } from '../../components/ui';
 import type { Group } from '../../types';
 
 export const AvailableEnglishCoursesPage = () => {
@@ -20,6 +20,11 @@ export const AvailableEnglishCoursesPage = () => {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const [waitlisting, setWaitlisting] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    | { type: 'enroll'; groupId: string; courseName: string; nivelIngles: number; costo?: number }
+    | { type: 'waitlist' }
+    | null
+  >(null);
 
   useEffect(() => {
     fetchData();
@@ -60,22 +65,19 @@ export const AvailableEnglishCoursesPage = () => {
     }
   };
 
-  const handleEnroll = async (groupId: string, courseName: string, nivelIngles: number, costo?: number) => {
+  const requestEnroll = (groupId: string, courseName: string, nivelIngles: number, costo?: number) => {
     if (!courseEligibility?.canRequest) {
       showToast(courseEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
       return;
     }
-
     if (nivelIngles !== courseEligibility.level) {
       showToast(`Solo puedes inscribirte al nivel ${courseEligibility.level}`, 'error');
       return;
     }
+    setConfirmAction({ type: 'enroll', groupId, courseName, nivelIngles, costo });
+  };
 
-    const costoMsg = costo != null ? ` El costo es de $${costo.toFixed(2)}.` : '';
-    if (!confirm(`¿Deseas inscribirte al curso "${courseName}"?${costoMsg}`)) {
-      return;
-    }
-
+  const performEnroll = async (groupId: string, nivelIngles: number) => {
     try {
       setEnrolling(groupId);
       const result = await specialCoursesApi.createSpecialCourse({
@@ -102,24 +104,21 @@ export const AvailableEnglishCoursesPage = () => {
 
   // Lista de espera: cuando no hay grupo publicado para el nivel del alumno,
   // se solicita el curso sin groupId y el backend lo deja en LISTA_ESPERA.
-  const handleJoinWaitlist = async () => {
+  const requestWaitlist = () => {
     if (!courseEligibility?.canRequest) {
       showToast(courseEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
       return;
     }
-    const level = courseEligibility.level;
-    if (
-      !confirm(
-        `No hay grupo publicado para el nivel ${level}. ¿Deseas unirte a la lista de espera? El área abrirá un grupo según la demanda y no necesitas pagar hasta que te asignen uno.`
-      )
-    ) {
-      return;
-    }
+    setConfirmAction({ type: 'waitlist' });
+  };
+
+  const performWaitlist = async () => {
+    if (!courseEligibility) return;
     try {
       setWaitlisting(true);
       await specialCoursesApi.createSpecialCourse({
         courseType: 'INGLES',
-        nivelIngles: level,
+        nivelIngles: courseEligibility.level,
       });
       showToast('Te agregamos a la lista de espera.', 'success');
       navigate('/student/english/status');
@@ -130,6 +129,17 @@ export const AvailableEnglishCoursesPage = () => {
       showToast(errorMessage, 'error');
     } finally {
       setWaitlisting(false);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmAction) return;
+    const action = confirmAction;
+    setConfirmAction(null);
+    if (action.type === 'enroll') {
+      await performEnroll(action.groupId, action.nivelIngles);
+    } else {
+      await performWaitlist();
     }
   };
 
@@ -212,7 +222,7 @@ export const AvailableEnglishCoursesPage = () => {
             </p>
             {canEnroll && (
               <button
-                onClick={handleJoinWaitlist}
+                onClick={requestWaitlist}
                 disabled={waitlisting}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -275,7 +285,7 @@ export const AvailableEnglishCoursesPage = () => {
                         showToast('Este grupo no tiene nivel definido; contacta a servicios escolares.', 'error');
                         return;
                       }
-                      handleEnroll(course.id, course.nombre, nivel, course.costo);
+                      requestEnroll(course.id, course.nombre, nivel, course.costo);
                     }}
                     disabled={!canEnrollThis || enrolling === course.id || cupoDisponible <= 0 || nivel == null}
                     className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -288,6 +298,23 @@ export const AvailableEnglishCoursesPage = () => {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmAction !== null}
+        title={confirmAction?.type === 'waitlist' ? 'Unirte a lista de espera' : 'Confirmar inscripción'}
+        message={
+          confirmAction?.type === 'enroll'
+            ? `¿Deseas inscribirte al curso "${confirmAction.courseName}"?${
+                confirmAction.costo != null ? ` El costo es de $${confirmAction.costo.toFixed(2)}.` : ''
+              }`
+            : `No hay grupo publicado para el nivel ${courseEligibility?.level ?? ''}. ¿Deseas unirte a la lista de espera? El área abrirá un grupo según la demanda y no necesitas pagar hasta que te asignen uno.`
+        }
+        confirmText={confirmAction?.type === 'waitlist' ? 'Unirme' : 'Inscribirme'}
+        cancelText="Cancelar"
+        variant="info"
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmAction(null)}
+      />
     </Layout>
   );
 };
