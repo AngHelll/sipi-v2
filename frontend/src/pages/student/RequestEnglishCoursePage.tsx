@@ -266,6 +266,15 @@ export const RequestEnglishCoursePage = () => {
             <br />
             Después de la solicitud, deberás realizar el pago y llevar el comprobante físico a Servicio Estudiantil.
           </p>
+          {!hasCompletedAllRequirements && (
+            <button
+              onClick={() => navigate('/student/english/available-courses')}
+              className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-green-700 hover:text-green-800"
+            >
+              <Icon name="book" size={18} />
+              Ver los grupos de inglés disponibles
+            </button>
+          )}
           {currentLevel && (
             <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
