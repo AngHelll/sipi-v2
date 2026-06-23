@@ -188,6 +188,7 @@ model groups {
   periodoId        String?
   // Campos para cursos de inglés
   nivelIngles              Int?              // Nivel del curso (1-6) si es curso de inglés
+  costo                    Decimal?          @db.Decimal(10, 2) // Precio del curso de inglés; el alumno lo paga al solicitar (PENDIENTE_PAGO)
   fechaInscripcionInicio  DateTime?         // Fecha de apertura de inscripciones
   fechaInscripcionFin     DateTime?         // Fecha de cierre de inscripciones
   esCursoIngles           Boolean           @default(false) // Flag para identificar cursos de inglés

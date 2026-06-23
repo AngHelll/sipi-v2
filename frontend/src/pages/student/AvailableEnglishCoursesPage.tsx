@@ -59,7 +59,7 @@ export const AvailableEnglishCoursesPage = () => {
     }
   };
 
-  const handleEnroll = async (groupId: string, courseName: string, nivelIngles: number) => {
+  const handleEnroll = async (groupId: string, courseName: string, nivelIngles: number, costo?: number) => {
     if (!courseEligibility?.canRequest) {
       showToast(courseEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
       return;
@@ -70,7 +70,8 @@ export const AvailableEnglishCoursesPage = () => {
       return;
     }
 
-    if (!confirm(`¿Deseas inscribirte al curso "${courseName}"?`)) {
+    const costoMsg = costo != null ? ` El costo es de $${costo.toFixed(2)}.` : '';
+    if (!confirm(`¿Deseas inscribirte al curso "${courseName}"?${costoMsg}`)) {
       return;
     }
 
@@ -219,6 +220,12 @@ export const AvailableEnglishCoursesPage = () => {
                       <p className="text-sm font-medium text-gray-700">Cupos:</p>
                       <p className="text-sm text-gray-600">{cupoDisponible} disponibles</p>
                     </div>
+                    {course.costo != null && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Costo:</p>
+                        <p className="text-sm font-semibold text-green-700">${course.costo.toFixed(2)}</p>
+                      </div>
+                    )}
                     {course.fechaInscripcionFin && (
                       <div>
                         <p className="text-sm font-medium text-gray-700">Inscripciones hasta:</p>
@@ -233,7 +240,7 @@ export const AvailableEnglishCoursesPage = () => {
                         showToast('Este grupo no tiene nivel definido; contacta a servicios escolares.', 'error');
                         return;
                       }
-                      handleEnroll(course.id, course.nombre, nivel);
+                      handleEnroll(course.id, course.nombre, nivel, course.costo);
                     }}
                     disabled={!canEnrollThis || enrolling === course.id || cupoDisponible <= 0 || nivel == null}
                     className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

@@ -394,9 +394,10 @@ export const RequestEnglishCoursePage = () => {
                     ...filteredCourses.map((course) => {
                       const cupoMax = course.cupoMaximo || 0;
                       const cupoAct = course.cupoActual || 0;
+                      const costoLabel = course.costo != null ? ` · $${course.costo.toFixed(2)}` : '';
                       return {
                         value: course.id,
-                        label: `${course.nombre} - Nivel ${course.nivelIngles || 'N/A'} (${cupoMax - cupoAct} cupos disponibles)`,
+                        label: `${course.nombre} - Nivel ${course.nivelIngles || 'N/A'} (${cupoMax - cupoAct} cupos disponibles)${costoLabel}`,
                       };
                     }),
                   ]}
@@ -466,7 +467,14 @@ export const RequestEnglishCoursePage = () => {
                   <div>
                     <h3 className="font-semibold text-yellow-900 mb-1">Importante - Proceso de Pago</h3>
                     <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
-                      <li>Este curso requiere pago</li>
+                      {(() => {
+                        const selected = filteredCourses.find((c) => c.id === selectedGroupId);
+                        return selected?.costo != null ? (
+                          <li><strong>Costo del curso: ${selected.costo.toFixed(2)}</strong></li>
+                        ) : (
+                          <li>Este curso requiere pago</li>
+                        );
+                      })()}
                       <li>Después de solicitar, deberás realizar el pago correspondiente</li>
                       <li>Lleva el comprobante de pago físico a Servicio Estudiantil</li>
                       <li>El personal de Servicio Estudiantil revisará y aprobará tu pago</li>

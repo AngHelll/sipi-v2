@@ -77,9 +77,12 @@ interface EnglishStatus {
     nivelIngles: number | null;
     fechaInscripcion: string;
     estatus: string;
+    requierePago: boolean;
     pagoAprobado: boolean | null;
+    montoPago: number | null;
     calificacion: number | null;
     subject: string;
+    observaciones?: string | null;
     completadoPorDiagnostico: boolean;
   }>;
   completedLevels: number[];
@@ -242,10 +245,10 @@ export const EnglishStatusPage = () => {
     estatus: c.estatus,
     calificacion: c.calificacion,
     fechaInscripcion: c.fechaInscripcion,
-    requierePago: false,
+    requierePago: c.requierePago,
     pagoAprobado: c.pagoAprobado,
-    montoPago: null,
-    observaciones: null,
+    montoPago: c.montoPago,
+    observaciones: c.observaciones ?? null,
     completadoPorDiagnostico: c.completadoPorDiagnostico,
     cancelable:
       CANCELABLE_STATUSES.includes(c.estatus) && c.calificacion === null && !c.completadoPorDiagnostico,

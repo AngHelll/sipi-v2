@@ -22,6 +22,7 @@ export interface CreateGroupDto {
   fechaFin?: string; // ISO date string
   // Campos opcionales para cursos de inglés
   nivelIngles?: number; // Nivel del curso (1-6) si es curso de inglés
+  costo?: number; // Precio del curso de inglés (obligatorio si esCursoIngles)
   fechaInscripcionInicio?: string; // ISO date string
   fechaInscripcionFin?: string; // ISO date string
   esCursoIngles?: boolean; // Flag para identificar cursos de inglés
@@ -47,6 +48,7 @@ export interface UpdateGroupDto {
   fechaFin?: string; // ISO date string
   // Campos para cursos de inglés
   nivelIngles?: number;
+  costo?: number; // Precio del curso de inglés (obligatorio si esCursoIngles)
   fechaInscripcionInicio?: string; // ISO date string
   fechaInscripcionFin?: string; // ISO date string
   esCursoIngles?: boolean;
@@ -111,6 +113,7 @@ export interface GroupResponseDto {
   estatus?: 'ABIERTO' | 'CERRADO' | 'CANCELADO' | 'EN_CURSO' | 'FINALIZADO';
   // Campos para cursos de inglés
   nivelIngles?: number;
+  costo?: number; // Precio del curso de inglés
   fechaInscripcionInicio?: string; // ISO date string
   fechaInscripcionFin?: string; // ISO date string
   esCursoIngles?: boolean;

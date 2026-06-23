@@ -62,9 +62,10 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 5. La política de pago la decide **el servidor**; el cliente no puede enviar `requierePago`.
 
 #### Grupo de inglés disponible (regla única)
-- Todo grupo de inglés (`esCursoIngles = true`) **debe tener nivel 1–6**; el backend lo exige al crear/editar (`createGroup`/`updateGroup`). Sin nivel no se publica.
+- Todo grupo de inglés (`esCursoIngles = true`) **debe tener nivel 1–6 y costo (> 0)**; el backend lo exige al crear/editar (`createGroup`/`updateGroup`). Sin nivel o sin costo no se publica.
 - Un grupo es **disponible** (solicitable) si y solo si: `estatus = ABIERTO`, ventana de inscripción vigente (`fechaInscripcionInicio ≤ ahora ≤ fechaInscripcionFin`, o sin fechas) y cupo libre (`cupoActual < cupoMaximo`).
 - **Misma regla en ambos lados**: el listado del alumno (`GET /api/groups/available/english-courses`) y la validación de la solicitud (`POST .../special-courses`) la comparten (`GroupValidators.englishGroupAvailability`). Si el grupo deja de estar disponible entre listar y solicitar, el POST responde `400` con el motivo.
+- **Monto del curso visible desde el inicio**: al solicitar el curso con grupo, el servidor copia el `costo` del grupo a `special_courses.montoPago` y deja la solicitud en `PENDIENTE_PAGO`, así el alumno ve cuánto pagar de inmediato (no espera a que el admin lo capture al aprobar). El monto es un snapshot del momento de la solicitud.
 
 #### Lista de Espera (Admin)
 1. Admin consulta demanda: `GET /api/academic-activities/special-courses/waitlist/summary` — interesados por tipo de curso y nivel.

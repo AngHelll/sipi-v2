@@ -589,6 +589,7 @@ export const groupsApi = {
     estatus?: 'ABIERTO' | 'CERRADO' | 'CANCELADO' | 'EN_CURSO' | 'FINALIZADO';
     // Campos para cursos de inglés
     nivelIngles?: number;
+    costo?: number;
     fechaInscripcionInicio?: string;
     fechaInscripcionFin?: string;
     esCursoIngles?: boolean;
@@ -619,6 +620,7 @@ export const groupsApi = {
       estatus?: 'ABIERTO' | 'CERRADO' | 'CANCELADO' | 'EN_CURSO' | 'FINALIZADO';
       // Campos para cursos de inglés
       nivelIngles?: number;
+      costo?: number;
       fechaInscripcionInicio?: string;
       fechaInscripcionFin?: string;
       esCursoIngles?: boolean;
@@ -1046,10 +1048,13 @@ export const examsApi = {
       nivelIngles: number | null;
       fechaInscripcion: string;
       estatus: string;
+      requierePago: boolean;
       pagoAprobado: boolean | null;
+      montoPago: number | null;
       calificacion: number | null;
       subject: string;
       groupId: string | null;
+      observaciones?: string | null;
       completadoPorDiagnostico: boolean;
     }>;
     completedLevels: number[];

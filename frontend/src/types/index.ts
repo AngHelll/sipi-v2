@@ -192,6 +192,7 @@ export type Group = {
   
   // Campos para cursos de inglés
   nivelIngles?: number;
+  costo?: number;
   fechaInscripcionInicio?: string;
   fechaInscripcionFin?: string;
   esCursoIngles?: boolean;

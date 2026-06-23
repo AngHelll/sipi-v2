@@ -95,9 +95,9 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 
 | Cliente | Inglés V2 |
 |---------|-----------|
-| Web React | Sí — inglés solo en sus pantallas; hub "Mi Inglés" del alumno por ciclo de vida (solicitado / inscrito / historial) y explorador de cursos disponibles; el formulario genérico de inscripciones es exclusivo de materias regulares |
-| iOS (`sipi-mobile-ios`) | En progreso — estatus 70% del alumno vía `english-status`; **pendiente** solicitar examen/curso |
-| Android (`sipi-mobile-android`) | En progreso — tabs STUDENT (Inglés/Perfil/Inscripciones) y directorio de grupos; **pendiente** solicitar examen/curso |
+| Web React | Sí — inglés solo en sus pantallas; hub "Mi Inglés" del alumno por ciclo de vida (solicitado / inscrito / historial), explorador de cursos disponibles y resumen de acciones pendientes en el dashboard; el formulario genérico de inscripciones es exclusivo de materias regulares |
+| iOS (`sipi-mobile-ios`) | Sí — journey STUDENT completo: estatus 70%, solicitar examen/curso (con lista de espera), cancelar, claridad de pago y "siguiente paso". Pendiente: roles TEACHER/ADMIN |
+| Android (`sipi-mobile-android`) | Sí — journey STUDENT completo: estatus 70%, solicitar examen/curso (con lista de espera), cancelar, claridad de pago y seguimiento. Pendiente: roles TEACHER/ADMIN |
 
 ---
 
@@ -107,7 +107,7 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 - Niveles: **1–6** (validar con la institución si el requisito oficial sigue siendo 7)
 - Sin diagnóstico: solo **nivel 1**
 - Con diagnóstico: solo el **nivel asignado**
-- **Grupos de inglés**: todo grupo marcado como de inglés debe tener **nivel 1–6** (obligatorio al crearlo/editarlo); sin nivel no se publica.
+- **Grupos de inglés**: todo grupo marcado como de inglés debe tener **nivel 1–6** y **costo (> 0)** (ambos obligatorios al crearlo/editarlo); sin ellos no se publica. El costo se copia al `montoPago` de la solicitud, de modo que el alumno ve cuánto pagar desde que queda en `PENDIENTE_PAGO`.
 - **Grupo disponible (regla única)**: el alumno ve y puede solicitar un grupo de inglés **solo** si está `ABIERTO`, dentro de su ventana de inscripción y con cupo libre. La misma regla aplica al listar (`/groups/available/english-courses`) y al solicitar (`POST /special-courses`): lo que se ve es lo que se puede solicitar.
 - **Lista de espera (cursos)**: solicitar curso sin grupo publicado ⇒ `LISTA_ESPERA` (sin pago). El admin detecta la demanda por nivel, crea grupo y asigna desde la lista; el pago se define al asignar.
 - **Lista de espera (exámenes)**: primer diagnóstico sin período ⇒ `LISTA_ESPERA` (gratuito). El admin asigna período cuando publique uno; retake de diagnóstico solo vía período (puede tener costo).
@@ -131,7 +131,7 @@ Más detalle: [REGLAS-NEGOCIO-ENROLLMENTS.md](REGLAS-NEGOCIO-ENROLLMENTS.md) (re
 1. ~~Migración Prisma V2~~
 2. ~~Deprecar `/api/enrollments/english` y eliminar código legacy~~
 3. ~~Cierre capa web: inglés solo en pantallas V2, typecheck en CI~~
-4. iOS y Android contra `academic-activities` (mismo contrato): estatus de inglés **hecho**; **pendiente** solicitar examen/curso. Contrato en [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
+4. iOS y Android contra `academic-activities` (mismo contrato): journey STUDENT de inglés **completo** (estatus 70%, solicitar examen/curso con lista de espera, cancelar, claridad de pago); **pendiente** rol ADMIN en móvil (assign-period, assign-group, waitlist/summary, initial-level). Contrato en [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
 5. Opcional: otra `SpecialCourseType` cuando exista requisito de negocio
 
 Detalle por capas y próximos pasos: [ROADMAP.md](ROADMAP.md)

@@ -28,13 +28,19 @@ export const createSpecialCourse = async (
     await SpecialCoursesValidators.validateCanRequestEnglishCourse(studentId, nivelIngles || 1);
   }
 
-  // Validate group if provided
+  // Validate group if provided and capture its price
+  let groupCosto: number | null = null;
   if (groupId) {
     await EntityValidators.validateGroupExists(groupId);
     // El grupo debe corresponder al curso solicitado (tipo y nivel) y tener cupo
     await SpecialCoursesValidators.validateGroupMatchesCourse(groupId, courseType, nivelIngles);
     // Check if student is already enrolled in this specific group
     await SpecialCoursesValidators.validateNotEnrolledInGroup(studentId, groupId);
+    const group = await (prisma as any).groups.findUnique({
+      where: { id: groupId },
+      select: { costo: true },
+    });
+    groupCosto = group?.costo != null ? Number(group.costo) : null;
   }
 
   // Generate codes
@@ -42,7 +48,8 @@ export const createSpecialCourse = async (
   const activityId = randomUUID();
   const courseId = randomUUID();
 
-  // Server-side: con grupo publicado se paga; sin grupo entra a lista de espera
+  // Server-side: con grupo publicado se paga; sin grupo entra a lista de espera.
+  // El monto se toma del precio del grupo para que el alumno lo vea en PENDIENTE_PAGO.
   const requierePago = !!groupId;
   const estatus = groupId ? 'PENDIENTE_PAGO' : 'LISTA_ESPERA';
 
@@ -69,6 +76,7 @@ export const createSpecialCourse = async (
         nivelIngles: nivelIngles || null,
         groupId: groupId || null,
         requierePago,
+        montoPago: groupCosto, // Precio del grupo; visible para el alumno en PENDIENTE_PAGO
         pagoAprobado: null, // Se define al aprobar pago (con grupo) o al asignar grupo (lista de espera)
         fechaPagoAprobado: null,
       },
@@ -130,6 +138,12 @@ export const assignGroupToCourse = async (
     activity.special_courses.nivelIngles ?? undefined
   );
 
+  const group = await (prisma as any).groups.findUnique({
+    where: { id: groupId },
+    select: { costo: true },
+  });
+  const groupCosto = group?.costo != null ? Number(group.costo) : null;
+
   const newStatus = requierePago ? 'PENDIENTE_PAGO' : 'INSCRITO';
 
   await prisma.$transaction(async (tx) => {
@@ -138,6 +152,8 @@ export const assignGroupToCourse = async (
       data: {
         groupId,
         requierePago,
+        // Si requiere pago, el alumno verá el precio del grupo en PENDIENTE_PAGO
+        montoPago: requierePago ? groupCosto : null,
         pagoAprobado: requierePago ? null : true,
         fechaPagoAprobado: requierePago ? null : new Date(),
       },
