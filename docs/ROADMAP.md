@@ -15,22 +15,22 @@ flowchart TB
 
 ## Capas y estado
 
-| Capa | Fuente de verdad | Estado (2026-06-10) |
+| Capa | Fuente de verdad | Estado (2026-06-22) |
 |------|------------------|---------------------|
 | 0. Producto | [PRODUCTO.md](PRODUCTO.md) | **Estable** — SIPI Inglés (requisito 70%, niveles 1–6); SIS básico como soporte |
-| 1. Flujos de negocio | [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md) | **Estable** — diagnóstico → pago → placement → cursos → certificación |
-| 2. Contratos API | [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md) + `/api/academic-activities/*` | **Estable** — canónico inglés en academic-activities; legacy `/enrollments/english/*` retirado (410) |
-| 3. Web (React) | `frontend/` | **Cerrada** — consume solo la API canónica para inglés; formulario de inscripciones limitado a materias regulares (inglés redirige a sus pantallas); typecheck (`tsc -b`) en verde y como gate en CI |
-| 4a. Móvil iOS | repo `sipi-mobile-ios` | **Parcial** — MVP por roles sobre endpoints genéricos; pestaña "Inglés" pendiente (ver contrato) |
-| 4b. Móvil Android | — | **No iniciado** — será la plataforma de seguimiento para disponibilidad de alumnos; partirá del mismo contrato |
+| 1. Flujos de negocio | [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md) | **Estable** — diagnóstico → pago → placement → cursos → certificación; grupos de inglés con nivel obligatorio y regla única de disponibilidad |
+| 2. Contratos API | [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md) + `/api/academic-activities/*` | **Estable** — canónico inglés en academic-activities; legacy `/enrollments/english/*` retirado (410); regla canónica de "grupo disponible" documentada para iOS y Android |
+| 3. Web (React) | `frontend/` | **Cerrada** — consume solo la API canónica para inglés; hub "Mi Inglés" del alumno por ciclo de vida; formulario de inscripciones limitado a materias regulares; typecheck (`tsc -b`) en verde y como gate en CI |
+| 4a. Móvil iOS | repo `sipi-mobile-ios` | **En progreso** — estatus 70% del alumno vía `english-status` hecho; **pendiente** solicitar examen/curso (`POST` exams/special-courses) |
+| 4b. Móvil Android | repo `sipi-mobile-android` | **En progreso** — tabs STUDENT (Inglés/Perfil/Inscripciones) y directorio de grupos; **pendiente** solicitar curso/examen; mismo contrato que iOS |
 
 ## Próximos pasos (en orden)
 
 La capa web (3) quedó cerrada para el alcance actual: cualquier trabajo nuevo debe venir de las capas 0–2 o del frente móvil.
 
-1. **iOS — pestaña "Inglés" (alumno)**: estatus 70%, solicitar examen, solicitar curso, consumiendo `english-status` y endpoints canónicos. Limpiar campos RB-038 de `EnrollmentsModels.swift`.
-2. **iOS — hardening**: filtros admin pendientes, observabilidad (R5 del roadmap iOS).
-3. **Android — MVP alumno**: login + estatus de inglés + solicitudes, mismo contrato que iOS.
+1. **iOS — solicitar examen/curso (alumno)**: sobre la pestaña "Inglés" ya con estatus 70%, agregar `POST` de examen y de curso (lista de espera incluida), aplicando la regla de "grupo disponible" y manejo de `400`. Ver `sipi-mobile-ios/contexto/FEEDBACK-backend-2026-06-20.md`.
+2. **Android — solicitar examen/curso (alumno)**: sobre tabs STUDENT y directorio de grupos ya hechos, agregar solicitud de curso (validar payload de `groups/available/english-courses`) y de examen. Ver `sipi-mobile-android/contexto/FEEDBACK-backend-2026-06-20.md`.
+3. **iOS / Android — hardening**: filtros admin, observabilidad, snackbar de feedback (R5).
 4. **Opcional (requiere caso de negocio)**: nueva `SpecialCourseType` (verano, talleres) u otra actividad — el schema ya lo soporta; **no** crear API sin pasar por Capa 0.
 
 ## Reglas del workflow
@@ -39,4 +39,4 @@ La capa web (3) quedó cerrada para el alcance actual: cualquier trabajo nuevo d
 - Cambios de API que afecten a móvil se documentan en MOBILE-API-CONTRACT.md **antes** de desplegar.
 - Lo "escalable a futuro" vive solo en schema/enums (sin API ni UI) hasta que tenga justificación de producto: `social_service`, `professional_practices`, `enrollments_v2`, `prerequisites`, `student_documents`.
 
-**Última actualización**: 2026-06-10
+**Última actualización**: 2026-06-22

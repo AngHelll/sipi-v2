@@ -48,6 +48,96 @@ describe('GroupValidators', () => {
       expect(EntityValidators.validateGroupExists).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('validateEnglishLevel', () => {
+    it('does nothing when the group is not an English course', () => {
+      expect(() => GroupValidators.validateEnglishLevel(false, null)).not.toThrow();
+      expect(() => GroupValidators.validateEnglishLevel(undefined, undefined)).not.toThrow();
+    });
+
+    it('throws when an English group has no level', () => {
+      expect(() => GroupValidators.validateEnglishLevel(true, null)).toThrow(/nivel asignado/i);
+      expect(() => GroupValidators.validateEnglishLevel(true, undefined)).toThrow(/nivel asignado/i);
+    });
+
+    it('throws when the level is out of range', () => {
+      expect(() => GroupValidators.validateEnglishLevel(true, 0)).toThrow(/entre 1 y 6/i);
+      expect(() => GroupValidators.validateEnglishLevel(true, 7)).toThrow(/entre 1 y 6/i);
+      expect(() => GroupValidators.validateEnglishLevel(true, 2.5)).toThrow(/entre 1 y 6/i);
+    });
+
+    it('accepts a valid English level', () => {
+      for (let nivel = 1; nivel <= 6; nivel++) {
+        expect(() => GroupValidators.validateEnglishLevel(true, nivel)).not.toThrow();
+      }
+    });
+
+    it('tags the validation error with statusCode 400', () => {
+      try {
+        GroupValidators.validateEnglishLevel(true, null);
+        throw new Error('should have thrown');
+      } catch (err) {
+        expect((err as { statusCode?: number }).statusCode).toBe(400);
+      }
+    });
+  });
+
+  describe('englishGroupAvailability', () => {
+    const now = new Date('2026-06-20T12:00:00Z');
+    const base = {
+      estatus: 'ABIERTO',
+      deletedAt: null as Date | null,
+      cupoActual: 0,
+      cupoMaximo: 30,
+      fechaInscripcionInicio: null as Date | null,
+      fechaInscripcionFin: null as Date | null,
+    };
+
+    it('is available with open status, capacity and no date window', () => {
+      expect(GroupValidators.englishGroupAvailability(base, now)).toEqual({
+        available: true,
+        reason: null,
+      });
+    });
+
+    it('is unavailable when soft-deleted', () => {
+      const result = GroupValidators.englishGroupAvailability({ ...base, deletedAt: now }, now);
+      expect(result.available).toBe(false);
+    });
+
+    it('is unavailable when status is not ABIERTO (e.g. EN_CURSO)', () => {
+      const result = GroupValidators.englishGroupAvailability({ ...base, estatus: 'EN_CURSO' }, now);
+      expect(result.available).toBe(false);
+      expect(result.reason).toMatch(/no está disponible/i);
+    });
+
+    it('is unavailable before the inscription window opens', () => {
+      const result = GroupValidators.englishGroupAvailability(
+        { ...base, fechaInscripcionInicio: new Date('2026-06-21T00:00:00Z') },
+        now
+      );
+      expect(result.available).toBe(false);
+      expect(result.reason).toMatch(/aún no abren/i);
+    });
+
+    it('is unavailable after the inscription window closes', () => {
+      const result = GroupValidators.englishGroupAvailability(
+        { ...base, fechaInscripcionFin: new Date('2026-06-19T00:00:00Z') },
+        now
+      );
+      expect(result.available).toBe(false);
+      expect(result.reason).toMatch(/ya cerró/i);
+    });
+
+    it('is unavailable when full', () => {
+      const result = GroupValidators.englishGroupAvailability(
+        { ...base, cupoActual: 30, cupoMaximo: 30 },
+        now
+      );
+      expect(result.available).toBe(false);
+      expect(result.reason).toMatch(/cupos/i);
+    });
+  });
 });
 
 

@@ -646,10 +646,10 @@ export const EnglishStatusPage = () => {
               )}
               {courseEligibility.canRequest && (
                 <button
-                  onClick={() => navigate('/student/english/request-course')}
+                  onClick={() => navigate('/student/english/available-courses')}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  Solicitar curso de inglés
+                  Ver cursos de inglés disponibles
                 </button>
               )}
             </div>
@@ -694,13 +694,21 @@ export const EnglishStatusPage = () => {
           </button>
           )}
           {courseEligibility.canRequest && (
+          <>
           <button
-            onClick={() => navigate('/student/english/request-course')}
+            onClick={() => navigate('/student/english/available-courses')}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
           >
             <Icon name="book" size={20} />
-            Solicitar Curso de Inglés
+            Ver cursos de inglés disponibles
           </button>
+          <button
+            onClick={() => navigate('/student/english/request-course')}
+            className="px-4 py-2 border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-2"
+          >
+            Solicitar curso / lista de espera
+          </button>
+          </>
           )}
         </div>
         )}

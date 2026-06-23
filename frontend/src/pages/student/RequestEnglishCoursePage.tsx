@@ -83,11 +83,11 @@ export const RequestEnglishCoursePage = () => {
       // Filter courses by current level
       // Note: We fetch all available courses first, then filter by level
       if (currentLevel !== null) {
-        const filtered = result.courses.filter(course => course.nivelIngles === currentLevel);
+        const filtered = result.courses.filter(course => course.nivelIngles === currentLevel || course.nivelIngles == null);
         setFilteredCourses(filtered);
       } else {
-        // If no level, only show level 1 courses
-        const filtered = result.courses.filter(course => course.nivelIngles === 1);
+        // If no level, show level 1 courses (and any group without level set)
+        const filtered = result.courses.filter(course => course.nivelIngles === 1 || course.nivelIngles == null);
         setFilteredCourses(filtered);
         
         // Debug: Log if no level 1 courses found
@@ -106,11 +106,11 @@ export const RequestEnglishCoursePage = () => {
   // Update filtered courses when current level changes
   useEffect(() => {
     if (currentLevel !== null && availableCourses.length > 0) {
-      const filtered = availableCourses.filter(course => course.nivelIngles === currentLevel);
+      const filtered = availableCourses.filter(course => course.nivelIngles === currentLevel || course.nivelIngles == null);
       setFilteredCourses(filtered);
     } else if (currentLevel === null && availableCourses.length > 0) {
-      // If no level, only show level 1 courses
-      const filtered = availableCourses.filter(course => course.nivelIngles === 1);
+      // If no level, show level 1 courses (and any group without level set)
+      const filtered = availableCourses.filter(course => course.nivelIngles === 1 || course.nivelIngles == null);
       setFilteredCourses(filtered);
       
       // Debug: Log available courses to help diagnose why level 1 might not be showing
@@ -266,6 +266,15 @@ export const RequestEnglishCoursePage = () => {
             <br />
             Después de la solicitud, deberás realizar el pago y llevar el comprobante físico a Servicio Estudiantil.
           </p>
+          {!hasCompletedAllRequirements && (
+            <button
+              onClick={() => navigate('/student/english/available-courses')}
+              className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-green-700 hover:text-green-800"
+            >
+              <Icon name="book" size={18} />
+              Ver los grupos de inglés disponibles
+            </button>
+          )}
           {currentLevel && (
             <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">

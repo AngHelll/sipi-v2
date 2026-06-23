@@ -10,6 +10,16 @@ export interface CreateGroupDto {
   teacherId: string;
   nombre: string;
   periodo: string;
+  // Configuración del grupo (opcional; con defaults si no se envía)
+  cupoMaximo?: number;
+  cupoMinimo?: number;
+  horario?: string;
+  aula?: string;
+  edificio?: string;
+  modalidad?: 'PRESENCIAL' | 'VIRTUAL' | 'HIBRIDO' | 'SEMIPRESENCIAL';
+  estatus?: 'ABIERTO' | 'CERRADO' | 'CANCELADO' | 'EN_CURSO' | 'FINALIZADO';
+  fechaInicio?: string; // ISO date string
+  fechaFin?: string; // ISO date string
   // Campos opcionales para cursos de inglés
   nivelIngles?: number; // Nivel del curso (1-6) si es curso de inglés
   fechaInscripcionInicio?: string; // ISO date string
@@ -33,6 +43,8 @@ export interface UpdateGroupDto {
   edificio?: string;
   modalidad?: 'PRESENCIAL' | 'VIRTUAL' | 'HIBRIDO' | 'SEMIPRESENCIAL';
   estatus?: 'ABIERTO' | 'CERRADO' | 'CANCELADO' | 'EN_CURSO' | 'FINALIZADO';
+  fechaInicio?: string; // ISO date string
+  fechaFin?: string; // ISO date string
   // Campos para cursos de inglés
   nivelIngles?: number;
   fechaInscripcionInicio?: string; // ISO date string
