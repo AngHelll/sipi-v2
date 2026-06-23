@@ -899,6 +899,9 @@ export const examsApi = {
           clave: string;
           nombre: string;
         };
+        requierePago?: boolean;
+        pagoAprobado?: boolean | null;
+        montoPago?: number;
       } | null;
     }>;
     pagination: {

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
-import { studentsApi, teachersApi, subjectsApi, groupsApi } from '../../lib/api';
+import { studentsApi, teachersApi, subjectsApi, groupsApi, specialCoursesApi, examsApi } from '../../lib/api';
 import { getCached } from '../../lib/requestCache';
 import { useToast } from '../../context/ToastContext';
 import { PageLoader } from '../../components/ui';
@@ -32,11 +32,54 @@ interface DashboardStats {
   recentEnrollments: any[];
 }
 
+interface EnglishOps {
+  pagosPorAprobar: number;
+  examenesPorProcesar: number;
+  listaEsperaCursos: number;
+  listaEsperaExamenes: number;
+}
+
+const EnglishOpTile = ({
+  label,
+  value,
+  icon,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  icon: string;
+  onClick: () => void;
+}) => {
+  const hasPending = value > 0;
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-start p-4 rounded-xl border text-left transition-colors ${
+        hasPending
+          ? 'bg-secondary-container/10 border-secondary-container/30 hover:bg-secondary-container/20'
+          : 'bg-primary-container/5 border-primary-container/10 hover:bg-primary-container/10'
+      }`}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <span className={`material-symbols-outlined text-[22px] ${hasPending ? 'text-secondary' : 'text-primary'}`}>{icon}</span>
+        {hasPending && (
+          <span className="text-[10px] font-bold uppercase tracking-wide text-secondary bg-secondary-container/30 px-2 py-0.5 rounded-full">
+            Pendiente
+          </span>
+        )}
+      </div>
+      <span className={`text-3xl font-black font-headline ${hasPending ? 'text-secondary' : 'text-primary'}`}>{value}</span>
+      <span className="text-xs text-on-surface-variant mt-1 font-medium font-sans">{label}</span>
+    </button>
+  );
+};
+
 export const DashboardAdmin = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [englishOps, setEnglishOps] = useState<EnglishOps | null>(null);
 
 
   // Custom tooltip component with improved contrast
@@ -66,7 +109,62 @@ export const DashboardAdmin = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchEnglishOps();
   }, []);
+
+  // Métricas operativas del producto (SIPI Inglés). Informativas en el dashboard:
+  // si fallan, no deben tumbar el resto del panel.
+  const fetchEnglishOps = async () => {
+    try {
+      const ops = await getCached('admin-english-ops', 60 * 1000, async () => {
+        const [
+          coursesPay,
+          examsPay,
+          coursesWaitlist,
+          examsWaitlist,
+          examsInscrito,
+          examsPagoAprobado,
+        ] = await Promise.allSettled([
+          specialCoursesApi.getAll({ estatus: 'PENDIENTE_PAGO', courseType: 'INGLES', requierePago: true, limit: 100 }),
+          examsApi.getAll({ estatus: 'PENDIENTE_PAGO', examType: 'DIAGNOSTICO', limit: 100 }),
+          specialCoursesApi.getWaitlistSummary(),
+          examsApi.getWaitlistSummary(),
+          examsApi.getAll({ estatus: 'INSCRITO', examType: 'DIAGNOSTICO', limit: 1 }),
+          examsApi.getAll({ estatus: 'PAGO_APROBADO', examType: 'DIAGNOSTICO', limit: 1 }),
+        ]);
+
+        const coursePayCount =
+          coursesPay.status === 'fulfilled'
+            ? coursesPay.value.courses.filter(
+                (c) => c.course?.requierePago && c.course?.pagoAprobado === null
+              ).length
+            : 0;
+        const examPayCount =
+          examsPay.status === 'fulfilled'
+            ? examsPay.value.exams.filter(
+                (e) =>
+                  e.exam?.requierePago &&
+                  (e.exam?.pagoAprobado === null || e.exam?.pagoAprobado === undefined)
+              ).length
+            : 0;
+
+        const examsToProcess =
+          (examsInscrito.status === 'fulfilled' ? examsInscrito.value.pagination.total : 0) +
+          (examsPagoAprobado.status === 'fulfilled' ? examsPagoAprobado.value.pagination.total : 0);
+
+        return {
+          pagosPorAprobar: coursePayCount + examPayCount,
+          examenesPorProcesar: examsToProcess,
+          listaEsperaCursos: coursesWaitlist.status === 'fulfilled' ? coursesWaitlist.value.total : 0,
+          listaEsperaExamenes: examsWaitlist.status === 'fulfilled' ? examsWaitlist.value.total : 0,
+        } satisfies EnglishOps;
+      });
+      setEnglishOps(ops);
+    } catch (err) {
+      console.error('Error fetching English ops for dashboard:', err);
+      setEnglishOps(null);
+    }
+  };
 
   const fetchAllStudents = async (totalPages: number): Promise<any[]> => {
     const allStudents: any[] = [];
@@ -262,6 +360,42 @@ export const DashboardAdmin = () => {
             <p className="text-xs text-on-surface-variant mt-2 font-medium font-sans">Ciclo escolar en curso</p>
           </div>
         </div>
+
+        {/* SIPI Inglés — operación del producto (acciones pendientes del admin) */}
+        {englishOps && (
+          <div className="bg-surface-container-lowest rounded-xl shadow-soft p-5 border border-outline-variant/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-primary tracking-tight font-headline">SIPI Inglés — Operación</h3>
+              <span className="material-symbols-outlined text-secondary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>translate</span>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <EnglishOpTile
+                label="Pagos por aprobar"
+                value={englishOps.pagosPorAprobar}
+                icon="payments"
+                onClick={() => navigate('/admin/english/payment-approvals')}
+              />
+              <EnglishOpTile
+                label="Exámenes por procesar"
+                value={englishOps.examenesPorProcesar}
+                icon="quiz"
+                onClick={() => navigate('/admin/exams')}
+              />
+              <EnglishOpTile
+                label="Lista de espera · cursos"
+                value={englishOps.listaEsperaCursos}
+                icon="hourglass_empty"
+                onClick={() => navigate('/admin/special-courses')}
+              />
+              <EnglishOpTile
+                label="Lista de espera · exámenes"
+                value={englishOps.listaEsperaExamenes}
+                icon="hourglass_empty"
+                onClick={() => navigate('/admin/exams')}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
