@@ -19,6 +19,7 @@ export const AvailableEnglishCoursesPage = () => {
   const [courseEligibility, setCourseEligibility] = useState<ReturnType<typeof getCourseEligibility> | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
+  const [waitlisting, setWaitlisting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -99,6 +100,39 @@ export const AvailableEnglishCoursesPage = () => {
     }
   };
 
+  // Lista de espera: cuando no hay grupo publicado para el nivel del alumno,
+  // se solicita el curso sin groupId y el backend lo deja en LISTA_ESPERA.
+  const handleJoinWaitlist = async () => {
+    if (!courseEligibility?.canRequest) {
+      showToast(courseEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
+      return;
+    }
+    const level = courseEligibility.level;
+    if (
+      !confirm(
+        `No hay grupo publicado para el nivel ${level}. ¿Deseas unirte a la lista de espera? El área abrirá un grupo según la demanda y no necesitas pagar hasta que te asignen uno.`
+      )
+    ) {
+      return;
+    }
+    try {
+      setWaitlisting(true);
+      await specialCoursesApi.createSpecialCourse({
+        courseType: 'INGLES',
+        nivelIngles: level,
+      });
+      showToast('Te agregamos a la lista de espera.', 'success');
+      navigate('/student/english/status');
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+        'Error al unirte a la lista de espera';
+      showToast(errorMessage, 'error');
+    } finally {
+      setWaitlisting(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
@@ -154,7 +188,7 @@ export const AvailableEnglishCoursesPage = () => {
             Solo se muestran grupos de <strong>nivel {eligibleLevel}</strong> (tu nivel actual).
             {!courseEligibility?.canRequest && courseEligibility?.reason
               ? ''
-              : ' Si no hay grupo publicado, puedes unirte a la lista de espera desde solicitar curso.'}
+              : ' Si no hay grupo publicado para tu nivel, puedes unirte a la lista de espera.'}
           </p>
         </div>
 
@@ -178,10 +212,11 @@ export const AvailableEnglishCoursesPage = () => {
             </p>
             {canEnroll && (
               <button
-                onClick={() => navigate('/student/english/request-course')}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                onClick={handleJoinWaitlist}
+                disabled={waitlisting}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Unirme a lista de espera
+                {waitlisting ? 'Uniéndote...' : 'Unirme a lista de espera'}
               </button>
             )}
           </Card>

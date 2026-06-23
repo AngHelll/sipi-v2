@@ -16,6 +16,7 @@ export const AvailableExamPeriodsPage = () => {
   const [examEligibility, setExamEligibility] = useState<ReturnType<typeof getExamEligibility> | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
+  const [waitlisting, setWaitlisting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -79,6 +80,35 @@ export const AvailableExamPeriodsPage = () => {
       showToast(errorMessage, 'error');
     } finally {
       setEnrolling(null);
+    }
+  };
+
+  // Lista de espera: el primer diagnóstico sin período se solicita sin periodId y
+  // el backend lo deja en LISTA_ESPERA (gratuito). No aplica para un retake.
+  const handleJoinWaitlist = async () => {
+    if (!examEligibility?.canRequest) {
+      showToast(examEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
+      return;
+    }
+    if (
+      !confirm(
+        'No hay período abierto. ¿Deseas entrar a la lista de espera? Tu primer diagnóstico es gratuito y el administrador te asignará fechas cuando publique un período.'
+      )
+    ) {
+      return;
+    }
+    try {
+      setWaitlisting(true);
+      await examsApi.createDiagnosticExam({ examType: 'DIAGNOSTICO' });
+      showToast('Solicitud registrada en lista de espera. Te avisaremos cuando haya un período disponible.', 'success');
+      navigate('/student/english/status');
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+        'Error al entrar a la lista de espera';
+      showToast(errorMessage, 'error');
+    } finally {
+      setWaitlisting(false);
     }
   };
 
@@ -157,10 +187,11 @@ export const AvailableExamPeriodsPage = () => {
             </p>
             {!priorDiagnostic && canEnroll && (
               <button
-                onClick={() => navigate('/student/english/request-exam')}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                onClick={handleJoinWaitlist}
+                disabled={waitlisting}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Entrar a lista de espera
+                {waitlisting ? 'Procesando...' : 'Entrar a lista de espera'}
               </button>
             )}
           </Card>

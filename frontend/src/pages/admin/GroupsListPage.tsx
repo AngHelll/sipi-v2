@@ -19,6 +19,7 @@ export const GroupsListPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<GroupsListResponse['pagination'] | null>(null);
   const isAdmin = user?.role === UserRole.ADMIN;
+  const isTeacher = user?.role === UserRole.TEACHER;
   
   // Delete confirmation state
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -114,7 +115,14 @@ export const GroupsListPage = () => {
   };
 
   const handleView = (id: string) => {
-    navigate(`/admin/groups/${id}`);
+    if (isAdmin) {
+      navigate(`/admin/groups/${id}`);
+    } else if (isTeacher) {
+      // El maestro gestiona sus grupos desde calificaciones; no tiene acceso al
+      // detalle administrativo (/admin/groups/:id está restringido a admin).
+      navigate('/teacher/grades');
+    }
+    // Alumno: las tarjetas no son navegables (no existe vista de detalle para su rol).
   };
 
   const handleEdit = (id: string, e?: React.MouseEvent) => {
@@ -349,7 +357,7 @@ export const GroupsListPage = () => {
                     <GroupCard
                       key={group.id}
                       group={group}
-                      onClick={() => handleView(group.id)}
+                      onClick={isAdmin || isTeacher ? () => handleView(group.id) : undefined}
                       onEdit={isAdmin ? (e) => handleEdit(group.id, e) : undefined}
                       onDelete={isAdmin ? (e) => {
                         e.stopPropagation();

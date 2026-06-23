@@ -220,8 +220,10 @@ export const DashboardAdmin = () => {
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-[-0.03em] mb-4 font-headline text-white">Resumen Institucional</h2>
             <p className="text-sm sm:text-lg opacity-80 max-w-2xl font-light leading-relaxed font-sans text-white/90">Infraestructura digital para la gestión académica de alto rendimiento. Supervise el estado de su institución en tiempo real.</p>
           </div>
-          <div className="absolute top-0 right-0 w-1/3 h-full opacity-10 pointer-events-none">
-            <img className="w-full h-full object-cover" alt="abstract architecture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmEoPSCnnDiIn3nirJOy_rJfKRXyLMxu8y1CZAdDHv0R_FCYMAkuAfQxcCm76lldRqIRp7FnRqv0WMc9VKOcZ5-P7AAZPvQcEyAbAtzC7T3M90M2St7xixAHYyMvi9HCUExeveP_BovB9weyi_mIzXQ7o_-HvCSyYaCfCatTcu6NIRDN3vKqvDB5iPBkMPsMoo1hpdPq3uzUMNrOUsqf9puLbQFdgRAnXYtMjVRVbTJOajYIybOfD01MvgP1HyaPw2MbZfMwMWR1I" />
+          <div className="absolute top-0 right-0 w-1/3 h-full opacity-10 pointer-events-none flex items-center justify-end pr-6">
+            <span className="material-symbols-outlined text-white text-[180px] leading-none" style={{ fontVariationSettings: "'FILL' 1" }}>
+              account_balance
+            </span>
           </div>
         </section>
 

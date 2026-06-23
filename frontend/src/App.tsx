@@ -38,8 +38,6 @@ const SpecialCourseDetailPage = lazy(() => import('./pages/admin/SpecialCourseDe
 // Lazy load student pages
 const EnrollmentsListPage = lazy(() => import('./pages/student/EnrollmentsListPage').then(module => ({ default: module.EnrollmentsListPage })));
 const EnglishStatusPage = lazy(() => import('./pages/student/EnglishStatusPage').then(module => ({ default: module.EnglishStatusPage })));
-const RequestDiagnosticExamPage = lazy(() => import('./pages/student/RequestDiagnosticExamPage').then(module => ({ default: module.RequestDiagnosticExamPage })));
-const RequestEnglishCoursePage = lazy(() => import('./pages/student/RequestEnglishCoursePage').then(module => ({ default: module.RequestEnglishCoursePage })));
 const AvailableExamPeriodsPage = lazy(() => import('./pages/student/AvailableExamPeriodsPage').then(module => ({ default: module.AvailableExamPeriodsPage })));
 const AvailableEnglishCoursesPage = lazy(() => import('./pages/student/AvailableEnglishCoursesPage').then(module => ({ default: module.AvailableEnglishCoursesPage })));
 
@@ -269,21 +267,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Rutas antiguas de solicitud: unificadas en las páginas exploradoras
+              (available-*), que ahora incluyen también la lista de espera. */}
           <Route
             path="/student/english/request-exam"
-            element={
-              <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
-                <RequestDiagnosticExamPage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/student/english/available-exam-periods" replace />}
           />
           <Route
             path="/student/english/request-course"
-            element={
-              <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
-                <RequestEnglishCoursePage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/student/english/available-courses" replace />}
           />
 
           {/* Admin — SIPI Inglés (academic-activities) */}
