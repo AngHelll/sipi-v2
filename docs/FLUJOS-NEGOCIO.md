@@ -1,6 +1,6 @@
 # 📋 Flujos de Negocio - SIPI-V2
 
-**Última actualización:** 2026-06-11
+**Última actualización:** 2026-06-22
 
 Este documento centraliza todos los flujos de negocio principales del sistema.
 
@@ -57,9 +57,14 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 #### Solicitud de Curso (Estudiante)
 1. Estudiante solicita curso: `POST /api/academic-activities/special-courses`
 2. Sistema valida nivel de inglés y requisitos
-3. **Con `groupId`** (grupo publicado): valida que el grupo sea de inglés, del mismo nivel y con cupo → estatus `PENDIENTE_PAGO`. El alumno paga y el admin aprueba (`receive-and-approve-payment`), lo que activa la inscripción y consume cupo.
+3. **Con `groupId`** (grupo publicado): valida que el grupo sea de inglés, del mismo nivel y **disponible** (regla única, ver abajo) → estatus `PENDIENTE_PAGO`. El alumno paga y el admin aprueba (`receive-and-approve-payment`), lo que activa la inscripción y consume cupo.
 4. **Sin `groupId`** (no hay grupo publicado): la solicitud entra a **`LISTA_ESPERA`**, sin pago. No es una inscripción evaluable.
 5. La política de pago la decide **el servidor**; el cliente no puede enviar `requierePago`.
+
+#### Grupo de inglés disponible (regla única)
+- Todo grupo de inglés (`esCursoIngles = true`) **debe tener nivel 1–6**; el backend lo exige al crear/editar (`createGroup`/`updateGroup`). Sin nivel no se publica.
+- Un grupo es **disponible** (solicitable) si y solo si: `estatus = ABIERTO`, ventana de inscripción vigente (`fechaInscripcionInicio ≤ ahora ≤ fechaInscripcionFin`, o sin fechas) y cupo libre (`cupoActual < cupoMaximo`).
+- **Misma regla en ambos lados**: el listado del alumno (`GET /api/groups/available/english-courses`) y la validación de la solicitud (`POST .../special-courses`) la comparten (`GroupValidators.englishGroupAvailability`). Si el grupo deja de estar disponible entre listar y solicitar, el POST responde `400` con el motivo.
 
 #### Lista de Espera (Admin)
 1. Admin consulta demanda: `GET /api/academic-activities/special-courses/waitlist/summary` — interesados por tipo de curso y nivel.

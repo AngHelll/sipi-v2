@@ -1,6 +1,6 @@
 # SIPI — Alcance de producto
 
-**Última actualización:** 2026-06-11
+**Última actualización:** 2026-06-22
 
 ## Enfoque: SIPI Inglés
 
@@ -106,6 +106,8 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 - Niveles: **1–6** (validar con la institución si el requisito oficial sigue siendo 7)
 - Sin diagnóstico: solo **nivel 1**
 - Con diagnóstico: solo el **nivel asignado**
+- **Grupos de inglés**: todo grupo marcado como de inglés debe tener **nivel 1–6** (obligatorio al crearlo/editarlo); sin nivel no se publica.
+- **Grupo disponible (regla única)**: el alumno ve y puede solicitar un grupo de inglés **solo** si está `ABIERTO`, dentro de su ventana de inscripción y con cupo libre. La misma regla aplica al listar (`/groups/available/english-courses`) y al solicitar (`POST /special-courses`): lo que se ve es lo que se puede solicitar.
 - **Lista de espera (cursos)**: solicitar curso sin grupo publicado ⇒ `LISTA_ESPERA` (sin pago). El admin detecta la demanda por nivel, crea grupo y asigna desde la lista; el pago se define al asignar.
 - **Lista de espera (exámenes)**: primer diagnóstico sin período ⇒ `LISTA_ESPERA` (gratuito). El admin asigna período cuando publique uno; retake de diagnóstico solo vía período (puede tener costo).
 - **Cancelación**: alumno cancela sus solicitudes en estados tempranos (sin resultado/calificación); admin cancela con motivo. Toda cancelación revierte cupos (período/grupo).
