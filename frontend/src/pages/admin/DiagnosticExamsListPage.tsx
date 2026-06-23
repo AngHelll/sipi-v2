@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { examsApi, studentsApi, examPeriodsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { Badge, Icon, SkeletonTable, EmptyState, FormField, ButtonLoader } from '../../components/ui';
+import { Badge, Icon, SkeletonTable, EmptyState, FormField, ButtonLoader, PromptDialog } from '../../components/ui';
 import type { Student, ExamPeriod } from '../../types';
 
 interface Exam {
@@ -193,6 +193,10 @@ export const DiagnosticExamsListPage = () => {
     montoPago: '',
     observaciones: '',
   });
+  const [rejectModal, setRejectModal] = useState<{ isOpen: boolean; examId: string | null }>({
+    isOpen: false,
+    examId: null,
+  });
 
   const handleOpenPaymentModal = (examId: string) => {
     setPaymentModal({
@@ -237,12 +241,10 @@ export const DiagnosticExamsListPage = () => {
     }
   };
 
-  const handleRejectPayment = async (examId: string) => {
-    const motivo = window.prompt('Ingresa el motivo del rechazo:');
-    if (!motivo || motivo.trim() === '') {
-      return;
-    }
-
+  const handleConfirmReject = async (motivo: string) => {
+    const examId = rejectModal.examId;
+    setRejectModal({ isOpen: false, examId: null });
+    if (!examId) return;
     try {
       await examsApi.rejectExamPayment(examId, motivo);
       showToast('Pago rechazado', 'success');
@@ -717,7 +719,7 @@ export const DiagnosticExamsListPage = () => {
                                     Recibir y Aprobar
                                   </button>
                                   <button
-                                    onClick={() => handleRejectPayment(exam.id)}
+                                    onClick={() => setRejectModal({ isOpen: true, examId: exam.id })}
                                     className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                                     title="Rechazar pago"
                                   >
@@ -937,6 +939,17 @@ export const DiagnosticExamsListPage = () => {
           </div>
         </div>
       )}
+
+      <PromptDialog
+        isOpen={rejectModal.isOpen}
+        title="Rechazar pago"
+        label="Motivo del rechazo"
+        placeholder="Describe por qué se rechaza el comprobante…"
+        confirmText="Rechazar pago"
+        variant="danger"
+        onConfirm={handleConfirmReject}
+        onCancel={() => setRejectModal({ isOpen: false, examId: null })}
+      />
     </Layout>
   );
 };

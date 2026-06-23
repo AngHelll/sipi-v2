@@ -3,6 +3,7 @@ export { Avatar } from './Avatar';
 export { Badge } from './Badge';
 export { Card } from './Card';
 export { ConfirmDialog } from './ConfirmDialog';
+export { PromptDialog } from './PromptDialog';
 export { EmptyState } from './EmptyState';
 export { ErrorDisplay } from './ErrorDisplay';
 export { FormField } from './FormField';

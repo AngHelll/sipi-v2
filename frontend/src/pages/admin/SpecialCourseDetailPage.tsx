@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { specialCoursesApi, groupsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { PageLoader, Badge, Icon, FormField, ButtonLoader } from '../../components/ui';
+import { PageLoader, Badge, Icon, FormField, ButtonLoader, PromptDialog } from '../../components/ui';
 import type { Group } from '../../types';
 
 interface SpecialCourse {
@@ -56,6 +56,7 @@ export const SpecialCourseDetailPage = () => {
   const [assigning, setAssigning] = useState(false);
   // Cancelación (admin)
   const [cancelling, setCancelling] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -162,13 +163,12 @@ export const SpecialCourseDetailPage = () => {
     }
   };
 
-  const handleCancelCourse = async () => {
+  const handleConfirmCancelCourse = async (motivo: string) => {
+    setCancelModalOpen(false);
     if (!id) return;
-    const motivo = window.prompt('Motivo de la cancelación (requerido):');
-    if (!motivo || !motivo.trim()) return;
     try {
       setCancelling(true);
-      await specialCoursesApi.cancelCourse(id, { motivo: motivo.trim() });
+      await specialCoursesApi.cancelCourse(id, { motivo });
       showToast('Solicitud cancelada', 'success');
       await fetchCourse();
     } catch (err: any) {
@@ -528,7 +528,7 @@ export const SpecialCourseDetailPage = () => {
         {['LISTA_ESPERA', 'PENDIENTE_PAGO', 'INSCRITO', 'EN_CURSO'].includes(course.estatus) && (
           <div className="mt-6 flex justify-end">
             <button
-              onClick={handleCancelCourse}
+              onClick={() => setCancelModalOpen(true)}
               disabled={cancelling}
               className="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
@@ -538,6 +538,18 @@ export const SpecialCourseDetailPage = () => {
           </div>
         )}
       </div>
+
+      <PromptDialog
+        isOpen={cancelModalOpen}
+        title="Cancelar solicitud"
+        label="Motivo de la cancelación"
+        placeholder="Describe el motivo de la cancelación…"
+        confirmText="Cancelar solicitud"
+        cancelText="Volver"
+        variant="danger"
+        onConfirm={handleConfirmCancelCourse}
+        onCancel={() => setCancelModalOpen(false)}
+      />
     </Layout>
   );
 };
