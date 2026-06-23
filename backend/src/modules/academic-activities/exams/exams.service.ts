@@ -809,10 +809,13 @@ export const getStudentEnglishStatusV2 = async (studentId: string) => {
     nivelIngles: activity.special_courses?.nivelIngles || null,
     fechaInscripcion: activity.fechaInscripcion.toISOString(),
     estatus: activity.estatus,
-    pagoAprobado: activity.special_courses?.pagoAprobado || null,
+    requierePago: activity.special_courses?.requierePago ?? false,
+    pagoAprobado: activity.special_courses?.pagoAprobado ?? null,
+    montoPago: activity.special_courses?.montoPago != null ? Number(activity.special_courses.montoPago) : null,
     calificacion: activity.special_courses?.calificacion ? Number(activity.special_courses.calificacion) : null,
     subject: activity.special_courses?.groups?.subjects?.nombre || 'Inglés',
     groupId: activity.special_courses?.groupId || null,
+    observaciones: activity.observaciones || null,
     completadoPorDiagnostico: false, // Real courses are never completed by diagnostic
   }));
 

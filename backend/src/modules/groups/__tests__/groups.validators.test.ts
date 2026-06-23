@@ -82,6 +82,37 @@ describe('GroupValidators', () => {
     });
   });
 
+  describe('validateEnglishCost', () => {
+    it('does nothing when the group is not an English course', () => {
+      expect(() => GroupValidators.validateEnglishCost(false, null)).not.toThrow();
+      expect(() => GroupValidators.validateEnglishCost(undefined, undefined)).not.toThrow();
+    });
+
+    it('throws when an English group has no cost', () => {
+      expect(() => GroupValidators.validateEnglishCost(true, null)).toThrow(/costo asignado/i);
+      expect(() => GroupValidators.validateEnglishCost(true, undefined)).toThrow(/costo asignado/i);
+    });
+
+    it('throws when the cost is zero or negative', () => {
+      expect(() => GroupValidators.validateEnglishCost(true, 0)).toThrow(/mayor a 0/i);
+      expect(() => GroupValidators.validateEnglishCost(true, -50)).toThrow(/mayor a 0/i);
+    });
+
+    it('accepts a positive cost', () => {
+      expect(() => GroupValidators.validateEnglishCost(true, 1200)).not.toThrow();
+      expect(() => GroupValidators.validateEnglishCost(true, 0.01)).not.toThrow();
+    });
+
+    it('tags the validation error with statusCode 400', () => {
+      try {
+        GroupValidators.validateEnglishCost(true, 0);
+        throw new Error('should have thrown');
+      } catch (err) {
+        expect((err as { statusCode?: number }).statusCode).toBe(400);
+      }
+    });
+  });
+
   describe('englishGroupAvailability', () => {
     const now = new Date('2026-06-20T12:00:00Z');
     const base = {

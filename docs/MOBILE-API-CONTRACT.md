@@ -45,7 +45,7 @@ Respuesta (campos principales):
   "cumpleRequisitoIngles": false,
   "fechaExamenDiagnostico": "2026-05-25T...",
   "diagnosticExams": [ { "id", "codigo", "estatus", "calificacion", "nivelIngles", "period", "requierePago", "pagoAprobado", "montoPago", "observaciones" } ],
-  "englishCourses": [ { "id", "codigo", "estatus", "nivelIngles", "calificacion", "aprobado", "group" } ],
+  "englishCourses": [ { "id", "codigo", "estatus", "nivelIngles", "calificacion", "requierePago", "pagoAprobado", "montoPago", "groupId", "observaciones" } ],
   "completedLevels": [1, 2, 3],
   "missingLevels": [4, 5, 6],
   "pendingExam": { "id", "codigo", "estatus", "period", "requierePago", "pagoAprobado", "montoPago", "observaciones" },
@@ -99,6 +99,8 @@ Reglas de contrato (cursos, 2026-06-11; asignación admin 2026-06-15):
 - **`requierePago` ya no se acepta** en el body de `POST .../special-courses`: la política de pago la decide el servidor (con grupo → `PENDIENTE_PAGO`; sin grupo → `LISTA_ESPERA` sin pago).
 - **Los grupos de inglés siempre traen `nivelIngles` (1-6)** (2026-06-20): el backend exige el nivel al crear/editar un grupo con `esCursoIngles=true`, por lo que los clientes pueden filtrar `GET /api/groups/available/english-courses` por nivel sin descartar grupos por nivel ausente.
 - **Regla canónica de "grupo disponible"** (2026-06-20): un grupo aparece en `GET /api/groups/available/english-courses` **si y solo si** cumple TODO: `esCursoIngles=true`, `estatus = ABIERTO` (no `EN_CURSO`/`CERRADO`/`CANCELADO`/`FINALIZADO`), ventana de inscripción vigente (`fechaInscripcionInicio ≤ ahora ≤ fechaInscripcionFin`, o sin fechas) y cupo libre (`cupoActual < cupoMaximo`). El `POST .../special-courses` aplica **exactamente la misma regla**: lo que se lista es lo que se puede solicitar. Si el grupo dejó de estar disponible entre el listado y el envío, el POST responde **`400`** con `error` explicando el motivo (estatus, ventana cerrada o sin cupo) — el cliente debe refrescar el listado, **no** reintentar a ciegas.
+- **Los grupos de inglés siempre traen `costo` (> 0)** (2026-06-22): el backend exige el costo al crear/editar un grupo con `esCursoIngles=true`. `GET /api/groups/available/english-courses` incluye `costo` por grupo, así que el cliente puede mostrar el precio **antes** de solicitar.
+- **El curso muestra el monto a pagar desde el inicio** (2026-06-22): al solicitar un curso con grupo, el servidor copia `costo` del grupo a `special_courses.montoPago` y deja la solicitud en `PENDIENTE_PAGO`. Por eso `english-status.englishCourses[]` ahora trae `requierePago`, `pagoAprobado`, `montoPago` y `observaciones`: cuando `estatus = PENDIENTE_PAGO`, muestra `montoPago` con la instrucción "paga en banco → lleva el comprobante a Servicio Estudiantil". El monto es un snapshot al momento de solicitar (cambiar el `costo` del grupo no reescribe solicitudes existentes). En lista de espera (`LISTA_ESPERA`) `montoPago` es `null` hasta que el admin asigna grupo.
 - Nuevo estatus de actividad: **`LISTA_ESPERA`** — solicitud de curso sin grupo publicado. Los clientes deben mostrarlo como "en lista de espera" (no como inscripción activa) y permitir cancelarla.
 - El avance del curso (calificación, aprobado) se refleja en `english-status.englishCourses`.
 
@@ -187,4 +189,4 @@ No hay endpoints nuevos por esta optimización: es política de consumo sobre lo
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-06-20 (grupos de inglés siempre con `nivelIngles`; regla canónica de "grupo disponible" compartida entre listado y solicitud; contrato aplicable a iOS y Android)
+**Última actualización**: 2026-06-22 (grupos de inglés con `costo` obligatorio; `english-status.englishCourses[]` ahora trae `requierePago`/`pagoAprobado`/`montoPago`/`observaciones`; el alumno ve el monto del curso desde `PENDIENTE_PAGO`. Previo: grupos siempre con `nivelIngles`; regla canónica de "grupo disponible" compartida entre listado y solicitud; contrato aplicable a iOS y Android)

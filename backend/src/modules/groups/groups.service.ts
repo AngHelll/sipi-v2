@@ -195,6 +195,7 @@ export const getAllGroups = async (
       modalidad: group.modalidad || undefined,
       estatus: group.estatus || undefined,
       nivelIngles: group.nivelIngles ?? undefined,
+      costo: group.costo != null ? Number(group.costo) : undefined,
       fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
       fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
       esCursoIngles: group.esCursoIngles ?? false,
@@ -275,6 +276,7 @@ export const getGroupById = async (id: string): Promise<GroupResponseDto | null>
     modalidad: group.modalidad || undefined,
     estatus: group.estatus || undefined,
     nivelIngles: group.nivelIngles ?? undefined,
+    costo: group.costo != null ? Number(group.costo) : undefined,
     fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
     fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
     esCursoIngles: group.esCursoIngles ?? false,
@@ -307,6 +309,7 @@ export const createGroup = async (
       nombre,
       periodo,
     nivelIngles,
+    costo,
     fechaInscripcionInicio,
     fechaInscripcionFin,
     esCursoIngles
@@ -316,6 +319,7 @@ export const createGroup = async (
   await GroupValidators.validateSubjectExists(subjectId);
   await GroupValidators.validateTeacherExists(teacherId);
   GroupValidators.validateEnglishLevel(esCursoIngles, nivelIngles);
+  GroupValidators.validateEnglishCost(esCursoIngles, costo);
 
   // Generate UUID for group
   const groupId = randomUUID();
@@ -371,6 +375,7 @@ export const createGroup = async (
 
   // Add optional fields for English courses
   if (nivelIngles !== undefined) createData.nivelIngles = nivelIngles;
+  if (costo !== undefined) createData.costo = costo;
   if (fechaInscripcionInicio) createData.fechaInscripcionInicio = new Date(fechaInscripcionInicio);
   if (fechaInscripcionFin) createData.fechaInscripcionFin = new Date(fechaInscripcionFin);
   if (esCursoIngles !== undefined) createData.esCursoIngles = esCursoIngles;
@@ -385,6 +390,7 @@ export const createGroup = async (
     cupoMinimo: number;
     cupoActual: number;
     nivelIngles?: number | null;
+    costo?: Prisma.Decimal | null;
     fechaInscripcionInicio?: Date | null;
     fechaInscripcionFin?: Date | null;
     esCursoIngles?: boolean;
@@ -406,6 +412,7 @@ export const createGroup = async (
     modalidad: group.modalidad || undefined,
     estatus: group.estatus || undefined,
     nivelIngles: group.nivelIngles ?? undefined,
+    costo: group.costo != null ? Number(group.costo) : undefined,
     fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
     fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
     esCursoIngles: group.esCursoIngles ?? false,
@@ -496,6 +503,13 @@ export const updateGroup = async (
   const effectiveNivelIngles =
     data.nivelIngles !== undefined ? data.nivelIngles : existingGroup.nivelIngles;
   GroupValidators.validateEnglishLevel(effectiveEsCursoIngles, effectiveNivelIngles);
+  const effectiveCosto =
+    data.costo !== undefined
+      ? data.costo
+      : existingGroup.costo != null
+      ? Number(existingGroup.costo)
+      : null;
+  GroupValidators.validateEnglishCost(effectiveEsCursoIngles, effectiveCosto);
 
     // Build update data (only include provided fields)
     const updateData: Record<string, unknown> = {};
@@ -518,6 +532,7 @@ export const updateGroup = async (
     }
     // Campos para cursos de inglés
     if (data.nivelIngles !== undefined) updateData.nivelIngles = data.nivelIngles;
+    if (data.costo !== undefined) updateData.costo = data.costo;
     if (data.fechaInscripcionInicio !== undefined) {
       updateData.fechaInscripcionInicio = data.fechaInscripcionInicio ? new Date(data.fechaInscripcionInicio) : null;
     }
@@ -567,6 +582,7 @@ export const updateGroup = async (
     modalidad: group.modalidad || undefined,
     estatus: group.estatus || undefined,
     nivelIngles: group.nivelIngles ?? undefined,
+    costo: group.costo != null ? Number(group.costo) : undefined,
     fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
     fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
     esCursoIngles: group.esCursoIngles ?? false,
@@ -657,6 +673,7 @@ export const getAvailableEnglishCourses = async (): Promise<GroupResponseDto[]> 
       modalidad: group.modalidad || undefined,
       estatus: group.estatus || undefined,
       nivelIngles: group.nivelIngles ?? undefined,
+      costo: group.costo != null ? Number(group.costo) : undefined,
       fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
       fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
       esCursoIngles: group.esCursoIngles ?? false,

@@ -38,6 +38,7 @@ export const GroupFormPage = () => {
     estatus: 'ABIERTO' as 'ABIERTO' | 'CERRADO' | 'CANCELADO' | 'EN_CURSO' | 'FINALIZADO',
     // Campos para cursos de inglés
     nivelIngles: '',
+    costo: '',
     fechaInscripcionInicio: '',
     fechaInscripcionFin: '',
     fechaInicio: '',
@@ -99,6 +100,7 @@ export const GroupFormPage = () => {
         modalidad: (group.modalidad || 'PRESENCIAL') as 'PRESENCIAL' | 'VIRTUAL' | 'HIBRIDO' | 'SEMIPRESENCIAL',
         estatus: (group.estatus || 'ABIERTO') as 'ABIERTO' | 'CERRADO' | 'CANCELADO' | 'EN_CURSO' | 'FINALIZADO',
         nivelIngles: group.nivelIngles?.toString() || '',
+        costo: group.costo != null ? group.costo.toString() : '',
         fechaInscripcionInicio: formatDateTimeLocal(group.fechaInscripcionInicio),
         fechaInscripcionFin: formatDateTimeLocal(group.fechaInscripcionFin),
         fechaInicio: formatDateTimeLocal(group.fechaInicio),
@@ -162,9 +164,9 @@ export const GroupFormPage = () => {
       [name]: true,
     }));
 
-    // Clear the English level error when the group is no longer an English course
+    // Clear the English-only errors when the group is no longer an English course
     if (isCheckbox && name === 'esCursoIngles' && nextValue === false) {
-      setFormErrors((prev) => ({ ...prev, nivelIngles: null }));
+      setFormErrors((prev) => ({ ...prev, nivelIngles: null, costo: null }));
     }
 
     const validator = validators[name as keyof typeof validators];
@@ -199,6 +201,12 @@ export const GroupFormPage = () => {
         errors.nivelIngles = 'El nivel de inglés es obligatorio (1-6) para un grupo de inglés';
         isValid = false;
       }
+      // English groups must have a positive cost; it is shown to the student at PENDIENTE_PAGO
+      const costo = parseFloat(String(formData.costo));
+      if (!String(formData.costo).trim() || Number.isNaN(costo) || costo <= 0) {
+        errors.costo = 'El costo es obligatorio y debe ser mayor a 0 para un grupo de inglés';
+        isValid = false;
+      }
     }
 
     setFormErrors(errors);
@@ -209,6 +217,7 @@ export const GroupFormPage = () => {
         return acc;
       }, {} as Record<string, boolean>),
       nivelIngles: true,
+      costo: true,
     }));
 
     return isValid;
@@ -252,6 +261,9 @@ export const GroupFormPage = () => {
       if (formData.esCursoIngles) {
         if (formData.nivelIngles) {
           groupData.nivelIngles = parseInt(formData.nivelIngles, 10);
+        }
+        if (formData.costo) {
+          groupData.costo = parseFloat(formData.costo);
         }
         if (formData.fechaInscripcionInicio) {
           groupData.fechaInscripcionInicio = new Date(formData.fechaInscripcionInicio).toISOString();
@@ -517,6 +529,19 @@ export const GroupFormPage = () => {
                   error={formErrors.nivelIngles}
                   touched={touchedFields.nivelIngles}
                   helpText="Obligatorio para cursos de inglés (1-6)"
+                />
+
+                <FormField
+                  label="Costo *"
+                  name="costo"
+                  type="number"
+                  value={formData.costo}
+                  onChange={handleChange}
+                  min={0}
+                  step="0.01"
+                  error={formErrors.costo}
+                  touched={touchedFields.costo}
+                  helpText="Precio del curso; el alumno lo ve al solicitar (pendiente de pago)"
                 />
 
                 <FormField

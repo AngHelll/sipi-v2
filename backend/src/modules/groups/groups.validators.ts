@@ -74,6 +74,36 @@ export class GroupValidators {
   }
 
   /**
+   * Validate that an English group has a valid cost (> 0).
+   *
+   * El precio se copia a `special_courses.montoPago` cuando el alumno solicita
+   * el curso (estado `PENDIENTE_PAGO`), por lo que el alumno necesita verlo de
+   * entrada. Un grupo de inglés sin costo dejaría al alumno sin saber cuánto
+   * pagar. Igual que el nivel, es obligatorio para publicar el grupo.
+   *
+   * @param esCursoIngles - Bandera de curso de inglés (estado efectivo)
+   * @param costo - Precio del grupo (estado efectivo)
+   * @throws Error si es curso de inglés sin costo válido
+   */
+  static validateEnglishCost(
+    esCursoIngles: boolean | null | undefined,
+    costo: number | null | undefined
+  ): void {
+    if (!esCursoIngles) return;
+    const fail = (message: string): never => {
+      const err = new Error(message) as Error & { statusCode?: number };
+      err.statusCode = 400;
+      throw err;
+    };
+    if (costo === null || costo === undefined) {
+      fail('Un grupo de inglés debe tener un costo asignado.');
+    }
+    if (typeof costo !== 'number' || !Number.isFinite(costo) || costo <= 0) {
+      fail('El costo del grupo de inglés debe ser un número mayor a 0.');
+    }
+  }
+
+  /**
    * Regla canónica de "grupo de inglés disponible para solicitar/inscribirse".
    *
    * Fuente única de verdad compartida por el listado del alumno
