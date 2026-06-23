@@ -461,7 +461,7 @@ export const EnglishStatusPage = () => {
               </p>
               <button
                 type="button"
-                onClick={() => navigate('/student/english/request-exam')}
+                onClick={() => navigate('/student/english/available-exam-periods')}
                 className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm"
               >
                 Solicitar segundo diagnóstico
@@ -493,13 +493,6 @@ export const EnglishStatusPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   Ver períodos de examen disponibles
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/student/english/request-exam')}
-                  className="px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm"
-                >
-                  Solicitar examen directamente
                 </button>
               </div>
             </div>
@@ -689,7 +682,7 @@ export const EnglishStatusPage = () => {
         <div className="flex flex-wrap gap-4">
           {examEligibility.canRequest && (
           <button
-            onClick={() => navigate('/student/english/request-exam')}
+            onClick={() => navigate('/student/english/available-exam-periods')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
             <Icon name="file-text" size={20} />
@@ -697,21 +690,13 @@ export const EnglishStatusPage = () => {
           </button>
           )}
           {courseEligibility.canRequest && (
-          <>
           <button
             onClick={() => navigate('/student/english/available-courses')}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
           >
             <Icon name="book" size={20} />
-            Ver cursos de inglés disponibles
+            Solicitar Curso de Inglés
           </button>
-          <button
-            onClick={() => navigate('/student/english/request-course')}
-            className="px-4 py-2 border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-2"
-          >
-            Solicitar curso / lista de espera
-          </button>
-          </>
           )}
         </div>
         )}

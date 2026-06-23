@@ -18,8 +18,8 @@ export const navItems: NavItem[] = [
   // Student Specific
   { label: 'Calificaciones', path: '/student/enrollments', roles: [UserRole.STUDENT], icon: 'auto_stories', isMain: true },
   { label: 'Mi Inglés', path: '/student/english/status', roles: [UserRole.STUDENT], icon: 'translate', isMain: true },
-  { label: 'Solicitar Examen', path: '/student/english/request-exam', roles: [UserRole.STUDENT], icon: 'edit_document', isMain: false },
-  { label: 'Solicitar Curso', path: '/student/english/request-course', roles: [UserRole.STUDENT], icon: 'library_books', isMain: false },
+  { label: 'Solicitar Examen', path: '/student/english/available-exam-periods', roles: [UserRole.STUDENT], icon: 'edit_document', isMain: false },
+  { label: 'Solicitar Curso', path: '/student/english/available-courses', roles: [UserRole.STUDENT], icon: 'library_books', isMain: false },
   
   // Teacher Specific
   { label: 'Gestión Calificaciones', path: '/teacher/grades', roles: [UserRole.TEACHER], icon: 'grading', isMain: false },
