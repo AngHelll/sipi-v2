@@ -383,7 +383,7 @@ export const DashboardStudent = () => {
         {/* My Enrollments */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Mis Inscripciones</h2>
+            <h2 className="text-xl font-semibold text-gray-800">Mis Calificaciones</h2>
             <button
               onClick={() => navigate('/student/enrollments')}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"

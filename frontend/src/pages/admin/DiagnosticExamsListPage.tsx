@@ -36,7 +36,7 @@ interface Exam {
       nombre: string;
     };
     requierePago?: boolean;
-    pagoAprobado?: boolean;
+    pagoAprobado?: boolean | null;
     montoPago?: number;
   } | null;
 }
