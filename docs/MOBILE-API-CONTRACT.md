@@ -64,7 +64,7 @@ Este endpoint es la fuente de verdad del requisito 70% (`cumpleRequisitoIngles`,
 | Solicitar examen (primer diagnóstico, sin período) | `POST /api/academic-activities/exams` body `{ "examType": "DIAGNOSTICO" }` → `LISTA_ESPERA` | STUDENT |
 | Solicitar examen (con período) | `POST /api/academic-activities/exams` body `{ "examType": "DIAGNOSTICO", "periodId": "..." }` | STUDENT |
 | Ver mis exámenes | `GET /api/academic-activities/exams/student` | STUDENT |
-| Cancelar solicitud | `PUT /api/academic-activities/exams/:id/cancel` | STUDENT (propias, sin resultado) / ADMIN (`motivo` requerido) |
+| Cancelar solicitud | `PUT /api/academic-activities/exams/:id/cancel` | STUDENT (propias, solo en `LISTA_ESPERA`/`PENDIENTE_PAGO`, sin resultado) / ADMIN (`motivo` requerido) |
 | Demanda lista de espera exámenes | `GET /api/academic-activities/exams/waitlist/summary` | ADMIN |
 | Asignar período desde lista de espera | `PUT /api/academic-activities/exams/:id/assign-period` body `{ "periodId" }` | ADMIN |
 
@@ -78,6 +78,7 @@ Reglas de contrato (exámenes, 2026-06-11; asignación admin actualizada 2026-06
 - **`APROBADO`/`EVALUADO` son terminales**: no bloquean una nueva solicitud si no hay otra activa; el retake es solo vía período.
 - **`LISTA_ESPERA`** en exámenes: mostrar como lista de espera (no inscripción activa); incluido en `pendingExam` de `english-status`.
 - **Pago rechazado**: `pagoAprobado: false` en `PENDIENTE_PAGO`; el alumno cancela y vuelve a solicitar.
+- **Cancelación del alumno (2026-06-24)**: solo en estados previos a la aprobación del pago (`LISTA_ESPERA`, `PENDIENTE_PAGO`). Una vez `INSCRITO` (pago aprobado) el `cancel` responde **`400`**; el cliente debe **ocultar el botón cancelar** y mostrar "para cancelar, acude a Servicio Estudiantil". El ADMIN sí puede cancelar estados activos con `motivo`.
 
 Estados de pago del examen: `PENDIENTE_PAGO` → (admin aprueba) → inscripción activa → examen → `APROBADO`/`EVALUADO`. El pago se entrega físicamente; el admin lo registra con `receive-and-approve-payment`. La cancelación revierte el cupo del período si aplica.
 
@@ -88,7 +89,7 @@ Estados de pago del examen: `PENDIENTE_PAGO` → (admin aprueba) → inscripció
 | Ver grupos de inglés disponibles | `GET /api/groups/available/english-courses` | STUDENT |
 | Solicitar curso (grupo publicado) | `POST /api/academic-activities/special-courses` body `{ "courseType": "INGLES", "nivelIngles": N, "groupId": "..." }` | STUDENT |
 | Unirse a lista de espera (sin grupo) | `POST /api/academic-activities/special-courses` body `{ "courseType": "INGLES", "nivelIngles": N }` (sin `groupId`) | STUDENT |
-| Cancelar solicitud | `PUT /api/academic-activities/special-courses/:id/cancel` | STUDENT (propias, sin calificación) / ADMIN (`motivo` requerido) |
+| Cancelar solicitud | `PUT /api/academic-activities/special-courses/:id/cancel` | STUDENT (propias, solo en `LISTA_ESPERA`/`PENDIENTE_PAGO`, sin calificación) / ADMIN (`motivo` requerido) |
 | Demanda de lista de espera | `GET /api/academic-activities/special-courses/waitlist/summary` | ADMIN |
 | Asignar grupo desde lista de espera | `PUT /api/academic-activities/special-courses/:id/assign-group` body `{ "groupId", "requierePago" }` | ADMIN |
 | Registrar nivel inicial (equivalencia) | `POST /api/academic-activities/special-courses/initial-level` body `{ "studentId", "nivel", "calificacion" }` | ADMIN |
@@ -102,6 +103,7 @@ Reglas de contrato (cursos, 2026-06-11; asignación admin 2026-06-15):
 - **Los grupos de inglés siempre traen `costo` (> 0)** (2026-06-22): el backend exige el costo al crear/editar un grupo con `esCursoIngles=true`. `GET /api/groups/available/english-courses` incluye `costo` por grupo, así que el cliente puede mostrar el precio **antes** de solicitar.
 - **El curso muestra el monto a pagar desde el inicio** (2026-06-22): al solicitar un curso con grupo, el servidor copia `costo` del grupo a `special_courses.montoPago` y deja la solicitud en `PENDIENTE_PAGO`. Por eso `english-status.englishCourses[]` ahora trae `requierePago`, `pagoAprobado`, `montoPago` y `observaciones`: cuando `estatus = PENDIENTE_PAGO`, muestra `montoPago` con la instrucción "paga en banco → lleva el comprobante a Servicio Estudiantil". El monto es un snapshot al momento de solicitar (cambiar el `costo` del grupo no reescribe solicitudes existentes). En lista de espera (`LISTA_ESPERA`) `montoPago` es `null` hasta que el admin asigna grupo.
 - Nuevo estatus de actividad: **`LISTA_ESPERA`** — solicitud de curso sin grupo publicado. Los clientes deben mostrarlo como "en lista de espera" (no como inscripción activa) y permitir cancelarla.
+- **Cancelación del alumno (2026-06-24)**: igual que exámenes — solo `LISTA_ESPERA`/`PENDIENTE_PAGO`. Tras `INSCRITO` (pago aprobado) el `cancel` responde **`400`**; ocultar el botón y derivar a Servicio Estudiantil.
 - El avance del curso (calificación, aprobado) se refleja en `english-status.englishCourses`.
 
 ---
@@ -117,11 +119,11 @@ Sin cambios de contrato, con la semántica post-limpieza:
 | `GET /api/students/me` | Incluye perfil de inglés del alumno (`nivelInglesActual`, `porcentajeIngles`, `cumpleRequisitoIngles`, `promedioIngles`) — útil para badges, pero la pantalla de inglés debe usar `english-status` |
 | `GET /api/enrollments/me` | Solo inscripciones de materias regulares (inglés legacy filtrado) |
 | `GET /api/enrollments/:id` | Resuelve también actividades V2 (cursos de inglés con grupo) por id de actividad |
-| `GET /api/enrollments/group/:groupId` | Fusiona inscripciones regulares + cursos de inglés V2 del grupo; campos `isSpecialCourse`, `courseType`, `nivelIngles` |
+| `GET /api/enrollments/group/:groupId` | Fusiona inscripciones regulares + cursos de inglés V2 del grupo; campos `isSpecialCourse`, `courseType`, `nivelIngles`. **Solo cohorte activa (2026-06-24)**: excluye `CANCELADO`, `BAJA`, `PENDIENTE_PAGO`, `PAGO_PENDIENTE_APROBACION` y `LISTA_ESPERA` (es la foto de quienes están en el grupo). Para ver pendientes/cancelados usar `GET /api/enrollments?groupId=&estatus=` (ADMIN) |
 | `GET /api/groups` (+ `periodo`, `esCursoIngles`) | Sin cambios |
 | `GET /api/students`, `/api/teachers`, `/api/subjects` | Directorio admin, sin cambios |
 | `GET /api/careers` | **Nuevo** — catálogo de carreras (ADMIN/TEACHER). Para filtros por carrera con UTF-8 correcto |
-| `GET /api/search` | Sin cambios |
+| `GET /api/search` | **Solo ADMIN (2026-06-24)** — antes lo consumía cualquier usuario autenticado; ahora responde **`403`** a STUDENT/TEACHER (exponía PII de toda la institución). Las apps de alumno/maestro no deben ofrecer búsqueda global. |
 
 ---
 
@@ -189,4 +191,4 @@ No hay endpoints nuevos por esta optimización: es política de consumo sobre lo
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-06-22 (grupos de inglés con `costo` obligatorio; `english-status.englishCourses[]` ahora trae `requierePago`/`pagoAprobado`/`montoPago`/`observaciones`; el alumno ve el monto del curso desde `PENDIENTE_PAGO`. Previo: grupos siempre con `nivelIngles`; regla canónica de "grupo disponible" compartida entre listado y solicitud; contrato aplicable a iOS y Android)
+**Última actualización**: 2026-06-24 (cancelación del alumno restringida a estados previos al pago aprobado — `LISTA_ESPERA`/`PENDIENTE_PAGO`; tras `INSCRITO` el `cancel` responde `400` y se deriva a Servicio Estudiantil; `GET /api/search` ahora es solo ADMIN — `403` para STUDENT/TEACHER. Previo: grupos de inglés con `costo` obligatorio; `english-status.englishCourses[]` con `requierePago`/`pagoAprobado`/`montoPago`/`observaciones`; el alumno ve el monto del curso desde `PENDIENTE_PAGO`; contrato aplicable a iOS y Android)

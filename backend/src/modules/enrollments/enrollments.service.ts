@@ -2,7 +2,7 @@
 import { randomUUID } from 'node:crypto';
 import prisma from '../../config/database';
 import { recalculateStudentAverages } from '../students/students.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, enrollments_estatus } from '@prisma/client';
 import {
   CreateEnrollmentDto,
   UpdateEnrollmentDto,
@@ -604,9 +604,25 @@ export const getEnrollmentById = async (
 };
 
 /**
+ * Estatus que NO forman parte de la cohorte activa de un grupo.
+ * El roster del grupo es la foto de quienes realmente están en él: se excluyen
+ * cancelados/bajas y solicitudes aún no confirmadas (pendientes de pago / lista
+ * de espera). Esos estados se gestionan en Inscripciones y Aprobaciones de pago,
+ * no en la vista del grupo.
+ */
+const GROUP_ROSTER_EXCLUDED_STATUSES = [
+  'CANCELADO',
+  'BAJA',
+  'PENDIENTE_PAGO',
+  'PAGO_PENDIENTE_APROBACION',
+  'LISTA_ESPERA',
+];
+
+/**
  * Get enrollments for a specific group
  * TEACHER can only see enrollments for their own groups
  * ADMIN can see enrollments for any group
+ * Devuelve solo la cohorte activa (ver GROUP_ROSTER_EXCLUDED_STATUSES).
  */
 export const getEnrollmentsByGroup = async (
   groupId: string,
@@ -636,9 +652,22 @@ export const getEnrollmentsByGroup = async (
     }
   }
 
-  // Get enrollments for this group (both legacy and V2)
+  // Get enrollments for this group (both legacy and V2). El enum de enrollments
+  // no incluye LISTA_ESPERA (solo existe en academic_activities), así que aquí se
+  // excluyen solo los estados válidos para esta tabla.
   const legacyEnrollments = await prisma.enrollments.findMany({
-    where: { groupId, ...LEGACY_ENGLISH_ENROLLMENT_FILTER },
+    where: {
+      groupId,
+      ...LEGACY_ENGLISH_ENROLLMENT_FILTER,
+      estatus: {
+        notIn: [
+          enrollments_estatus.CANCELADO,
+          enrollments_estatus.BAJA,
+          enrollments_estatus.PENDIENTE_PAGO,
+          enrollments_estatus.PAGO_PENDIENTE_APROBACION,
+        ],
+      },
+    },
     orderBy: { id: 'asc' },
     include: {
       students: {
@@ -685,6 +714,7 @@ export const getEnrollmentsByGroup = async (
       },
       activityType: 'ENROLLMENT',
       deletedAt: null,
+      estatus: { notIn: GROUP_ROSTER_EXCLUDED_STATUSES },
     },
     include: {
       students: {
@@ -736,6 +766,7 @@ export const getEnrollmentsByGroup = async (
       },
       activityType: 'SPECIAL_COURSE',
       deletedAt: null,
+      estatus: { notIn: GROUP_ROSTER_EXCLUDED_STATUSES },
     },
     include: {
       students: {
