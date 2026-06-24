@@ -198,6 +198,29 @@ export const deleteGroup = asyncHandler(async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/groups/:id/restore
+ * Restore a soft-deleted group (revierte la baja lógica)
+ * ADMIN only
+ */
+export const restoreGroup = asyncHandler(async (req: Request, res: Response) => {
+  const id = String(req.params.id);
+
+  try {
+    await groupsService.restoreGroup(id);
+    res.status(200).json({
+      message: 'Group restored successfully',
+      restoredId: id,
+    });
+  } catch (error: any) {
+    if (error.message === 'Group not found') {
+      res.status(404).json({ error: 'Group not found' });
+      return;
+    }
+    throw error;
+  }
+});
+
+/**
  * GET /api/groups/available/english-courses
  * Get available English courses for students
  * Returns courses that are open, within registration period, and have available capacity

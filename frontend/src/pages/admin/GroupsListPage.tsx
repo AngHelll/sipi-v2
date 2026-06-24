@@ -121,9 +121,13 @@ export const GroupsListPage = () => {
       }
       // Los filtros de estatus/tipo solo aplican en la vista admin.
       if (isAdmin) {
-        const estatusParam = ESTATUS_FILTER_MAP[estatusFilter];
-        if (estatusParam) {
-          params.estatus = estatusParam;
+        if (estatusFilter === 'eliminados') {
+          params.eliminados = true;
+        } else {
+          const estatusParam = ESTATUS_FILTER_MAP[estatusFilter];
+          if (estatusParam) {
+            params.estatus = estatusParam;
+          }
         }
         if (tipoFilter === 'ingles') {
           params.esCursoIngles = true;
@@ -191,6 +195,21 @@ export const GroupsListPage = () => {
 
   const handleCloseCancel = () => {
     setCloseConfirm({ isOpen: false, groupId: null, groupName: '' });
+  };
+
+  const handleRestore = async (id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    try {
+      await groupsApi.restore(id);
+      showToast('Grupo restaurado correctamente', 'success');
+      fetchGroups();
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Error al restaurar el grupo';
+      showToast(errorMessage, 'error');
+      console.error('Error restoring group:', err);
+    }
   };
 
   const handleNewGroup = () => {
@@ -393,7 +412,8 @@ export const GroupsListPage = () => {
                   <option value="vigentes">Vigentes (abiertos y en curso)</option>
                   <option value="cerrados">Cerrados / finalizados</option>
                   <option value="cancelados">Cancelados</option>
-                  <option value="todos">Todos</option>
+                  <option value="todos">Todos (activos)</option>
+                  <option value="eliminados">Eliminados (historial)</option>
                 </select>
               </div>
 
@@ -455,22 +475,26 @@ export const GroupsListPage = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
-                  {filteredGroups.map((group) => (
-                    <GroupCard
-                      key={group.id}
-                      group={group}
-                      onClick={isAdmin || isTeacher ? () => handleView(group.id) : undefined}
-                      onEdit={isAdmin ? (e) => handleEdit(group.id, e) : undefined}
-                      onDuplicate={isAdmin ? (e) => handleDuplicate(group.id, e) : undefined}
-                      onClose={isAdmin && (group.estatus === 'ABIERTO' || group.estatus === 'EN_CURSO')
-                        ? (e) => { e.stopPropagation(); handleCloseClick(group); }
-                        : undefined}
-                      onDelete={isAdmin ? (e) => {
-                        e.stopPropagation();
-                        handleDeleteClick(group);
-                      } : undefined}
-                    />
-                  ))}
+                  {filteredGroups.map((group) => {
+                    const isHistory = estatusFilter === 'eliminados';
+                    return (
+                      <GroupCard
+                        key={group.id}
+                        group={group}
+                        onClick={isAdmin || isTeacher ? () => handleView(group.id) : undefined}
+                        onEdit={isAdmin && !isHistory ? (e) => handleEdit(group.id, e) : undefined}
+                        onDuplicate={isAdmin && !isHistory ? (e) => handleDuplicate(group.id, e) : undefined}
+                        onClose={isAdmin && !isHistory && (group.estatus === 'ABIERTO' || group.estatus === 'EN_CURSO')
+                          ? (e) => { e.stopPropagation(); handleCloseClick(group); }
+                          : undefined}
+                        onRestore={isAdmin && isHistory ? (e) => handleRestore(group.id, e) : undefined}
+                        onDelete={isAdmin && !isHistory ? (e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(group);
+                        } : undefined}
+                      />
+                    );
+                  })}
                 </div>
 
                 {/* Pagination */}

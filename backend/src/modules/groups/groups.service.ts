@@ -31,11 +31,15 @@ export const getAllGroups = async (
     estatus,
     esCursoIngles,
     nivelIngles,
+    eliminados,
     page = 1,
     limit = 20,
     sortBy = 'nombre',
     sortOrder = 'asc',
   } = query;
+
+  // "eliminados" puede llegar como string desde el query param.
+  const soloEliminados = eliminados === true || (eliminados as unknown) === 'true';
 
   // Generate cache key (include user role for role-based filtering)
   const cacheKey = generateCacheKey('groups:list', {
@@ -44,6 +48,7 @@ export const getAllGroups = async (
     estatus,
     esCursoIngles,
     nivelIngles,
+    eliminados: soloEliminados,
     page,
     limit,
     sortBy,
@@ -58,8 +63,11 @@ export const getAllGroups = async (
     return cached; // Cache hit - return immediately without DB query
   }
 
-  // Build where clause
-  const where: Record<string, unknown> = {};
+  // Build where clause. Por defecto solo grupos activos (baja lógica oculta);
+  // la vista de historial pide explícitamente los eliminados.
+  const where: Record<string, unknown> = {
+    deletedAt: soloEliminados ? { not: null } : null,
+  };
 
   // Role-based filtering
   if (userRole === 'TEACHER' && userId) {
@@ -312,6 +320,35 @@ export const getGroupById = async (id: string): Promise<GroupResponseDto | null>
 };
 
 /**
+ * Genera un código de grupo único (GRP-NNNNNN). Se basa en el mayor sufijo
+ * existente (no en `count()`, que colisiona cuando hay bajas/huecos) y verifica
+ * unicidad ante concurrencia o códigos legados fuera de secuencia.
+ */
+const generateUniqueGroupCode = async (): Promise<string> => {
+  const latest = await prisma.groups.findFirst({
+    where: { codigo: { startsWith: 'GRP-' } },
+    orderBy: { codigo: 'desc' },
+    select: { codigo: true },
+  });
+
+  let next = 1;
+  if (latest?.codigo) {
+    const parsed = parseInt(latest.codigo.replace('GRP-', ''), 10);
+    if (!Number.isNaN(parsed)) next = parsed + 1;
+  }
+
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const codigo = `GRP-${String(next).padStart(6, '0')}`;
+    const exists = await prisma.groups.findUnique({ where: { codigo }, select: { id: true } });
+    if (!exists) return codigo;
+    next++;
+  }
+
+  // Fallback extremadamente improbable: código basado en timestamp.
+  return `GRP-${Date.now()}`;
+};
+
+/**
  * Materia canónica para cursos de inglés, por nivel. El producto identifica los
  * cursos de inglés por `esCursoIngles` + `nivelIngles`, no por la materia; para
  * que el admin no tenga que crear/elegir una materia al abrir un curso de inglés,
@@ -374,9 +411,8 @@ export const createGroup = async (
   // Generate UUID for group
   const groupId = randomUUID();
 
-  // Generate unique code for group
-  const codeCount = await prisma.groups.count();
-  const codigo = `GRP-${String(codeCount + 1).padStart(6, '0')}`;
+  // Generate unique code for group (robusto ante bajas lógicas / huecos)
+  const codigo = await generateUniqueGroupCode();
 
   // Define the include type for better type safety
   const groupInclude = {
@@ -446,6 +482,9 @@ export const createGroup = async (
     esCursoIngles?: boolean;
   };
 
+  // El listado está cacheado; invalida para que el nuevo grupo aparezca ya.
+  cache.invalidatePrefix('groups:list');
+
   return {
     id: group.id,
     subjectId: group.subjectId,
@@ -483,29 +522,53 @@ export const createGroup = async (
 };
 
 /**
- * Delete a group
- * Also deletes all enrollments (cascade)
+ * Soft-delete a group (baja lógica).
+ * Marca `deletedAt` para que salga de los listados activos pero quede en el
+ * historial. No borra inscripciones (se conservan para auditoría/historial).
  * ADMIN only
  */
 export const deleteGroup = async (id: string): Promise<void> => {
-  // Check if group exists
   const group = await prisma.groups.findUnique({
     where: { id },
-    include: {
-      enrollments: {
-        select: { id: true },
-      },
-    },
+    select: { id: true, deletedAt: true },
+  });
+
+  if (!group || group.deletedAt) {
+    // Ya no existe o ya está dado de baja: idempotente desde el punto de vista del cliente.
+    throw new Error('Group not found');
+  }
+
+  await prisma.groups.update({
+    where: { id },
+    data: { deletedAt: new Date(), updatedAt: new Date() },
+  });
+
+  cache.invalidatePrefix('groups:list');
+};
+
+/**
+ * Restore a soft-deleted group (revierte la baja lógica).
+ * ADMIN only
+ */
+export const restoreGroup = async (id: string): Promise<void> => {
+  const group = await prisma.groups.findUnique({
+    where: { id },
+    select: { id: true, deletedAt: true },
   });
 
   if (!group) {
     throw new Error('Group not found');
   }
+  if (!group.deletedAt) {
+    return; // No estaba dado de baja
+  }
 
-  // Delete group (this will cascade delete enrollments due to onDelete: Cascade)
-  await prisma.groups.delete({
+  await prisma.groups.update({
     where: { id },
+    data: { deletedAt: null, updatedAt: new Date() },
   });
+
+  cache.invalidatePrefix('groups:list');
 };
 
 /**
@@ -623,6 +686,9 @@ export const updateGroup = async (
       },
     },
   });
+
+  // El listado está cacheado; invalida para reflejar la edición de inmediato.
+  cache.invalidatePrefix('groups:list');
 
   return {
     id: group.id,

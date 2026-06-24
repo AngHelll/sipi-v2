@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Group } from '../../types';
 
 interface GroupCardProps {
@@ -10,11 +10,14 @@ interface GroupCardProps {
   onDuplicate?: (e: React.MouseEvent) => void;
   /** Cierra el curso (estatus → FINALIZADO). */
   onClose?: (e: React.MouseEvent) => void;
+  /** Restaura un grupo dado de baja (historial). */
+  onRestore?: (e: React.MouseEvent) => void;
   /** Nº de alumnos sin calificar (contexto maestro); si > 0 muestra un badge. */
   pendingGrades?: number;
 }
 
-export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, onDelete, onDuplicate, onClose, pendingGrades }) => {
+export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, onDelete, onDuplicate, onClose, onRestore, pendingGrades }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
   const isEstatusAbierto = group.estatus === 'ABIERTO';
   
   // Calculate capacity percentage safely
@@ -32,28 +35,79 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
       {/* Decorative gradient header */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary" />
 
-      {/* Admin Actions */}
-      {(onEdit || onDelete || onDuplicate || onClose) && (
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity bg-surface/80 backdrop-blur-md rounded-lg p-1 border border-outline-variant/20 shadow-sm" onClick={e => e.stopPropagation()}>
-          {onEdit && (
-            <button onClick={onEdit} className="p-1.5 rounded-md text-primary hover:bg-primary/10 transition-colors" title="Editar">
-              <span className="material-symbols-outlined text-[18px]">edit</span>
-            </button>
-          )}
-          {onDuplicate && (
-            <button onClick={onDuplicate} className="p-1.5 rounded-md text-secondary hover:bg-secondary/10 transition-colors" title="Duplicar para nuevo periodo">
-              <span className="material-symbols-outlined text-[18px]">content_copy</span>
-            </button>
-          )}
-          {onClose && (
-            <button onClick={onClose} className="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors" title="Cerrar curso">
-              <span className="material-symbols-outlined text-[18px]">lock</span>
-            </button>
-          )}
-          {onDelete && (
-            <button onClick={onDelete} className="p-1.5 rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Eliminar">
-              <span className="material-symbols-outlined text-[18px]">delete</span>
-            </button>
+      {/* Admin Actions — menú compacto (kebab) para no saturar la tarjeta */}
+      {(onEdit || onDelete || onDuplicate || onClose || onRestore) && (
+        <div className="absolute top-4 right-4 z-30" onClick={e => e.stopPropagation()}>
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors bg-surface/80 backdrop-blur-md border border-outline-variant/20 shadow-sm"
+            title="Acciones"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+          >
+            <span className="material-symbols-outlined text-[18px]">more_vert</span>
+          </button>
+
+          {menuOpen && (
+            <>
+              {/* Backdrop para cerrar al hacer clic fuera */}
+              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+              <div
+                role="menu"
+                className="absolute right-0 mt-1 w-48 z-20 bg-surface-container-lowest rounded-xl shadow-medium border border-outline-variant/20 py-1 overflow-hidden"
+              >
+                {onEdit && (
+                  <button
+                    role="menuitem"
+                    onClick={(e) => { setMenuOpen(false); onEdit(e); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors text-left"
+                  >
+                    <span className="material-symbols-outlined text-[18px] text-primary">edit</span>
+                    Editar
+                  </button>
+                )}
+                {onDuplicate && (
+                  <button
+                    role="menuitem"
+                    onClick={(e) => { setMenuOpen(false); onDuplicate(e); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors text-left"
+                  >
+                    <span className="material-symbols-outlined text-[18px] text-secondary">content_copy</span>
+                    Duplicar
+                  </button>
+                )}
+                {onClose && (
+                  <button
+                    role="menuitem"
+                    onClick={(e) => { setMenuOpen(false); onClose(e); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors text-left"
+                  >
+                    <span className="material-symbols-outlined text-[18px] text-amber-600">lock</span>
+                    Cerrar curso
+                  </button>
+                )}
+                {onRestore && (
+                  <button
+                    role="menuitem"
+                    onClick={(e) => { setMenuOpen(false); onRestore(e); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors text-left"
+                  >
+                    <span className="material-symbols-outlined text-[18px] text-green-600">restore</span>
+                    Restaurar
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    role="menuitem"
+                    onClick={(e) => { setMenuOpen(false); onDelete(e); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    Eliminar
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </div>
       )}
