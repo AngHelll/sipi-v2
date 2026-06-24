@@ -43,6 +43,7 @@ const AvailableEnglishCoursesPage = lazy(() => import('./pages/student/Available
 
 // Lazy load teacher pages
 const GradesManagementPage = lazy(() => import('./pages/teacher/GradesManagementPage').then(module => ({ default: module.GradesManagementPage })));
+const TeacherGroupDetailPage = lazy(() => import('./pages/teacher/GroupDetailPage').then(module => ({ default: module.TeacherGroupDetailPage })));
 import { UserRole } from './types';
 
 function App() {
@@ -235,6 +236,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[UserRole.TEACHER]}>
                 <GradesManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/groups/:id"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.TEACHER]}>
+                <TeacherGroupDetailPage />
               </ProtectedRoute>
             }
           />

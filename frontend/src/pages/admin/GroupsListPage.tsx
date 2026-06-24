@@ -118,9 +118,8 @@ export const GroupsListPage = () => {
     if (isAdmin) {
       navigate(`/admin/groups/${id}`);
     } else if (isTeacher) {
-      // El maestro gestiona sus grupos desde calificaciones; no tiene acceso al
-      // detalle administrativo (/admin/groups/:id está restringido a admin).
-      navigate('/teacher/grades');
+      // El maestro tiene su propia vista de detalle (solo lectura) del grupo.
+      navigate(`/teacher/groups/${id}`);
     }
     // Alumno: las tarjetas no son navegables (no existe vista de detalle para su rol).
   };
