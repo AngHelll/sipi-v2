@@ -14,6 +14,8 @@ interface TeacherDashboardStats {
   pendingGrades: number;
   englishGroups: number;
   groups: Group[];
+  /** Pendientes por calificar por grupo (groupId → nº de alumnos sin calificación) */
+  pendingByGroup: Record<string, number>;
 }
 
 export const DashboardTeacher = () => {
@@ -48,19 +50,24 @@ export const DashboardTeacher = () => {
 
       let totalStudents = 0;
       let pendingGrades = 0;
-      for (const list of enrollmentLists) {
+      const pendingByGroup: Record<string, number> = {};
+      groups.forEach((group, idx) => {
+        const list = enrollmentLists[idx];
         totalStudents += list.length;
-        pendingGrades += list.filter(
+        const pending = list.filter(
           (e) => e.calificacion === null || e.calificacion === undefined
         ).length;
-      }
+        pendingByGroup[group.id] = pending;
+        pendingGrades += pending;
+      });
 
       setStats({
         totalGroups: groups.length,
         totalStudents,
         pendingGrades,
         englishGroups: groups.filter((g) => g.esCursoIngles).length,
-        groups: groups.slice(0, 6),
+        groups,
+        pendingByGroup,
       });
     } catch (err) {
       showToast('Error al cargar los datos del dashboard', 'error');
@@ -130,6 +137,47 @@ export const DashboardTeacher = () => {
           />
         </div>
 
+        {/* Pendientes por calificar (acción prioritaria) */}
+        {(() => {
+          const pendientes = stats.groups
+            .map((g) => ({ group: g, count: stats.pendingByGroup[g.id] ?? 0 }))
+            .filter((x) => x.count > 0)
+            .sort((a, b) => b.count - a.count);
+          if (pendientes.length === 0) return null;
+          return (
+            <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border-l-4 border-amber-400">
+              <div className="flex items-center gap-2 mb-4">
+                <Icon name="grades" size={20} className="text-amber-600" />
+                <h2 className="text-xl font-semibold text-on-surface">Pendientes por calificar</h2>
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700">
+                  {pendientes.reduce((s, x) => s + x.count, 0)} en {pendientes.length} grupo{pendientes.length > 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="divide-y divide-outline-variant/20">
+                {pendientes.map(({ group, count }) => (
+                  <button
+                    key={group.id}
+                    onClick={() => navigate('/teacher/grades')}
+                    className="w-full flex items-center justify-between py-3 text-left hover:bg-surface-container/50 rounded-lg px-2 -mx-2 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-on-surface truncate">
+                        {group.subject?.nombre || group.nombre}
+                      </p>
+                      <p className="text-xs text-on-surface-variant truncate">
+                        {group.nombre} · {group.periodo}
+                      </p>
+                    </div>
+                    <span className="shrink-0 ml-3 px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700">
+                      {count} sin calificar
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* My Groups */}
         <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">
           <div className="flex justify-between items-center mb-4">
@@ -147,10 +195,11 @@ export const DashboardTeacher = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {stats.groups.map((group) => (
+              {stats.groups.slice(0, 6).map((group) => (
                 <GroupCard
                   key={group.id}
                   group={group}
+                  pendingGrades={stats.pendingByGroup[group.id]}
                   onClick={() => navigate(`/teacher/groups/${group.id}`)}
                 />
               ))}
