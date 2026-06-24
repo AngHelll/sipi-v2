@@ -1,6 +1,6 @@
 // Special Courses List Page - Admin can view and manage special course requests
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { specialCoursesApi } from '../../lib/api';
 import { Badge, SkeletonTable, EmptyState, FormField } from '../../components/ui';
@@ -55,6 +55,7 @@ interface WaitlistSummary {
 
 export const SpecialCoursesListPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [courses, setCourses] = useState<SpecialCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +65,7 @@ export const SpecialCoursesListPage = () => {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [courseTypeFilter, setCourseTypeFilter] = useState('');
-  const [estatusFilter, setEstatusFilter] = useState('');
+  const [estatusFilter, setEstatusFilter] = useState(searchParams.get('estatus') || '');
   const [requierePagoFilter, setRequierePagoFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);

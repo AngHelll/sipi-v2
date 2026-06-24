@@ -379,19 +379,19 @@ export const DashboardAdmin = () => {
                 label="Exámenes por procesar"
                 value={englishOps.examenesPorProcesar}
                 icon="quiz"
-                onClick={() => navigate('/admin/exams')}
+                onClick={() => navigate('/admin/exams?examType=DIAGNOSTICO')}
               />
               <EnglishOpTile
                 label="Lista de espera · cursos"
                 value={englishOps.listaEsperaCursos}
                 icon="hourglass_empty"
-                onClick={() => navigate('/admin/special-courses')}
+                onClick={() => navigate('/admin/special-courses?estatus=LISTA_ESPERA')}
               />
               <EnglishOpTile
                 label="Lista de espera · exámenes"
                 value={englishOps.listaEsperaExamenes}
                 icon="hourglass_empty"
-                onClick={() => navigate('/admin/exams')}
+                onClick={() => navigate('/admin/exams?estatus=LISTA_ESPERA')}
               />
             </div>
           </div>
