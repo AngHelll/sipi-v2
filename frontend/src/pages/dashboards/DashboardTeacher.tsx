@@ -4,15 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { groupsApi, enrollmentsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { PageLoader } from '../../components/ui';
-import type { Group, Enrollment } from '../../types';
+import { PageLoader, GroupCard, Icon } from '../../components/ui';
+import type { IconName } from '../../components/ui/Icon';
+import type { Group } from '../../types';
 
 interface TeacherDashboardStats {
   totalGroups: number;
   totalStudents: number;
   pendingGrades: number;
+  englishGroups: number;
   groups: Group[];
-  recentEnrollments: Enrollment[];
 }
 
 export const DashboardTeacher = () => {
@@ -29,68 +30,45 @@ export const DashboardTeacher = () => {
     try {
       setLoading(true);
 
-      // Fetch teacher's groups (max limit is 100)
       const groupsRes = await groupsApi.getAll({ limit: 100, page: 1 });
       const groups = groupsRes.groups;
 
-      // Fetch enrollments for all groups to calculate statistics
+      // Una sola ráfaga en paralelo (antes era un loop secuencial = N+1).
+      const enrollmentLists = await Promise.all(
+        groups.map((group) =>
+          enrollmentsApi
+            .getByGroup(group.id)
+            .then((res) => res.enrollments)
+            .catch((err) => {
+              console.error(`Error fetching enrollments for group ${group.id}:`, err);
+              return [];
+            })
+        )
+      );
+
       let totalStudents = 0;
       let pendingGrades = 0;
-      const enrollmentsByGroup: Record<string, Enrollment[]> = {};
-
-      for (const group of groups) {
-        try {
-          const enrollmentsRes = await enrollmentsApi.getByGroup(group.id);
-          enrollmentsByGroup[group.id] = enrollmentsRes.enrollments;
-          totalStudents += enrollmentsRes.enrollments.length;
-          pendingGrades += enrollmentsRes.enrollments.filter(e => e.calificacion === null || e.calificacion === undefined).length;
-        } catch (err) {
-          console.error(`Error fetching enrollments for group ${group.id}:`, err);
-        }
+      for (const list of enrollmentLists) {
+        totalStudents += list.length;
+        pendingGrades += list.filter(
+          (e) => e.calificacion === null || e.calificacion === undefined
+        ).length;
       }
-
-      // Get recent enrollments (from first group)
-      const recentEnrollments = groups.length > 0 && enrollmentsByGroup[groups[0].id]
-        ? enrollmentsByGroup[groups[0].id].slice(0, 5)
-        : [];
 
       setStats({
         totalGroups: groups.length,
         totalStudents,
         pendingGrades,
-        groups: groups.slice(0, 6), // Show up to 6 groups
-        recentEnrollments,
+        englishGroups: groups.filter((g) => g.esCursoIngles).length,
+        groups: groups.slice(0, 6),
       });
-    } catch (err: any) {
+    } catch (err) {
       showToast('Error al cargar los datos del dashboard', 'error');
       console.error('Error fetching dashboard data:', err);
     } finally {
       setLoading(false);
     }
   };
-
-  const StatCard = ({ title, value, icon, color, onClick }: {
-    title: string;
-    value: number | string;
-    icon: React.ReactNode;
-    color: string;
-    onClick?: () => void;
-  }) => (
-    <div
-      onClick={onClick}
-      className={`bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow ${onClick ? 'cursor-pointer' : ''}`}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className={`text-3xl font-bold mt-2 ${color}`}>{value}</p>
-        </div>
-        <div className={`${color} bg-opacity-10 p-3 rounded-full`}>
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (
@@ -104,7 +82,7 @@ export const DashboardTeacher = () => {
     return (
       <Layout>
         <div className="p-6">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-error-container/30 border border-error/30 text-error px-4 py-3 rounded-lg">
             Error al cargar los datos del dashboard
           </div>
         </div>
@@ -117,118 +95,144 @@ export const DashboardTeacher = () => {
       <div className="p-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Panel del Maestro</h1>
-          <p className="text-gray-600 mt-2">Resumen de tus grupos y estudiantes</p>
+          <h1 className="text-3xl font-bold text-on-surface font-headline">Panel del Maestro</h1>
+          <p className="text-on-surface-variant mt-2">Resumen de tus grupos y estudiantes</p>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Mis Grupos"
             value={stats.totalGroups}
-            color="text-blue-600"
-            icon={
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            }
+            icon="groups"
+            color="text-primary"
             onClick={() => navigate('/admin/groups')}
           />
           <StatCard
             title="Total Estudiantes"
             value={stats.totalStudents}
-            color="text-green-600"
-            icon={
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            }
+            icon="students"
+            color="text-tertiary"
           />
           <StatCard
             title="Calificaciones Pendientes"
             value={stats.pendingGrades}
-            color="text-orange-600"
-            icon={
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            }
+            icon="grades"
+            color="text-secondary"
             onClick={() => navigate('/teacher/grades')}
+          />
+          <StatCard
+            title="Grupos de Inglés"
+            value={stats.englishGroups}
+            icon="book"
+            color="text-primary"
+            onClick={() => navigate('/admin/groups')}
           />
         </div>
 
         {/* My Groups */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Mis Grupos</h2>
+            <h2 className="text-xl font-semibold text-on-surface">Mis Grupos</h2>
             <button
               onClick={() => navigate('/admin/groups')}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="text-primary hover:opacity-80 text-sm font-medium"
             >
               Ver todos →
             </button>
           </div>
           {stats.groups.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-on-surface-variant">
               No tienes grupos asignados
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {stats.groups.map((group) => (
-                <div
+                <GroupCard
                   key={group.id}
-                  onClick={() => navigate('/teacher/grades')}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                >
-                  <h3 className="font-semibold text-gray-900 mb-2">{group.nombre}</h3>
-                  <p className="text-sm text-gray-600 mb-1">
-                    {group.subject?.nombre || 'N/A'}
-                  </p>
-                  <p className="text-xs text-gray-500">Período: {group.periodo}</p>
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">Maestro asignado</p>
-                  </div>
-                </div>
+                  group={group}
+                  onClick={() => navigate(`/teacher/groups/${group.id}`)}
+                />
               ))}
             </div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Accesos Rápidos</h2>
+        <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">
+          <h2 className="text-xl font-semibold text-on-surface mb-4">Accesos Rápidos</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
+            <QuickAction
+              title="Gestión de Calificaciones"
+              description="Actualiza las calificaciones de tus estudiantes"
+              icon="grades"
               onClick={() => navigate('/teacher/grades')}
-              className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left"
-            >
-              <div className="bg-blue-600 p-3 rounded-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-900">Gestión de Calificaciones</p>
-                <p className="text-sm text-gray-600">Actualiza las calificaciones de tus estudiantes</p>
-              </div>
-            </button>
-            <button
+            />
+            <QuickAction
+              title="Ver Mis Grupos"
+              description="Consulta todos tus grupos asignados"
+              icon="groups"
               onClick={() => navigate('/admin/groups')}
-              className="flex items-center gap-4 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left"
-            >
-              <div className="bg-green-600 p-3 rounded-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-900">Ver Mis Grupos</p>
-                <p className="text-sm text-gray-600">Consulta todos tus grupos asignados</p>
-              </div>
-            </button>
+            />
           </div>
         </div>
       </div>
     </Layout>
   );
 };
+
+const StatCard = ({
+  title,
+  value,
+  icon,
+  color,
+  onClick,
+}: {
+  title: string;
+  value: number | string;
+  icon: IconName;
+  color: string;
+  onClick?: () => void;
+}) => (
+  <div
+    onClick={onClick}
+    className={`bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20 transition-shadow ${
+      onClick ? 'cursor-pointer hover:shadow-medium' : ''
+    }`}
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-on-surface-variant">{title}</p>
+        <p className={`text-3xl font-bold mt-2 ${color}`}>{value}</p>
+      </div>
+      <div className={`${color} bg-current/10 p-3 rounded-full`}>
+        <Icon name={icon} size={28} className={color} />
+      </div>
+    </div>
+  </div>
+);
+
+const QuickAction = ({
+  title,
+  description,
+  icon,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  icon: IconName;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className="flex items-center gap-4 p-4 bg-surface hover:bg-surface-container rounded-xl transition-colors text-left border border-outline-variant/20"
+  >
+    <div className="bg-primary p-3 rounded-lg text-on-primary">
+      <Icon name={icon} size={24} />
+    </div>
+    <div>
+      <p className="font-semibold text-on-surface">{title}</p>
+      <p className="text-sm text-on-surface-variant">{description}</p>
+    </div>
+  </button>
+);
