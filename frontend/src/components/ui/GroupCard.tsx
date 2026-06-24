@@ -62,6 +62,12 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
                 {group.estatus}
               </span>
             )}
+            {group.esCursoIngles && (
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-tertiary-container/20 text-tertiary inline-flex items-center gap-1">
+                <span className="material-symbols-outlined text-[12px]">translate</span>
+                Inglés{group.nivelIngles ? ` · N${group.nivelIngles}` : ''}
+              </span>
+            )}
           </div>
         </div>
 
