@@ -1,6 +1,7 @@
 // Special Courses Service - Business logic for special course activities
 // V2: Servicio para cursos especiales (grupo opcional)
 import { randomUUID } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import prisma from '../../../config/database';
 import { generateActivityCode, updateActivityStatus } from '../academic-activities.service';
 import { recalculateStudentAverages } from '../../students/students.service';
@@ -483,8 +484,8 @@ export const getAllSpecialCourses = async (
   const limit = Math.min(query.limit || 20, 100);
   const skip = (page - 1) * limit;
 
-  // Build where clause
-  const where: any = {
+  // Build where clause (tipado fuerte: filtros de relación uno-a-uno validados en compilación)
+  const where: Prisma.academic_activitiesWhereInput = {
     activityType: 'SPECIAL_COURSE',
     deletedAt: null,
   };
@@ -494,13 +495,13 @@ export const getAllSpecialCourses = async (
   }
 
   if (query.estatus) {
-    where.estatus = query.estatus;
+    where.estatus = query.estatus as Prisma.academic_activitiesWhereInput['estatus'];
   }
 
   // Build special_courses filter
-  const specialCoursesWhere: any = {};
+  const specialCoursesWhere: Prisma.special_coursesWhereInput = {};
   if (query.courseType) {
-    specialCoursesWhere.courseType = query.courseType;
+    specialCoursesWhere.courseType = query.courseType as Prisma.special_coursesWhereInput['courseType'];
   }
   if (query.nivelIngles !== undefined) {
     specialCoursesWhere.nivelIngles = query.nivelIngles;
@@ -511,13 +512,14 @@ export const getAllSpecialCourses = async (
 
   // Date filters
   if (query.fechaInicio || query.fechaFin) {
-    where.fechaInscripcion = {};
+    const fecha: Prisma.DateTimeFilter = {};
     if (query.fechaInicio) {
-      where.fechaInscripcion.gte = new Date(query.fechaInicio);
+      fecha.gte = new Date(query.fechaInicio);
     }
     if (query.fechaFin) {
-      where.fechaInscripcion.lte = new Date(query.fechaFin);
+      fecha.lte = new Date(query.fechaFin);
     }
+    where.fechaInscripcion = fecha;
   }
 
   // Get total count (excluding diagnostic-completed courses)

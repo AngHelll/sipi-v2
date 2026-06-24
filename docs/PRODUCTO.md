@@ -1,6 +1,6 @@
 # SIPI — Alcance de producto
 
-**Última actualización:** 2026-06-22
+**Última actualización:** 2026-06-24
 
 ## Enfoque: SIPI Inglés
 
@@ -95,7 +95,7 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 
 | Cliente | Inglés V2 |
 |---------|-----------|
-| Web React | Sí — inglés solo en sus pantallas; hub "Mi Inglés" del alumno por ciclo de vida (solicitado / inscrito / historial), explorador de cursos disponibles y resumen de acciones pendientes en el dashboard; el formulario genérico de inscripciones es exclusivo de materias regulares |
+| Web React | Sí — inglés solo en sus pantallas; hub "Mi Inglés" del alumno por ciclo de vida (solicitado / inscrito / historial), explorador de cursos disponibles y resumen de acciones pendientes en el dashboard; admin con dashboard de operación de inglés y **bandeja única** de aprobación de pagos (examen + curso); el formulario genérico de inscripciones es exclusivo de materias regulares |
 | iOS (`sipi-mobile-ios`) | Sí — journey STUDENT completo: estatus 70%, solicitar examen/curso (con lista de espera), cancelar, claridad de pago y "siguiente paso". Pendiente: roles TEACHER/ADMIN |
 | Android (`sipi-mobile-android`) | Sí — journey STUDENT completo: estatus 70%, solicitar examen/curso (con lista de espera), cancelar, claridad de pago y seguimiento. Pendiente: roles TEACHER/ADMIN |
 

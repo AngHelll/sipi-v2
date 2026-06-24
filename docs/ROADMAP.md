@@ -15,12 +15,12 @@ flowchart TB
 
 ## Capas y estado
 
-| Capa | Fuente de verdad | Estado (2026-06-22) |
+| Capa | Fuente de verdad | Estado (2026-06-24) |
 |------|------------------|---------------------|
 | 0. Producto | [PRODUCTO.md](PRODUCTO.md) | **Estable** — SIPI Inglés (requisito 70%, niveles 1–6); SIS básico como soporte |
 | 1. Flujos de negocio | [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md) | **Estable** — diagnóstico → pago → placement → cursos → certificación; grupos de inglés con nivel obligatorio y regla única de disponibilidad |
 | 2. Contratos API | [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md) + `/api/academic-activities/*` | **Estable** — canónico inglés en academic-activities; legacy `/enrollments/english/*` retirado (410); regla canónica de "grupo disponible" documentada para iOS y Android |
-| 3. Web (React) | `frontend/` | **Cerrada** — consume solo la API canónica para inglés; hub "Mi Inglés" del alumno por ciclo de vida; formulario de inscripciones limitado a materias regulares; typecheck (`tsc -b`) en verde y como gate en CI |
+| 3. Web (React) | `frontend/` | **Cerrada (con pasada de consolidación 2026-06-24)** — consume solo la API canónica para inglés; hub "Mi Inglés" del alumno por ciclo de vida; formulario de inscripciones limitado a materias regulares; typecheck (`tsc -b`) en verde y como gate en CI. Consolidación admin: dashboard con sección "SIPI Inglés — Operación" (acciones pendientes), bandeja **única** de aprobación de pagos (examen + curso), y higiene de patrones UI (un solo `ConfirmDialog`/`PromptDialog`, `Suspense` único para rutas lazy). Tooling: `npm run audit:nav` (auditoría estática de navegación/roles). |
 | 4a. Móvil iOS | repo `sipi-mobile-ios` | **STUDENT completo** — journey de inglés del alumno completo: estatus 70%, solicitar examen/curso (con lista de espera), cancelar, claridad de pago y "siguiente paso"; reglas de contrato aplicadas (listado==solicitud, 429/410, caché corta). **Pendiente**: alineación visual/diseño del rol alumno (Capa 4 diseño), rol ADMIN (assign-period/assign-group/waitlist/initial-level) y R5 hardening |
 | 4b. Móvil Android | repo `sipi-mobile-android` | **STUDENT completo** — journey de inglés del alumno (pasos 1–7): estatus 70%, solicitar examen (con lista de espera) y curso (selección de nivel + lista de espera); mismo contrato que iOS. **Pendiente**: alineación visual/diseño del rol alumno (Capa 4 diseño), roles TEACHER/ADMIN |
 | 4-UX. Diseño móvil (alumno) | repos iOS + Android | **Propuesto (no iniciado)** — alinear estructura visual de ambas apps para el rol alumno sin tocar lógica/flujos/contratos: tokens paritarios, componentes base comunes, higiene de IDs/campos crudos y plantilla de vistas compartida |
@@ -32,8 +32,17 @@ El journey STUDENT de inglés está completo en web, iOS y Android. La capa web 
 1. **iOS / Android — alineación visual y diseño del rol ALUMNO (móvil)**: refactor de presentación (sin tocar lógica, flujos ni contratos) para que ambas apps compartan estructura de vistas y se vean como un mismo producto. Detalle en [Capa 4 — Alineación visual y diseño (rol alumno)](#capa-4--alineación-visual-y-diseño-rol-alumno).
 2. **iOS / Android — rol ADMIN del flujo de inglés (móvil)**: assign-period, assign-group, waitlist/summary e initial-level sobre la API canónica ya existente. Es el único bloque grande pendiente en móvil.
 3. **iOS / Android — hardening (R5)**: filtros admin de docentes/materias, observabilidad, snackbar de feedback, pull-to-refresh; validación end-to-end en dispositivo con alumno real.
-4. **Backend + web (opcional, no bloqueante)**: exponer `montoPago` del curso en `english-status` (hoy solo el examen muestra monto) y revisar coherencia de `assign-group`/`assign-period` con la regla canónica de disponibilidad.
+4. **Backend + web (opcional, no bloqueante)**: ~~exponer `montoPago` del curso~~ (hecho: el costo del grupo se copia al `montoPago` y el alumno lo ve desde `PENDIENTE_PAGO`); pendiente revisar coherencia de `assign-group`/`assign-period` con la regla canónica de disponibilidad.
 5. **Opcional (requiere caso de negocio)**: nueva `SpecialCourseType` (verano, talleres) u otra actividad — el schema ya lo soporta; **no** crear API sin pasar por Capa 0.
+
+### Mantenimiento aplicado (2026-06-24)
+
+Trabajo de robustez dentro del alcance cerrado (sin features nuevas):
+
+- **Fix**: `getAllExams` usaba `exams: { some }` sobre una relación uno-a-uno → 400 en la bandeja de aprobaciones. Corregido a filtro directo.
+- **Hardening de tipos**: los `where` de `getAllExams`/`getAllSpecialCourses` se tiparon con los input types de Prisma (`Prisma.*WhereInput`); un `some` sobre relación 1-1 ahora es error de compilación, no un 400 en runtime.
+- **Tests de regresión**: `exams.service`/`special-courses.service` fijan la forma del filtro (relación directa, exclusión de completados por diagnóstico, paginación).
+- **Auditoría de navegación**: `frontend/scripts/audit-navigation.mjs` (`npm run audit:nav`) cruza menú × rutas para detectar links rotos y menús visibles para roles que la ruta rechazaría.
 
 ## Capa 4 — Alineación visual y diseño (rol alumno)
 
@@ -99,4 +108,4 @@ Definir una **plantilla común** por pantalla y aplicarla en ambas plataformas.
 - Cambios de API que afecten a móvil se documentan en MOBILE-API-CONTRACT.md **antes** de desplegar.
 - Lo "escalable a futuro" vive solo en schema/enums (sin API ni UI) hasta que tenga justificación de producto: `social_service`, `professional_practices`, `enrollments_v2`, `prerequisites`, `student_documents`.
 
-**Última actualización**: 2026-06-22 — añadida Capa 4 (diseño): alineación visual del rol alumno entre iOS y Android, sin cambios de lógica/flujos.
+**Última actualización**: 2026-06-24 — pasada de consolidación de la capa web admin (dashboard de operación de inglés, bandeja única de aprobaciones, higiene de patrones UI), fix del filtro de exámenes (400) + hardening de tipos/tests en el backend de inglés, y script de auditoría de navegación/roles.
