@@ -12,14 +12,13 @@ export const navItems: NavItem[] = [
   // Common Main
   { label: 'Dashboard', path: '/dashboard', roles: [UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN], icon: 'dashboard', isMain: true },
   
-  // Student & Teacher Main
-  { label: 'Mis Grupos', path: '/admin/groups', roles: [UserRole.STUDENT, UserRole.TEACHER], icon: 'groups', isMain: true },
+  // Teacher Main
+  { label: 'Mis Grupos', path: '/admin/groups', roles: [UserRole.TEACHER], icon: 'groups', isMain: true },
   
-  // Student Specific
+  // Student Specific — el flujo de inglés vive en "Mi Inglés" (hub único);
+  // las solicitudes de examen/curso se piden desde ahí según elegibilidad.
   { label: 'Calificaciones', path: '/student/enrollments', roles: [UserRole.STUDENT], icon: 'auto_stories', isMain: true },
   { label: 'Mi Inglés', path: '/student/english/status', roles: [UserRole.STUDENT], icon: 'translate', isMain: true },
-  { label: 'Solicitar Examen', path: '/student/english/available-exam-periods', roles: [UserRole.STUDENT], icon: 'edit_document', isMain: false },
-  { label: 'Solicitar Curso', path: '/student/english/available-courses', roles: [UserRole.STUDENT], icon: 'library_books', isMain: false },
   
   // Teacher Specific
   { label: 'Gestión Calificaciones', path: '/teacher/grades', roles: [UserRole.TEACHER], icon: 'grading', isMain: false },

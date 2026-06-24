@@ -174,7 +174,7 @@ function App() {
           <Route
             path="/admin/groups"
             element={
-              <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]}>
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.TEACHER]}>
                 <GroupsListPage />
               </ProtectedRoute>
             }
