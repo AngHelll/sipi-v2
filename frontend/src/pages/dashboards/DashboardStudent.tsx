@@ -10,9 +10,6 @@ import type { IconName } from '../../components/ui/Icon';
 import type { Enrollment, Student } from '../../types';
 
 interface StudentDashboardStats {
-  totalEnrollments: number;
-  completedGrades: number;
-  pendingGrades: number;
   student: Student | null;
   recentEnrollments: Enrollment[];
 }
@@ -133,15 +130,7 @@ export const DashboardStudent = () => {
       const student = studentRes as Student;
       const enrollments = enrollmentsRes.enrollments;
 
-      const totalEnrollments = enrollments.length;
-      const completedGrades = enrollments.filter(
-        (e) => e.calificacion !== null && e.calificacion !== undefined
-      ).length;
-
       setStats({
-        totalEnrollments,
-        completedGrades,
-        pendingGrades: totalEnrollments - completedGrades,
         student,
         recentEnrollments: enrollments.slice(0, 6),
       });
@@ -304,30 +293,32 @@ export const DashboardStudent = () => {
           </div>
         )}
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard
-            title="Total Inscripciones"
-            value={stats.totalEnrollments}
-            icon="enrollments"
-            color="text-primary"
-            onClick={() => navigate('/student/enrollments')}
-          />
-          <StatCard
-            title="Calificadas"
-            value={stats.completedGrades}
-            icon="check-circle"
-            color="text-tertiary"
-            onClick={() => navigate('/student/enrollments')}
-          />
-          <StatCard
-            title="Pendientes"
-            value={stats.pendingGrades}
-            icon="info"
-            color="text-secondary"
-            onClick={() => navigate('/student/enrollments')}
-          />
-        </div>
+        {/* Statistics Cards — métricas del producto (SIPI Inglés) */}
+        {english && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatCard
+              title="Nivel de inglés actual"
+              value={english.nivelInglesActual ? `Nivel ${english.nivelInglesActual}` : 'No definido'}
+              icon="book"
+              color="text-primary"
+              onClick={() => navigate('/student/english/status')}
+            />
+            <StatCard
+              title="Niveles completados"
+              value={`${english.progress.completed}/${english.progress.totalLevels}`}
+              icon="award"
+              color="text-tertiary"
+              onClick={() => navigate('/student/english/status')}
+            />
+            <StatCard
+              title="Requisito de inglés"
+              value={english.cumpleRequisitoIngles ? 'Cumplido' : 'Pendiente'}
+              icon={english.cumpleRequisitoIngles ? 'check-circle' : 'x-circle'}
+              color={english.cumpleRequisitoIngles ? 'text-green-600' : 'text-red-600'}
+              onClick={() => navigate('/student/english/status')}
+            />
+          </div>
+        )}
 
         {/* My Enrollments */}
         <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">

@@ -27,7 +27,7 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 - Admin asigna período: `PUT /api/academic-activities/exams/:id/assign-period` body `{ "periodId" }` → `PENDIENTE_PAGO` o `INSCRITO` según el período.
 
 #### Cancelación de Solicitud
-- Estudiante: `PUT /api/academic-activities/exams/:id/cancel` — solo sus propias solicitudes, en estados tempranos (`LISTA_ESPERA`, `PENDIENTE_PAGO`, `INSCRITO`) y sin resultado registrado.
+- Estudiante: `PUT /api/academic-activities/exams/:id/cancel` — solo sus propias solicitudes, en estados **previos a la aprobación del pago** (`LISTA_ESPERA`, `PENDIENTE_PAGO`) y sin resultado registrado. Una vez `INSCRITO` (pago aprobado) ya **no puede auto-cancelar**: debe gestionarlo en Servicio Estudiantil (el admin sí puede cancelar con motivo).
 - Admin: misma ruta, cualquier estado no terminal, con `motivo` requerido.
 - Efectos: estatus → `CANCELADO`, y se **revierte el cupo** del período (`cupoActual - 1`).
 
@@ -79,7 +79,7 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 2. Al aprobar (≥70) un curso real de inglés, `nivelInglesActual` avanza al siguiente nivel (máx. 6).
 
 #### Cancelación de Solicitud
-- Estudiante: `PUT /api/academic-activities/special-courses/:id/cancel` — solo sus propias, en `LISTA_ESPERA`, `PENDIENTE_PAGO` o `INSCRITO`, sin calificación.
+- Estudiante: `PUT /api/academic-activities/special-courses/:id/cancel` — solo sus propias, en estados **previos a la aprobación del pago** (`LISTA_ESPERA`, `PENDIENTE_PAGO`), sin calificación. Una vez `INSCRITO` (pago aprobado) ya **no puede auto-cancelar**: debe gestionarlo en Servicio Estudiantil (el admin sí puede cancelar con motivo).
 - Admin: misma ruta, cualquier estado no terminal, con `motivo` requerido.
 - Efectos: estatus → `CANCELADO`; si estaba `INSCRITO` con grupo, se **revierte el cupo** del grupo.
 

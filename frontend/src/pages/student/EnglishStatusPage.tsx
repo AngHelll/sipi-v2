@@ -7,8 +7,12 @@ import { Loader, Card, Badge, Icon, ConfirmDialog } from '../../components/ui';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
 
-/** Estados en los que el alumno puede cancelar su solicitud */
-const CANCELABLE_STATUSES = ['LISTA_ESPERA', 'PENDIENTE_PAGO', 'INSCRITO'];
+/**
+ * Estados en los que el alumno puede cancelar su solicitud: solo antes de que el
+ * pago sea aprobado. Una vez inscrito (pago aprobado) debe acudir a Servicio
+ * Estudiantil; el backend aplica la misma regla.
+ */
+const CANCELABLE_STATUSES = ['LISTA_ESPERA', 'PENDIENTE_PAGO'];
 
 /** Ciclo de vida para agrupar exámenes y cursos del alumno */
 type Lifecycle = 'solicitado' | 'inscrito' | 'historial';
@@ -305,6 +309,11 @@ export const EnglishStatusPage = () => {
             {item.estatus === 'LISTA_ESPERA' && (
               <div className="text-xs text-indigo-700 mt-1">
                 En lista de espera. El administrador te asignará {item.kind === 'examen' ? 'período' : 'grupo'} cuando haya cupo.
+              </div>
+            )}
+            {['INSCRITO', 'EN_CURSO', 'PAGO_APROBADO'].includes(item.estatus) && item.calificacion === null && (
+              <div className="text-xs text-gray-500 mt-1">
+                Pago aprobado. Para cancelar o hacer cambios, acude a Servicio Estudiantil.
               </div>
             )}
           </div>

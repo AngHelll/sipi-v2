@@ -6,9 +6,11 @@ interface GroupCardProps {
   onClick?: () => void;
   onEdit?: (e: React.MouseEvent) => void;
   onDelete?: (e: React.MouseEvent) => void;
+  /** Nº de alumnos sin calificar (contexto maestro); si > 0 muestra un badge. */
+  pendingGrades?: number;
 }
 
-export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, onDelete }) => {
+export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, onDelete, pendingGrades }) => {
   const isEstatusAbierto = group.estatus === 'ABIERTO';
   
   // Calculate capacity percentage safely
@@ -66,6 +68,12 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
               <span className="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-tertiary-container/20 text-tertiary inline-flex items-center gap-1">
                 <span className="material-symbols-outlined text-[12px]">translate</span>
                 Inglés{group.nivelIngles ? ` · N${group.nivelIngles}` : ''}
+              </span>
+            )}
+            {pendingGrades !== undefined && pendingGrades > 0 && (
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 inline-flex items-center gap-1">
+                <span className="material-symbols-outlined text-[12px]">pending_actions</span>
+                {pendingGrades} sin calificar
               </span>
             )}
           </div>
