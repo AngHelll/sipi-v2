@@ -1,6 +1,6 @@
 // Group form page for creating/editing groups with improved validation
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { groupsApi, subjectsApi, teachersApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
@@ -10,11 +10,15 @@ import type { Subject, Teacher } from '../../types';
 export const GroupFormPage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
+  const [searchParams] = useSearchParams();
+  const duplicateFromId = searchParams.get('from');
   const isEdit = !!id;
+  // Duplicar: alta nueva pre-llenada desde un grupo existente (otro periodo).
+  const isDuplicate = !isEdit && !!duplicateFromId;
   const { showToast } = useToast();
 
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(isEdit);
+  const [fetching, setFetching] = useState(isEdit || isDuplicate);
   const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
@@ -50,8 +54,10 @@ export const GroupFormPage = () => {
     fetchOptions();
     if (isEdit && id) {
       fetchGroup();
+    } else if (isDuplicate && duplicateFromId) {
+      fetchGroupForDuplicate(duplicateFromId);
     }
-  }, [id, isEdit]);
+  }, [id, isEdit, isDuplicate, duplicateFromId]);
 
   const fetchOptions = async () => {
     try {
@@ -116,6 +122,41 @@ export const GroupFormPage = () => {
     }
   };
 
+  // Duplicar: copia la configuración del grupo origen pero deja que el admin
+  // ajuste lo que cambia entre periodos (periodo, fechas) y arranca en ABIERTO.
+  const fetchGroupForDuplicate = async (fromId: string) => {
+    try {
+      setFetching(true);
+      const group = await groupsApi.getById(fromId);
+      setFormData({
+        subjectId: group.subjectId,
+        teacherId: group.teacherId,
+        nombre: group.nombre,
+        periodo: '',
+        cupoMaximo: group.cupoMaximo || 30,
+        cupoMinimo: group.cupoMinimo || 5,
+        horario: group.horario || '',
+        aula: group.aula || '',
+        edificio: group.edificio || '',
+        modalidad: (group.modalidad || 'PRESENCIAL') as 'PRESENCIAL' | 'VIRTUAL' | 'HIBRIDO' | 'SEMIPRESENCIAL',
+        estatus: 'ABIERTO',
+        nivelIngles: group.nivelIngles?.toString() || '',
+        costo: group.costo != null ? group.costo.toString() : '',
+        fechaInscripcionInicio: '',
+        fechaInscripcionFin: '',
+        fechaInicio: '',
+        fechaFin: '',
+        esCursoIngles: group.esCursoIngles || false,
+      });
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Error al cargar el grupo a duplicar';
+      showToast(errorMessage, 'error');
+      console.error('Error fetching group to duplicate:', err);
+    } finally {
+      setFetching(false);
+    }
+  };
+
   // Validation functions
   const validators = {
     subjectId: (value: string | number): string | null => {
@@ -164,9 +205,14 @@ export const GroupFormPage = () => {
       [name]: true,
     }));
 
-    // Clear the English-only errors when the group is no longer an English course
-    if (isCheckbox && name === 'esCursoIngles' && nextValue === false) {
-      setFormErrors((prev) => ({ ...prev, nivelIngles: null, costo: null }));
+    // Al alternar "curso de inglés": si se desmarca, limpia errores de nivel/costo;
+    // si se marca, limpia el error de materia (la resuelve el backend por nivel).
+    if (isCheckbox && name === 'esCursoIngles') {
+      if (nextValue === false) {
+        setFormErrors((prev) => ({ ...prev, nivelIngles: null, costo: null }));
+      } else {
+        setFormErrors((prev) => ({ ...prev, subjectId: null }));
+      }
     }
 
     const validator = validators[name as keyof typeof validators];
@@ -184,6 +230,10 @@ export const GroupFormPage = () => {
     let isValid = true;
 
     Object.keys(validators).forEach((key) => {
+      // Para cursos de inglés la materia la resuelve el backend (canónica por nivel).
+      if (key === 'subjectId' && formData.esCursoIngles) {
+        return;
+      }
       const validator = validators[key as keyof typeof validators];
       // Los validators solo cubren campos string del formulario
       const value = formData[key as keyof typeof formData] as string | number;
@@ -234,11 +284,11 @@ export const GroupFormPage = () => {
     try {
       setLoading(true);
 
-      // Prepare data with English course fields
+      // Prepare data with English course fields. La materia solo se envía para
+      // grupos regulares; en cursos de inglés la resuelve el backend por nivel.
       const groupData: any = {
         nombre: formData.nombre,
         periodo: formData.periodo,
-        subjectId: formData.subjectId,
         teacherId: formData.teacherId,
         cupoMaximo: formData.cupoMaximo,
         cupoMinimo: formData.cupoMinimo,
@@ -274,6 +324,7 @@ export const GroupFormPage = () => {
         groupData.esCursoIngles = true;
       } else {
         groupData.esCursoIngles = false;
+        groupData.subjectId = formData.subjectId;
       }
 
       if (isEdit && id) {
@@ -314,35 +365,41 @@ export const GroupFormPage = () => {
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">
-            {isEdit ? 'Editar Grupo' : 'Nuevo Grupo'}
+            {isEdit ? 'Editar Grupo' : isDuplicate ? 'Duplicar Grupo' : 'Nuevo Grupo'}
           </h1>
           <p className="text-gray-600 mt-2">
             {isEdit
               ? 'Modifica la información del grupo'
-              : 'Completa el formulario para crear un nuevo grupo'}
+              : isDuplicate
+                ? 'Se copió la configuración del grupo original. Ajusta el período y las fechas para el nuevo curso.'
+                : 'Completa el formulario para crear un nuevo grupo'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-2xl border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              label="Materia"
-              name="subjectId"
-              value={formData.subjectId}
-              onChange={handleChange}
-              required
-              error={formErrors.subjectId}
-              touched={touchedFields.subjectId}
-              validate={validators.subjectId}
-              as="select"
-              options={[
-                { value: '', label: 'Selecciona una materia' },
-                ...subjects.map((subject) => ({
-                  value: subject.id,
-                  label: `${subject.clave} - ${subject.nombre}`,
-                })),
-              ]}
-            />
+            {/* La materia solo se captura en grupos regulares; en cursos de inglés
+                el sistema usa la materia canónica del nivel (Inglés Nivel N). */}
+            {!formData.esCursoIngles && (
+              <FormField
+                label="Materia"
+                name="subjectId"
+                value={formData.subjectId}
+                onChange={handleChange}
+                required
+                error={formErrors.subjectId}
+                touched={touchedFields.subjectId}
+                validate={validators.subjectId}
+                as="select"
+                options={[
+                  { value: '', label: 'Selecciona una materia' },
+                  ...subjects.map((subject) => ({
+                    value: subject.id,
+                    label: `${subject.clave} - ${subject.nombre}`,
+                  })),
+                ]}
+              />
+            )}
 
             <FormField
               label="Maestro"
@@ -515,6 +572,13 @@ export const GroupFormPage = () => {
                 <span className="text-sm font-medium text-gray-700">Marcar como curso de inglés</span>
               </label>
             </div>
+
+            {formData.esCursoIngles && (
+              <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px]">info</span>
+                La materia se asigna automáticamente según el nivel (Inglés Nivel N); no necesitas crearla ni seleccionarla.
+              </p>
+            )}
 
             {formData.esCursoIngles && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

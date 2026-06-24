@@ -10,6 +10,14 @@ import { ConfirmDialog, Loader, GroupCard } from '../../components/ui';
 import { UserRole } from '../../types';
 import type { Group, GroupsListResponse, Subject } from '../../types';
 
+/** Agrupaciones de estatus para administrar cursos vigentes vs. cerrados. */
+const ESTATUS_FILTER_MAP: Record<string, string | undefined> = {
+  vigentes: 'ABIERTO,EN_CURSO',
+  cerrados: 'CERRADO,FINALIZADO',
+  cancelados: 'CANCELADO',
+  todos: undefined,
+};
+
 export const GroupsListPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -32,10 +40,19 @@ export const GroupsListPage = () => {
     groupName: '',
   });
 
+  // Close-course confirmation state
+  const [closeConfirm, setCloseConfirm] = useState<{
+    isOpen: boolean;
+    groupId: string | null;
+    groupName: string;
+  }>({ isOpen: false, groupId: null, groupName: '' });
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [periodoFilter, setPeriodoFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
+  const [estatusFilter, setEstatusFilter] = useState('vigentes');
+  const [tipoFilter, setTipoFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortBy] = useState<'nombre' | 'periodo'>('nombre');
@@ -59,7 +76,7 @@ export const GroupsListPage = () => {
 
   useEffect(() => {
     fetchGroups();
-  }, [debouncedSearchTerm, periodoFilter, subjectFilter, currentPage, pageSize, sortBy, sortOrder]);
+  }, [debouncedSearchTerm, periodoFilter, subjectFilter, estatusFilter, tipoFilter, currentPage, pageSize, sortBy, sortOrder]);
 
   // Fetch filter options on mount
   useEffect(() => {
@@ -102,6 +119,18 @@ export const GroupsListPage = () => {
       if (subjectFilter) {
         params.subjectId = subjectFilter;
       }
+      // Los filtros de estatus/tipo solo aplican en la vista admin.
+      if (isAdmin) {
+        const estatusParam = ESTATUS_FILTER_MAP[estatusFilter];
+        if (estatusParam) {
+          params.estatus = estatusParam;
+        }
+        if (tipoFilter === 'ingles') {
+          params.esCursoIngles = true;
+        } else if (tipoFilter === 'regulares') {
+          params.esCursoIngles = false;
+        }
+      }
 
       const response = await groupsApi.getAll(params);
       setGroups(response.groups);
@@ -129,6 +158,39 @@ export const GroupsListPage = () => {
       e.stopPropagation();
     }
     navigate(`/admin/groups/${id}/edit`);
+  };
+
+  const handleDuplicate = (id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    navigate(`/admin/groups/new?from=${id}`);
+  };
+
+  const handleCloseClick = (group: Group) => {
+    setCloseConfirm({
+      isOpen: true,
+      groupId: group.id,
+      groupName: `${group.nombre} - ${group.subject?.nombre || 'N/A'} (${group.periodo})`,
+    });
+  };
+
+  const handleCloseConfirm = async () => {
+    if (!closeConfirm.groupId) return;
+    try {
+      await groupsApi.update(closeConfirm.groupId, { estatus: 'FINALIZADO' });
+      showToast('Curso cerrado correctamente', 'success');
+      setCloseConfirm({ isOpen: false, groupId: null, groupName: '' });
+      fetchGroups();
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Error al cerrar el curso';
+      showToast(errorMessage, 'error');
+      console.error('Error closing group:', err);
+    }
+  };
+
+  const handleCloseCancel = () => {
+    setCloseConfirm({ isOpen: false, groupId: null, groupName: '' });
   };
 
   const handleNewGroup = () => {
@@ -195,11 +257,13 @@ export const GroupsListPage = () => {
     setSearchTerm('');
     setPeriodoFilter('');
     setSubjectFilter('');
+    setEstatusFilter('vigentes');
+    setTipoFilter('');
     setCurrentPage(1);
   };
 
 
-  const hasActiveFilters = periodoFilter || subjectFilter;
+  const hasActiveFilters = periodoFilter || subjectFilter || estatusFilter !== 'vigentes' || tipoFilter;
 
   // Filter groups by search term (client-side for now)
   const filteredGroups = debouncedSearchTerm.trim()
@@ -312,6 +376,45 @@ export const GroupsListPage = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Estatus filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Estatus
+                </label>
+                <select
+                  value={estatusFilter}
+                  onChange={(e) => {
+                    setEstatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="vigentes">Vigentes (abiertos y en curso)</option>
+                  <option value="cerrados">Cerrados / finalizados</option>
+                  <option value="cancelados">Cancelados</option>
+                  <option value="todos">Todos</option>
+                </select>
+              </div>
+
+              {/* Tipo filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tipo
+                </label>
+                <select
+                  value={tipoFilter}
+                  onChange={(e) => {
+                    setTipoFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Todos</option>
+                  <option value="ingles">Solo cursos de inglés</option>
+                  <option value="regulares">Solo materias regulares</option>
+                </select>
+              </div>
             </div>
 
             {/* Clear filters button */}
@@ -358,6 +461,10 @@ export const GroupsListPage = () => {
                       group={group}
                       onClick={isAdmin || isTeacher ? () => handleView(group.id) : undefined}
                       onEdit={isAdmin ? (e) => handleEdit(group.id, e) : undefined}
+                      onDuplicate={isAdmin ? (e) => handleDuplicate(group.id, e) : undefined}
+                      onClose={isAdmin && (group.estatus === 'ABIERTO' || group.estatus === 'EN_CURSO')
+                        ? (e) => { e.stopPropagation(); handleCloseClick(group); }
+                        : undefined}
                       onDelete={isAdmin ? (e) => {
                         e.stopPropagation();
                         handleDeleteClick(group);
@@ -441,6 +548,20 @@ export const GroupsListPage = () => {
           variant="danger"
           onConfirm={handleDeleteConfirm}
           onCancel={handleDeleteCancel}
+        />
+      )}
+
+      {/* Close-course Confirmation Dialog */}
+      {isAdmin && (
+        <ConfirmDialog
+          isOpen={closeConfirm.isOpen}
+          title="Cerrar curso"
+          message={`¿Cerrar el curso "${closeConfirm.groupName}"? Pasará a FINALIZADO: dejará de aparecer entre los vigentes y no admitirá nuevas inscripciones. Asegúrate de haber calificado a los alumnos antes de cerrarlo.`}
+          confirmText="Cerrar curso"
+          cancelText="Cancelar"
+          variant="warning"
+          onConfirm={handleCloseConfirm}
+          onCancel={handleCloseCancel}
         />
       )}
     </Layout>

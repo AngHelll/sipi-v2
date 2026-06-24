@@ -108,6 +108,8 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 - Sin diagnóstico: solo **nivel 1**
 - Con diagnóstico: solo el **nivel asignado**
 - **Grupos de inglés**: todo grupo marcado como de inglés debe tener **nivel 1–6** y **costo (> 0)** (ambos obligatorios al crearlo/editarlo); sin ellos no se publica. El costo se copia al `montoPago` de la solicitud, de modo que el alumno ve cuánto pagar desde que queda en `PENDIENTE_PAGO`.
+- **Materia automática por nivel**: un curso de inglés se define por **nivel**, no por materia. Al crearlo, el sistema asigna sola la materia canónica `Inglés Nivel N` (clave `ING-N`); el admin **no captura ni elige materia**. El costo no se muestra al maestro (es dato administrativo).
+- **Ciclo de cursos**: "cerrar" un curso lo deja en `FINALIZADO` (fuera de los vigentes, sin inscripciones). Para el siguiente periodo se **duplica** el curso del mismo nivel ajustando solo periodo y fechas; los cerrados se administran con el filtro de estatus.
 - **Grupo disponible (regla única)**: el alumno ve y puede solicitar un grupo de inglés **solo** si está `ABIERTO`, dentro de su ventana de inscripción y con cupo libre. La misma regla aplica al listar (`/groups/available/english-courses`) y al solicitar (`POST /special-courses`): lo que se ve es lo que se puede solicitar.
 - **Lista de espera (cursos)**: solicitar curso sin grupo publicado ⇒ `LISTA_ESPERA` (sin pago). El admin detecta la demanda por nivel, crea grupo y asigna desde la lista; el pago se define al asignar.
 - **Lista de espera (exámenes)**: primer diagnóstico sin período ⇒ `LISTA_ESPERA` (gratuito). El admin asigna período cuando publique uno; retake de diagnóstico solo vía período (puede tener costo).

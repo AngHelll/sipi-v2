@@ -120,9 +120,7 @@ export const TeacherGroupDetailPage = () => {
               value={`${group.cupoActual ?? enrollments.length} / ${group.cupoMaximo ?? '—'}`}
               icon="groups"
             />
-            {group.esCursoIngles && group.costo != null && (
-              <InfoTile label="Costo" value={`$${group.costo.toFixed(2)}`} icon="payments" />
-            )}
+            {/* El costo es dato financiero/administrativo; no se muestra al maestro. */}
           </div>
         </div>
 

@@ -61,6 +61,7 @@ export interface UpdateGroupDto {
 export interface GroupQueryDto {
   periodo?: string;
   subjectId?: string;
+  estatus?: string; // Filtrar por estatus; acepta lista separada por comas (ej. "ABIERTO,EN_CURSO")
   esCursoIngles?: boolean; // Filtrar por cursos de inglés
   nivelIngles?: number; // Filtrar por nivel de inglés
   // Pagination

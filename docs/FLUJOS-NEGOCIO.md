@@ -61,6 +61,11 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 4. **Sin `groupId`** (no hay grupo publicado): la solicitud entra a **`LISTA_ESPERA`**, sin pago. No es una inscripción evaluable.
 5. La política de pago la decide **el servidor**; el cliente no puede enviar `requierePago`.
 
+#### Alta de curso de inglés y materia canónica
+- Un "curso de inglés" es un `group` con `esCursoIngles = true`, `nivelIngles` (1–6), `costo`, `periodo`, fechas y `estatus`. El producto lo identifica por **`esCursoIngles` + `nivelIngles`**, no por la materia.
+- **Materia canónica por nivel**: al crear (o editar) un grupo de inglés, el backend usa —o crea si no existe— una materia **`Inglés Nivel N`** con clave **`ING-N`** (`creditos: 0`, `tipo: OPTATIVA`, `nivel: N`) y la asigna automáticamente. El admin **no captura ni selecciona materia** para inglés: solo elige el nivel (`resolveEnglishSubjectId` en `groups.service`). El campo `subjectId` deja de ser obligatorio en `POST /api/groups` cuando `esCursoIngles = true`.
+- **Cerrar / abrir en otro periodo**: cerrar un curso = pasar su `estatus` a `FINALIZADO` (deja de ser vigente y no admite inscripciones). Para abrir el mismo nivel en otro periodo se **duplica** el grupo (copia su configuración y se ajusta `periodo` + fechas); no se recaptura nivel/costo/cupo/horario.
+
 #### Grupo de inglés disponible (regla única)
 - Todo grupo de inglés (`esCursoIngles = true`) **debe tener nivel 1–6 y costo (> 0)**; el backend lo exige al crear/editar (`createGroup`/`updateGroup`). Sin nivel o sin costo no se publica.
 - Un grupo es **disponible** (solicitable) si y solo si: `estatus = ABIERTO`, ventana de inscripción vigente (`fechaInscripcionInicio ≤ ahora ≤ fechaInscripcionFin`, o sin fechas) y cupo libre (`cupoActual < cupoMaximo`).

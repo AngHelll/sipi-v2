@@ -540,6 +540,8 @@ export const groupsApi = {
   getAll: async (params?: {
     periodo?: string;
     subjectId?: string;
+    estatus?: string;
+    esCursoIngles?: boolean;
     page?: number;
     limit?: number;
     sortBy?: string;

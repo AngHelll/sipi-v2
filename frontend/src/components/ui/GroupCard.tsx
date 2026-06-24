@@ -6,11 +6,15 @@ interface GroupCardProps {
   onClick?: () => void;
   onEdit?: (e: React.MouseEvent) => void;
   onDelete?: (e: React.MouseEvent) => void;
+  /** Duplica el grupo para un nuevo periodo (pre-llena el alta). */
+  onDuplicate?: (e: React.MouseEvent) => void;
+  /** Cierra el curso (estatus → FINALIZADO). */
+  onClose?: (e: React.MouseEvent) => void;
   /** Nº de alumnos sin calificar (contexto maestro); si > 0 muestra un badge. */
   pendingGrades?: number;
 }
 
-export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, onDelete, pendingGrades }) => {
+export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, onDelete, onDuplicate, onClose, pendingGrades }) => {
   const isEstatusAbierto = group.estatus === 'ABIERTO';
   
   // Calculate capacity percentage safely
@@ -29,11 +33,21 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary" />
 
       {/* Admin Actions */}
-      {(onEdit || onDelete) && (
+      {(onEdit || onDelete || onDuplicate || onClose) && (
         <div className="absolute top-4 right-4 z-20 flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity bg-surface/80 backdrop-blur-md rounded-lg p-1 border border-outline-variant/20 shadow-sm" onClick={e => e.stopPropagation()}>
           {onEdit && (
             <button onClick={onEdit} className="p-1.5 rounded-md text-primary hover:bg-primary/10 transition-colors" title="Editar">
               <span className="material-symbols-outlined text-[18px]">edit</span>
+            </button>
+          )}
+          {onDuplicate && (
+            <button onClick={onDuplicate} className="p-1.5 rounded-md text-secondary hover:bg-secondary/10 transition-colors" title="Duplicar para nuevo periodo">
+              <span className="material-symbols-outlined text-[18px]">content_copy</span>
+            </button>
+          )}
+          {onClose && (
+            <button onClick={onClose} className="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors" title="Cerrar curso">
+              <span className="material-symbols-outlined text-[18px]">lock</span>
             </button>
           )}
           {onDelete && (
