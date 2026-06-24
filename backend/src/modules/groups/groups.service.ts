@@ -28,6 +28,7 @@ export const getAllGroups = async (
   const {
     periodo,
     subjectId,
+    estatus,
     esCursoIngles,
     nivelIngles,
     page = 1,
@@ -40,6 +41,7 @@ export const getAllGroups = async (
   const cacheKey = generateCacheKey('groups:list', {
     periodo,
     subjectId,
+    estatus,
     esCursoIngles,
     nivelIngles,
     page,
@@ -133,11 +135,24 @@ export const getAllGroups = async (
   if (subjectId) {
     where.subjectId = subjectId;
   }
+  // estatus admite una lista separada por comas (ej. vigentes = ABIERTO,EN_CURSO)
+  if (estatus) {
+    const estatusList = String(estatus)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (estatusList.length === 1) {
+      where.estatus = estatusList[0];
+    } else if (estatusList.length > 1) {
+      where.estatus = { in: estatusList };
+    }
+  }
   if (esCursoIngles !== undefined) {
-    where.esCursoIngles = esCursoIngles;
+    // Los query params llegan como string ("true"/"false"); normalizar a boolean.
+    where.esCursoIngles = typeof esCursoIngles === 'string' ? esCursoIngles === 'true' : esCursoIngles;
   }
   if (nivelIngles !== undefined) {
-    where.nivelIngles = nivelIngles;
+    where.nivelIngles = typeof nivelIngles === 'string' ? parseInt(nivelIngles, 10) : nivelIngles;
   }
 
   // Calculate pagination
@@ -297,6 +312,32 @@ export const getGroupById = async (id: string): Promise<GroupResponseDto | null>
 };
 
 /**
+ * Materia canónica para cursos de inglés, por nivel. El producto identifica los
+ * cursos de inglés por `esCursoIngles` + `nivelIngles`, no por la materia; para
+ * que el admin no tenga que crear/elegir una materia al abrir un curso de inglés,
+ * el sistema usa (o crea) una materia "Inglés Nivel N" con clave `ING-N`.
+ */
+const resolveEnglishSubjectId = async (nivel: number): Promise<string> => {
+  const clave = `ING-${nivel}`;
+  const existing = await prisma.subjects.findUnique({ where: { clave } });
+  if (existing) return existing.id;
+  const id = randomUUID();
+  const created = await prisma.subjects.create({
+    data: {
+      id,
+      clave,
+      nombre: `Inglés Nivel ${nivel}`,
+      creditos: 0,
+      nivel,
+      tipo: 'OPTATIVA',
+      estatus: 'ACTIVA',
+      updatedAt: new Date(),
+    },
+  });
+  return created.id;
+};
+
+/**
  * Create a new group
  * Validates that subjectId and teacherId exist
  */
@@ -316,10 +357,19 @@ export const createGroup = async (
   } = data;
 
   // Apply business rule validations using validators
-  await GroupValidators.validateSubjectExists(subjectId);
-  await GroupValidators.validateTeacherExists(teacherId);
   GroupValidators.validateEnglishLevel(esCursoIngles, nivelIngles);
   GroupValidators.validateEnglishCost(esCursoIngles, costo);
+
+  // Para cursos de inglés la materia es la canónica del nivel (ING-N); para el
+  // resto se exige una materia existente capturada por el admin.
+  let effectiveSubjectId: string;
+  if (esCursoIngles && nivelIngles) {
+    effectiveSubjectId = await resolveEnglishSubjectId(nivelIngles);
+  } else {
+    await GroupValidators.validateSubjectExists(subjectId);
+    effectiveSubjectId = subjectId;
+  }
+  await GroupValidators.validateTeacherExists(teacherId);
 
   // Generate UUID for group
   const groupId = randomUUID();
@@ -352,7 +402,7 @@ export const createGroup = async (
   // Prepare data for creation, honoring captured group configuration
   const createData: Prisma.groupsUncheckedCreateInput = {
     id: groupId,
-    subjectId,
+    subjectId: effectiveSubjectId,
     teacherId,
     nombre,
     periodo,
@@ -511,11 +561,19 @@ export const updateGroup = async (
       : null;
   GroupValidators.validateEnglishCost(effectiveEsCursoIngles, effectiveCosto);
 
+  // Curso de inglés → materia canónica del nivel (ING-N), aunque el cliente no
+  // envíe subjectId (el formulario lo oculta para inglés).
+  let englishSubjectId: string | undefined;
+  if (effectiveEsCursoIngles && effectiveNivelIngles) {
+    englishSubjectId = await resolveEnglishSubjectId(effectiveNivelIngles);
+  }
+
     // Build update data (only include provided fields)
     const updateData: Record<string, unknown> = {};
     if (data.nombre !== undefined) updateData.nombre = data.nombre;
     if (data.periodo !== undefined) updateData.periodo = data.periodo;
     if (data.subjectId !== undefined) updateData.subjectId = data.subjectId;
+    if (englishSubjectId) updateData.subjectId = englishSubjectId;
     if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
     if (data.cupoMaximo !== undefined) updateData.cupoMaximo = data.cupoMaximo;
     if (data.cupoMinimo !== undefined) updateData.cupoMinimo = data.cupoMinimo;

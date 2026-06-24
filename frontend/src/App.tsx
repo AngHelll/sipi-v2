@@ -36,7 +36,6 @@ const SpecialCoursesListPage = lazy(() => import('./pages/admin/SpecialCoursesLi
 const SpecialCourseDetailPage = lazy(() => import('./pages/admin/SpecialCourseDetailPage').then(module => ({ default: module.SpecialCourseDetailPage })));
 
 // Lazy load student pages
-const EnrollmentsListPage = lazy(() => import('./pages/student/EnrollmentsListPage').then(module => ({ default: module.EnrollmentsListPage })));
 const EnglishStatusPage = lazy(() => import('./pages/student/EnglishStatusPage').then(module => ({ default: module.EnglishStatusPage })));
 const AvailableExamPeriodsPage = lazy(() => import('./pages/student/AvailableExamPeriodsPage').then(module => ({ default: module.AvailableExamPeriodsPage })));
 const AvailableEnglishCoursesPage = lazy(() => import('./pages/student/AvailableEnglishCoursesPage').then(module => ({ default: module.AvailableEnglishCoursesPage })));
@@ -244,16 +243,6 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[UserRole.TEACHER]}>
                 <TeacherGroupDetailPage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Student routes */}
-          <Route
-            path="/student/enrollments"
-            element={
-              <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
-                <EnrollmentsListPage />
               </ProtectedRoute>
             }
           />

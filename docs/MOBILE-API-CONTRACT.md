@@ -117,7 +117,7 @@ Sin cambios de contrato, con la semántica post-limpieza:
 | `GET /health` | Health check (sin `/api`) |
 | `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout` | Sin cambios |
 | `GET /api/students/me` | Incluye perfil de inglés del alumno (`nivelInglesActual`, `porcentajeIngles`, `cumpleRequisitoIngles`, `promedioIngles`) — útil para badges, pero la pantalla de inglés debe usar `english-status` |
-| `GET /api/enrollments/me` | Solo inscripciones de materias regulares (inglés legacy filtrado) |
+| `GET /api/enrollments/me` | Solo inscripciones de materias regulares (inglés legacy filtrado). **No usar en la app del alumno** (calificaciones SIS fuera de alcance, 2026-06-24); sigue disponible para ADMIN/herramientas |
 | `GET /api/enrollments/:id` | Resuelve también actividades V2 (cursos de inglés con grupo) por id de actividad |
 | `GET /api/enrollments/group/:groupId` | Fusiona inscripciones regulares + cursos de inglés V2 del grupo; campos `isSpecialCourse`, `courseType`, `nivelIngles`. **Solo cohorte activa (2026-06-24)**: excluye `CANCELADO`, `BAJA`, `PENDIENTE_PAGO`, `PAGO_PENDIENTE_APROBACION` y `LISTA_ESPERA` (es la foto de quienes están en el grupo). Para ver pendientes/cancelados usar `GET /api/enrollments?groupId=&estatus=` (ADMIN) |
 | `GET /api/groups` (+ `periodo`, `esCursoIngles`) | Sin cambios |
@@ -127,17 +127,94 @@ Sin cambios de contrato, con la semántica post-limpieza:
 
 ---
 
-## 4. Mapa pantalla → endpoint sugerido (pestaña "Inglés" móvil, rol alumno)
+## 4. Experiencia del alumno (rol STUDENT): paridad web ↔ móvil nativo
+
+Objetivo: que iOS y Android muestren **la misma información, secciones y flujos** que la web para el alumno, pero con **patrones nativos** (tab bar, navegación por stack, pull-to-refresh, skeletons). La web es la referencia funcional; el móvil no copia el layout, copia el **modelo de información y las reglas**.
+
+### 4.1 Arquitectura de navegación (2 destinos + perfil)
+
+La web del alumno tiene 2 secciones funcionales. El móvil debe reflejarlas como una **tab bar** (o navegación equivalente), más el perfil:
+
+| Tab móvil | Equivalente web | Propósito |
+|-----------|-----------------|-----------|
+| **Inicio** | `/dashboard` | Resumen: identidad y estado de inglés |
+| **Mi Inglés** | `/student/english/status` | Hub del producto: progreso 70%, exámenes y cursos, solicitudes |
+| **Perfil** (avatar) | menú de usuario | Rol "Estudiante", datos, cerrar sesión |
+
+**Lo que NO debe tener el alumno** (paridad con la limpieza de web 2026-06-24):
+- **Sin "Mis Calificaciones"** de materias regulares (SIS): **fuera de alcance** del producto por ahora. No mostrar tab, sección ni accesos a `GET /api/enrollments/me` en la app del alumno.
+- **Sin búsqueda global** (`GET /api/search` responde `403` a STUDENT). No mostrar barra de búsqueda de entidades.
+- **Sin "Mis Grupos"** ni vistas de roster/grupo (son de maestro/admin).
+- **Sin "Solicitar examen"/"Solicitar curso" como destinos sueltos**: esas acciones viven **dentro de "Mi Inglés"** y aparecen según elegibilidad.
+- **Sin acciones administrativas** (aprobar pagos, asignar período/grupo, calificar).
+
+### 4.2 Tab "Inicio" (Dashboard del alumno)
+
+Carga en paralelo (al montar, 2 requests; respetar rate limiting de la sección 5):
+`GET /api/students/me` · `GET .../exams/student/english-status`.
+El estado de inglés es **informativo**: si su request falla, las demás secciones se muestran igual (no romper la pantalla).
+
+Secciones, en este orden (espejo de web):
+
+1. **Encabezado**: "Panel del Estudiante" + saludo con `nombre apellidoPaterno`.
+2. **Tarjeta de identidad (hero)**: `matricula`, `carrera`, `semestre`, `estatus` (de `students/me`). Debajo, **promedios oficiales**: `promedioGeneral` y `promedioIngles`. Son la **única fuente de verdad del promedio**: mostrarlos tal cual, **no recalcular** en el cliente; ocultar el que venga `undefined`.
+3. **Resumen "Mi Inglés"**: chip de estado (`N acciones pendientes` o `Al día`), línea "Requisito de graduación: Cumplido/Pendiente · Nivel actual N (o Sin nivel definido)", y la **lista de alertas** derivadas (ver 4.2.1). Botón "Ver mi inglés →" abre la tab Mi Inglés.
+4. **Métricas de inglés (3 tarjetas)**: Nivel actual (`nivelInglesActual` → "Nivel N" o "No definido"), Niveles completados (`progress.completed`/`progress.totalLevels`, p. ej. 3/6) y Requisito (`cumpleRequisitoIngles` → "Cumplido"/"Pendiente", color verde/rojo). Cada tarjeta abre Mi Inglés.
+5. **Acceso rápido**: "Mi Inglés".
+
+#### 4.2.1 Reglas de derivación de alertas de inglés (idénticas a web)
+
+A partir de `diagnosticExams[]` + `englishCourses[]` de `english-status`, computar (cada app debe derivarlas igual para no divergir):
+
+| Alerta | Condición | ¿Acción del alumno? | Texto sugerido |
+|--------|-----------|---------------------|----------------|
+| Pago pendiente | `estatus == PENDIENTE_PAGO` y `pagoAprobado != false` | Sí | "N pago(s) pendiente(s): lleva tu comprobante a Servicio Estudiantil." |
+| Pago rechazado | `estatus == PENDIENTE_PAGO` y `pagoAprobado == false` | Sí | "N pago(s) rechazado(s): cancela y vuelve a solicitar con el comprobante correcto." |
+| Sin diagnóstico | `!nivelInglesActual` y `!pendingExam` y `diagnosticExams.length == 0` | Sí | "Aún no presentas tu examen de diagnóstico de inglés." |
+| En revisión | `estatus == PAGO_PENDIENTE_APROBACION` | No (informativa) | "N pago(s) en revisión por el administrador." |
+| En lista de espera | `estatus == LISTA_ESPERA` | No (informativa) | "N solicitud(es) en lista de espera." |
+
+El chip "N acciones pendientes" cuenta solo las alertas con "¿Acción? = Sí"; si no hay ninguna → "Al día".
+
+### 4.3 Tab "Mi Inglés" (hub del producto)
+
+Fuente única: `GET .../exams/student/english-status` (ver sección 2.1). Subsecciones:
+
+- **Progreso 70%**: `progress.percentage`, `completedLevels`/`missingLevels`, `cumpleRequisitoIngles`, `porcentajeIngles`, `nivelInglesActual`/`nivelInglesCertificado`. Si `cumpleRequisitoIngles=false`, mostrar `requirementDetails.razonNoCumple`.
+- **Examen de diagnóstico**: `pendingExam` (banner) + `diagnosticExams[]` (estatus, `calificacion`, `nivelIngles`, `period`, datos de pago).
+- **Cursos de inglés (niveles 1–6)**: `englishCourses[]` (nivel, estatus, `calificacion`, `montoPago`, `pagoAprobado`, `observaciones`).
+- **Acciones embebidas** (según elegibilidad, ver sección 2):
+  - *Solicitar examen*: `GET .../exam-periods/available` + `POST .../exams`.
+  - *Solicitar curso / lista de espera*: `GET /api/groups/available/english-courses` + `POST .../special-courses` (mostrar `costo` antes de solicitar).
+  - *Pagar*: cuando `estatus == PENDIENTE_PAGO`, mostrar `montoPago` + instrucción "paga en banco → lleva el comprobante a Servicio Estudiantil".
+  - *Cancelar*: **solo** si `estatus ∈ {LISTA_ESPERA, PENDIENTE_PAGO}`. Si está `INSCRITO`/pagado, **ocultar** el botón y mostrar "Para cancelar, acude a Servicio Estudiantil" (el backend responde `400` si se intenta).
+- Tras crear/cancelar examen o curso: **invalidar la caché** de `english-status` y volver a pedirlo (TTL ~20 s, sección 5).
+
+#### Mapa rápido pantalla → endpoint
 
 | Pantalla | Endpoints |
 |----------|-----------|
-| Estatus 70% (progreso, niveles, requisito) | `GET .../exams/student/english-status` |
+| Inicio | `GET /api/students/me` + `GET .../exams/student/english-status` |
+| Mi Inglés (estatus 70%) | `GET .../exams/student/english-status` |
 | Solicitar examen diagnóstico | `GET .../exam-periods/available` + `POST .../exams` |
-| Solicitar curso de inglés / lista de espera | `GET /api/groups/available/english-courses` + `POST .../special-courses` |
-| Cancelar solicitud (examen o curso) | `PUT .../exams/:id/cancel` / `PUT .../special-courses/:id/cancel` |
-| Pagos pendientes (informativo) | `english-status.pendingExam` / `diagnosticExams[].estatus` |
+| Solicitar curso / lista de espera | `GET /api/groups/available/english-courses` + `POST .../special-courses` |
+| Cancelar solicitud | `PUT .../exams/:id/cancel` / `PUT .../special-courses/:id/cancel` (solo estados previos al pago) |
 
-Roles TEACHER/ADMIN en móvil (futuro): listados `GET .../exams`, `GET .../special-courses`, aprobación de pagos (`receive-and-approve-payment`, `reject-payment`) y captura de resultados (`PUT .../exams/:id/result`, `PUT .../special-courses/:id/complete`).
+### 4.5 Perfil y rol
+
+- El rol viene de `GET /api/auth/me` (`role: "STUDENT"`); etiquetar como **"Estudiante"**. Avatar con iniciales del nombre.
+- Cerrar sesión: `POST /api/auth/logout` + limpiar cookie/sesión local. Un `401` en cualquier endpoint = cerrar sesión.
+
+### 4.6 Estados y patrones nativos (obligatorios)
+
+- **Carga**: skeletons por sección (no spinner de pantalla completa salvo arranque). **Pull-to-refresh** invalida cachés y vuelve a pedir.
+- **Vacío**: usar los textos sugeridos por sección.
+- **Error**: `english-status` es no bloqueante en Inicio; el resto muestra error reintentable. **No reintentar `429`/`401` en bucle** (sección 5).
+- **Rate limiting**: en Inicio, las 2 llamadas van en paralelo una sola vez por apertura; evitar ráfagas al cambiar de tab (reusar caché).
+
+### 4.7 Roles TEACHER/ADMIN en móvil (futuro)
+
+Fuera del alcance del alumno: listados `GET .../exams`, `GET .../special-courses`, aprobación de pagos (`receive-and-approve-payment`, `reject-payment`) y captura de resultados (`PUT .../exams/:id/result`, `PUT .../special-courses/:id/complete`). El maestro/admin tampoco usa búsqueda global desde apps de alumno.
 
 ---
 
@@ -191,4 +268,4 @@ No hay endpoints nuevos por esta optimización: es política de consumo sobre lo
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-06-24 (cancelación del alumno restringida a estados previos al pago aprobado — `LISTA_ESPERA`/`PENDIENTE_PAGO`; tras `INSCRITO` el `cancel` responde `400` y se deriva a Servicio Estudiantil; `GET /api/search` ahora es solo ADMIN — `403` para STUDENT/TEACHER. Previo: grupos de inglés con `costo` obligatorio; `english-status.englishCourses[]` con `requierePago`/`pagoAprobado`/`montoPago`/`observaciones`; el alumno ve el monto del curso desde `PENDIENTE_PAGO`; contrato aplicable a iOS y Android)
+**Última actualización**: 2026-06-24 (sección 4 reescrita: define la **experiencia del alumno** con paridad web ↔ móvil nativo — navegación de 3 tabs + perfil, contenido por sección, reglas de derivación de alertas de inglés, umbrales de calificación, qué NO mostrar al alumno, estados/patrones nativos. Previo del día: cancelación del alumno restringida a `LISTA_ESPERA`/`PENDIENTE_PAGO` con `400` tras `INSCRITO`; `GET /api/search` solo ADMIN — `403` para STUDENT/TEACHER; `GET /api/enrollments/group/:groupId` solo cohorte activa. Contrato aplicable a iOS y Android)

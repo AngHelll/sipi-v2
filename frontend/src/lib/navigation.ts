@@ -17,9 +17,10 @@ export const navItems: NavItem[] = [
   // Teacher Main
   { label: 'Mis Grupos', path: '/admin/groups', roles: [UserRole.TEACHER], icon: 'groups', isMain: true },
   
-  // Student Specific — el flujo de inglés vive en "Mi Inglés" (hub único);
-  // las solicitudes de examen/curso se piden desde ahí según elegibilidad.
-  { label: 'Calificaciones', path: '/student/enrollments', roles: [UserRole.STUDENT], icon: 'auto_stories', isMain: true },
+  // Student Specific — el alumno se centra en el producto (inglés). Las
+  // calificaciones de materias regulares (SIS) quedan fuera de alcance por ahora.
+  // El flujo de inglés vive en "Mi Inglés" (hub único): las solicitudes de
+  // examen/curso se piden desde ahí según elegibilidad.
   { label: 'Mi Inglés', path: '/student/english/status', roles: [UserRole.STUDENT], icon: 'translate', isMain: true },
   
   // Teacher Specific

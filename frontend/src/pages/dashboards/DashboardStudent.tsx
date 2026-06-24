@@ -2,16 +2,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
-import { enrollmentsApi, examsApi, studentsApi } from '../../lib/api';
+import { examsApi, studentsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { PageLoader, Icon } from '../../components/ui';
 import type { IconName } from '../../components/ui/Icon';
-import type { Enrollment, Student } from '../../types';
+import type { Student } from '../../types';
 
 interface StudentDashboardStats {
   student: Student | null;
-  recentEnrollments: Enrollment[];
 }
 
 type EnglishStatusData = Awaited<ReturnType<typeof examsApi.getStudentEnglishStatusV2>>;
@@ -122,31 +121,14 @@ export const DashboardStudent = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-
-      const [studentRes, enrollmentsRes] = await Promise.all([
-        studentsApi.getMe(),
-        enrollmentsApi.getMe({ limit: 100, page: 1 }),
-      ]);
-      const student = studentRes as Student;
-      const enrollments = enrollmentsRes.enrollments;
-
-      setStats({
-        student,
-        recentEnrollments: enrollments.slice(0, 6),
-      });
+      const student = (await studentsApi.getMe()) as Student;
+      setStats({ student });
     } catch (err) {
       showToast('Error al cargar los datos del dashboard', 'error');
       console.error('Error fetching dashboard data:', err);
     } finally {
       setLoading(false);
     }
-  };
-
-  const getGradeBadgeColor = (grade: number | null | undefined) => {
-    if (grade === null || grade === undefined) return 'bg-gray-100 text-gray-800';
-    if (grade >= 70) return 'bg-green-100 text-green-800';
-    if (grade >= 60) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-red-100 text-red-800';
   };
 
   if (loading) {
@@ -320,70 +302,10 @@ export const DashboardStudent = () => {
           </div>
         )}
 
-        {/* My Enrollments */}
-        <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-on-surface">Mis Calificaciones</h2>
-            <button
-              onClick={() => navigate('/student/enrollments')}
-              className="text-primary hover:opacity-80 text-sm font-medium"
-            >
-              Ver todas →
-            </button>
-          </div>
-          {stats.recentEnrollments.length === 0 ? (
-            <div className="text-center py-8 text-on-surface-variant">
-              No tienes inscripciones registradas
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {stats.recentEnrollments.map((enrollment) => (
-                <div
-                  key={enrollment.id}
-                  className="border border-outline-variant/30 rounded-xl p-4 hover:shadow-medium transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-on-surface text-sm">
-                      {enrollment.group?.subject?.nombre || 'N/A'}
-                    </h3>
-                    {enrollment.calificacion !== null && enrollment.calificacion !== undefined ? (
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getGradeBadgeColor(enrollment.calificacion)}`}>
-                        {enrollment.calificacion}
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                        Pendiente
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-on-surface-variant mb-1">
-                    {enrollment.group?.nombre || 'N/A'} - {enrollment.group?.periodo || 'N/A'}
-                  </p>
-                  <p className="text-xs text-on-surface-variant/70">
-                    Créditos: {enrollment.group?.subject?.creditos || 'N/A'}
-                  </p>
-                  <div className="mt-3 pt-3 border-t border-outline-variant/20">
-                    <p className="text-xs text-on-surface-variant/70">
-                      Maestro: {enrollment.group?.teacher?.nombre || 'N/A'}{' '}
-                      {enrollment.group?.teacher?.apellidoPaterno || ''}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Quick Actions */}
         <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">
           <h2 className="text-xl font-semibold text-on-surface mb-4">Accesos Rápidos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <QuickAction
-              title="Ver Mis Calificaciones"
-              description="Consulta todas tus calificaciones"
-              icon="grades"
-              onClick={() => navigate('/student/enrollments')}
-            />
+          <div className="grid grid-cols-1 gap-4">
             <QuickAction
               title="Mi Inglés"
               description="Consulta tu progreso y solicita exámenes o cursos"

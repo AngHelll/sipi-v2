@@ -76,12 +76,14 @@ export const getGroupById = asyncHandler(async (req: Request, res: Response) => 
 export const createGroup = asyncHandler(async (req: Request, res: Response) => {
   const data = req.body as CreateGroupDto;
 
-  // Validate required fields
-  if (!data.subjectId || !data.teacherId || !data.nombre || !data.periodo) {
+  // Validate required fields. Para cursos de inglés la materia es la canónica del
+  // nivel (la resuelve el servicio), así que subjectId no es obligatorio.
+  const requiresSubject = !data.esCursoIngles;
+  if ((requiresSubject && !data.subjectId) || !data.teacherId || !data.nombre || !data.periodo) {
     res.status(400).json({
       error: 'Missing required fields',
       details: {
-        required: ['subjectId', 'teacherId', 'nombre', 'periodo'],
+        required: [...(requiresSubject ? ['subjectId'] : []), 'teacherId', 'nombre', 'periodo'],
       },
     });
     return;

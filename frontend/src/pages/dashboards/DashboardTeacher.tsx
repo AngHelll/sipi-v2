@@ -18,6 +18,35 @@ interface TeacherDashboardStats {
   pendingByGroup: Record<string, number>;
 }
 
+type UrgencyTone = 'overdue' | 'soon' | 'normal';
+interface GradingUrgency {
+  label: string | null;
+  tone: UrgencyTone;
+  rank: number; // menor = más urgente (para ordenar)
+  days: number;
+}
+
+/**
+ * Urgencia de calificación según la fecha de fin del curso. Avisa cuando el
+ * curso está por terminar (≤7 días) o ya terminó con calificaciones pendientes.
+ */
+const gradingUrgency = (fechaFin?: string): GradingUrgency => {
+  if (!fechaFin) return { label: null, tone: 'normal', rank: 2, days: Infinity };
+  const end = new Date(fechaFin);
+  if (Number.isNaN(end.getTime())) return { label: null, tone: 'normal', rank: 2, days: Infinity };
+  const days = Math.ceil((end.getTime() - Date.now()) / 86_400_000);
+  if (days < 0) return { label: 'Curso finalizado', tone: 'overdue', rank: 0, days };
+  if (days === 0) return { label: 'Termina hoy', tone: 'soon', rank: 1, days };
+  if (days <= 7) return { label: `Termina en ${days} día${days > 1 ? 's' : ''}`, tone: 'soon', rank: 1, days };
+  return { label: null, tone: 'normal', rank: 2, days };
+};
+
+const URGENCY_BADGE: Record<UrgencyTone, string> = {
+  overdue: 'bg-red-100 text-red-700',
+  soon: 'bg-amber-100 text-amber-700',
+  normal: 'bg-surface-container text-on-surface-variant',
+};
+
 export const DashboardTeacher = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -137,28 +166,31 @@ export const DashboardTeacher = () => {
           />
         </div>
 
-        {/* Pendientes por calificar (acción prioritaria) */}
+        {/* Pendientes por calificar (acción prioritaria, ordenada por urgencia) */}
         {(() => {
           const pendientes = stats.groups
-            .map((g) => ({ group: g, count: stats.pendingByGroup[g.id] ?? 0 }))
+            .map((g) => ({ group: g, count: stats.pendingByGroup[g.id] ?? 0, urgency: gradingUrgency(g.fechaFin) }))
             .filter((x) => x.count > 0)
-            .sort((a, b) => b.count - a.count);
+            .sort((a, b) =>
+              a.urgency.rank - b.urgency.rank || a.urgency.days - b.urgency.days || b.count - a.count
+            );
           if (pendientes.length === 0) return null;
+          const hasUrgent = pendientes.some((x) => x.urgency.tone !== 'normal');
           return (
-            <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border-l-4 border-amber-400">
+            <div className={`bg-surface-container-lowest rounded-2xl shadow-soft p-6 border-l-4 ${hasUrgent ? 'border-red-400' : 'border-amber-400'}`}>
               <div className="flex items-center gap-2 mb-4">
-                <Icon name="grades" size={20} className="text-amber-600" />
+                <Icon name="grades" size={20} className={hasUrgent ? 'text-red-600' : 'text-amber-600'} />
                 <h2 className="text-xl font-semibold text-on-surface">Pendientes por calificar</h2>
                 <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700">
                   {pendientes.reduce((s, x) => s + x.count, 0)} en {pendientes.length} grupo{pendientes.length > 1 ? 's' : ''}
                 </span>
               </div>
               <div className="divide-y divide-outline-variant/20">
-                {pendientes.map(({ group, count }) => (
+                {pendientes.map(({ group, count, urgency }) => (
                   <button
                     key={group.id}
                     onClick={() => navigate('/teacher/grades')}
-                    className="w-full flex items-center justify-between py-3 text-left hover:bg-surface-container/50 rounded-lg px-2 -mx-2 transition-colors"
+                    className="w-full flex items-center justify-between py-3 text-left hover:bg-surface-container/50 rounded-lg px-2 -mx-2 transition-colors gap-3"
                   >
                     <div className="min-w-0">
                       <p className="font-medium text-on-surface truncate">
@@ -168,9 +200,19 @@ export const DashboardTeacher = () => {
                         {group.nombre} · {group.periodo}
                       </p>
                     </div>
-                    <span className="shrink-0 ml-3 px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700">
-                      {count} sin calificar
-                    </span>
+                    <div className="shrink-0 flex items-center gap-2">
+                      {urgency.label && (
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full inline-flex items-center gap-1 ${URGENCY_BADGE[urgency.tone]}`}>
+                          <span className="material-symbols-outlined text-[12px]">
+                            {urgency.tone === 'overdue' ? 'event_busy' : 'schedule'}
+                          </span>
+                          {urgency.label}
+                        </span>
+                      )}
+                      <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700">
+                        {count} sin calificar
+                      </span>
+                    </div>
                   </button>
                 ))}
               </div>
