@@ -1,6 +1,7 @@
 // Exams Service - Business logic for exam activities
 // V2: Servicio para exámenes (NO requiere grupo)
 import { randomUUID } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import prisma from '../../../config/database';
 import { generateActivityCode, updateActivityStatus } from '../academic-activities.service';
 import { recalculateStudentAverages } from '../../students/students.service';
@@ -951,31 +952,36 @@ export const getAllExams = async (query: {
     sortOrder = 'desc',
   } = query;
 
-  const where: any = {
+  // Tipado fuerte del filtro: si alguien vuelve a escribir `exams: { some }`
+  // sobre esta relación uno-a-uno, ahora es error de compilación (no un 400 en runtime).
+  const where: Prisma.academic_activitiesWhereInput = {
     activityType: 'EXAM',
     deletedAt: null,
   };
 
   if (studentId) where.studentId = studentId;
-  if (estatus) where.estatus = estatus;
-  if (fechaInicio) where.fechaInscripcion = { ...where.fechaInscripcion, gte: new Date(fechaInicio) };
-  if (fechaFin) where.fechaInscripcion = { ...where.fechaInscripcion, lte: new Date(fechaFin) };
+  if (estatus) where.estatus = estatus as Prisma.academic_activitiesWhereInput['estatus'];
+  if (fechaInicio || fechaFin) {
+    const fecha: Prisma.DateTimeFilter = {};
+    if (fechaInicio) fecha.gte = new Date(fechaInicio);
+    if (fechaFin) fecha.lte = new Date(fechaFin);
+    where.fechaInscripcion = fecha;
+  }
 
-  const examWhere: any = {};
+  const examWhere: Prisma.examsWhereInput = {};
   if (periodId) examWhere.periodId = periodId;
-  if (examType) examWhere.examType = examType;
+  if (examType) examWhere.examType = examType as Prisma.examsWhereInput['examType'];
 
   if (Object.keys(examWhere).length > 0) {
-    // academic_activities.exams es relación uno-a-uno (exams?), por lo que el
-    // filtro es directo/`is`, no `some` (que es solo para relaciones de lista).
+    // academic_activities.exams es relación uno-a-uno (exams?): filtro directo (`is`),
+    // nunca `some` (que solo aplica a relaciones de lista).
     where.exams = examWhere;
   }
 
   const skip = (page - 1) * limit;
   const take = Math.min(limit, 100);
 
-  const orderBy: Record<string, string> = {};
-  orderBy[sortBy] = sortOrder;
+  const orderBy = { [sortBy]: sortOrder } as Prisma.academic_activitiesOrderByWithRelationInput;
 
   const total = await (prisma as any).academic_activities.count({ where });
 
