@@ -213,8 +213,12 @@ export const updateActivityStatus = async (
   return updated;
 };
 
-/** Estados desde los que se puede cancelar (el alumno solo los tempranos) */
-const STUDENT_CANCELABLE = ['LISTA_ESPERA', 'PENDIENTE_PAGO', 'INSCRITO'];
+/**
+ * Estados desde los que el ALUMNO puede auto-cancelar: solo etapas previas a la
+ * aprobación del pago. Una vez INSCRITO (pago aprobado / inscripción activa) debe
+ * gestionarlo con Servicio Estudiantil; el ADMIN sí puede cancelar estados activos.
+ */
+const STUDENT_CANCELABLE = ['LISTA_ESPERA', 'PENDIENTE_PAGO'];
 const TERMINAL_STATUSES = ['APROBADO', 'REPROBADO', 'EVALUADO', 'CANCELADO', 'BAJA', 'COMPLETADO'];
 
 /**
