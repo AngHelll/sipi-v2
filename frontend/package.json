@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "lint": "eslint .",
+    "audit:nav": "node scripts/audit-navigation.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
