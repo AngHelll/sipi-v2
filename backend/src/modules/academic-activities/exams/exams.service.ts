@@ -966,9 +966,9 @@ export const getAllExams = async (query: {
   if (examType) examWhere.examType = examType;
 
   if (Object.keys(examWhere).length > 0) {
-    where.exams = {
-      some: examWhere,
-    };
+    // academic_activities.exams es relación uno-a-uno (exams?), por lo que el
+    // filtro es directo/`is`, no `some` (que es solo para relaciones de lista).
+    where.exams = examWhere;
   }
 
   const skip = (page - 1) * limit;
