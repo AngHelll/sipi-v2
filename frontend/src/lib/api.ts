@@ -542,6 +542,7 @@ export const groupsApi = {
     subjectId?: string;
     estatus?: string;
     esCursoIngles?: boolean;
+    eliminados?: boolean;
     page?: number;
     limit?: number;
     sortBy?: string;
@@ -636,10 +637,17 @@ export const groupsApi = {
   },
 
   /**
-   * Delete group (ADMIN only)
+   * Delete group — baja lógica (ADMIN only)
    */
   delete: async (id: string): Promise<void> => {
     await api.delete(`/groups/${id}`);
+  },
+
+  /**
+   * Restore a soft-deleted group (ADMIN only)
+   */
+  restore: async (id: string): Promise<void> => {
+    await api.post(`/groups/${id}/restore`);
   },
 };
 

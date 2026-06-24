@@ -64,6 +64,7 @@ export interface GroupQueryDto {
   estatus?: string; // Filtrar por estatus; acepta lista separada por comas (ej. "ABIERTO,EN_CURSO")
   esCursoIngles?: boolean; // Filtrar por cursos de inglés
   nivelIngles?: number; // Filtrar por nivel de inglés
+  eliminados?: boolean; // true → historial de grupos dados de baja (deletedAt != null)
   // Pagination
   page?: number;
   limit?: number;

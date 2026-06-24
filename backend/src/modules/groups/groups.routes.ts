@@ -76,7 +76,7 @@ router.put(
 
 /**
  * DELETE /api/groups/:id
- * Delete a group and all associated enrollments (cascade)
+ * Soft-delete a group (baja lógica; queda en historial)
  * ADMIN only
  */
 router.delete(
@@ -86,6 +86,20 @@ router.delete(
   validateUUID('id'),
   validateRequest,
   groupsController.deleteGroup
+);
+
+/**
+ * POST /api/groups/:id/restore
+ * Restore a soft-deleted group
+ * ADMIN only
+ */
+router.post(
+  '/:id/restore',
+  authenticate,
+  authorize(UserRole.ADMIN),
+  validateUUID('id'),
+  validateRequest,
+  groupsController.restoreGroup
 );
 
 export default router;
