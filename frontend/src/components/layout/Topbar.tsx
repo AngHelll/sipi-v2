@@ -83,10 +83,12 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
 
       {/* Center/Right section: Search & Navigation */}
       <div className="flex items-center gap-6">
-        {/* Only Admins/Teachers get global search visible on desktop to save space */}
-        <div className="hidden lg:flex w-64 mr-4">
-          <GlobalSearch />
-        </div>
+        {/* La búsqueda global expone entidades de toda la institución: solo admin. */}
+        {user.role === UserRole.ADMIN && (
+          <div className="hidden lg:flex w-64 mr-4">
+            <GlobalSearch />
+          </div>
+        )}
 
         {/* Dynamic Nav Links */}
         {renderNavLinks()}
