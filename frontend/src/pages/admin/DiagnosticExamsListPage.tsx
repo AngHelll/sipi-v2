@@ -1,6 +1,6 @@
 // Diagnostic Exams list page for ADMIN with filters, search, and pagination
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { examsApi, studentsApi, examPeriodsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
@@ -54,17 +54,18 @@ interface ExamsListResponse {
 export const DiagnosticExamsListPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<ExamsListResponse['pagination'] | null>(null);
 
-  // Filter states
+  // Filter states (admiten valores iniciales desde la URL, p. ej. desde el dashboard)
   const [searchTerm, setSearchTerm] = useState('');
   const [studentIdFilter, setStudentIdFilter] = useState('');
   const [periodIdFilter, setPeriodIdFilter] = useState('');
-  const [examTypeFilter, setExamTypeFilter] = useState('');
-  const [estatusFilter, setEstatusFilter] = useState('');
+  const [examTypeFilter, setExamTypeFilter] = useState(searchParams.get('examType') || '');
+  const [estatusFilter, setEstatusFilter] = useState(searchParams.get('estatus') || '');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [sortBy, setSortBy] = useState<'fechaInscripcion' | 'estatus' | 'examType'>('fechaInscripcion');
