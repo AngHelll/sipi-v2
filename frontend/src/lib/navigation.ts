@@ -24,7 +24,7 @@ export const navItems: NavItem[] = [
   { label: 'Mi Inglés', path: '/student/english/status', roles: [UserRole.STUDENT], icon: 'translate', isMain: true },
   
   // Teacher Specific
-  { label: 'Gestión Calificaciones', path: '/teacher/grades', roles: [UserRole.TEACHER], icon: 'grading', isMain: false },
+  { label: 'Calificar', path: '/teacher/grades', roles: [UserRole.TEACHER], icon: 'grading', isMain: false },
 
   // Admin — General (SIS de soporte)
   { label: 'Materias', path: '/admin/subjects', roles: [UserRole.ADMIN], icon: 'auto_stories', isMain: true, section: 'General' },
