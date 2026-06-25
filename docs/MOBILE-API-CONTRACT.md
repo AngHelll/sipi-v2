@@ -96,15 +96,33 @@ Estados de pago del examen: `PENDIENTE_PAGO` → (admin aprueba) → inscripció
 
 Reglas de contrato (cursos, 2026-06-11; asignación admin 2026-06-15):
 
-- **`assign-group` (ADMIN, lista de espera)**: la solicitud debe estar en `LISTA_ESPERA`. El grupo debe coincidir en tipo/nivel de inglés, no estar `CERRADO`/`CANCELADO`/`FINALIZADO`, y tener cupo. Para listar opciones de grupo en admin usar `GET /api/groups` (con filtros); **no** usar `GET /api/groups/available/english-courses` (ese endpoint es para el alumno al solicitar curso).
+- **`assign-group` (ADMIN, lista de espera)**: la solicitud debe estar en `LISTA_ESPERA`. El grupo debe coincidir en tipo/nivel de inglés, **no estar dado de baja** (`deletedAt = null`), estar en `ABIERTO`/`EN_CURSO` (no `CERRADO`/`CANCELADO`/`FINALIZADO`) y tener cupo. **No exige la ventana pública de inscripciones** (2026-06-24): el admin puede asignar fuera de fechas, coherente con `assign-period`. Para listar opciones de grupo en admin usar `GET /api/groups` (con filtros); **no** usar `GET /api/groups/available/english-courses` (ese endpoint es para el alumno al solicitar curso).
 - **`requierePago` ya no se acepta** en el body de `POST .../special-courses`: la política de pago la decide el servidor (con grupo → `PENDIENTE_PAGO`; sin grupo → `LISTA_ESPERA` sin pago).
 - **Los grupos de inglés siempre traen `nivelIngles` (1-6)** (2026-06-20): el backend exige el nivel al crear/editar un grupo con `esCursoIngles=true`, por lo que los clientes pueden filtrar `GET /api/groups/available/english-courses` por nivel sin descartar grupos por nivel ausente.
-- **Regla canónica de "grupo disponible"** (2026-06-20): un grupo aparece en `GET /api/groups/available/english-courses` **si y solo si** cumple TODO: `esCursoIngles=true`, `estatus = ABIERTO` (no `EN_CURSO`/`CERRADO`/`CANCELADO`/`FINALIZADO`), ventana de inscripción vigente (`fechaInscripcionInicio ≤ ahora ≤ fechaInscripcionFin`, o sin fechas) y cupo libre (`cupoActual < cupoMaximo`). El `POST .../special-courses` aplica **exactamente la misma regla**: lo que se lista es lo que se puede solicitar. Si el grupo dejó de estar disponible entre el listado y el envío, el POST responde **`400`** con `error` explicando el motivo (estatus, ventana cerrada o sin cupo) — el cliente debe refrescar el listado, **no** reintentar a ciegas.
+- **Regla canónica de "grupo disponible"** (2026-06-20): un grupo aparece en `GET /api/groups/available/english-courses` **si y solo si** cumple TODO: `esCursoIngles=true`, **no dado de baja** (`deletedAt = null`, 2026-06-24), `estatus = ABIERTO` (no `EN_CURSO`/`CERRADO`/`CANCELADO`/`FINALIZADO`), ventana de inscripción vigente (`fechaInscripcionInicio ≤ ahora ≤ fechaInscripcionFin`, o sin fechas) y cupo libre (`cupoActual < cupoMaximo`). El `POST .../special-courses` aplica **exactamente la misma regla**: lo que se lista es lo que se puede solicitar. Si el grupo dejó de estar disponible entre el listado y el envío, el POST responde **`400`** con `error` explicando el motivo (estatus, ventana cerrada o sin cupo) — el cliente debe refrescar el listado, **no** reintentar a ciegas.
 - **Los grupos de inglés siempre traen `costo` (> 0)** (2026-06-22): el backend exige el costo al crear/editar un grupo con `esCursoIngles=true`. `GET /api/groups/available/english-courses` incluye `costo` por grupo, así que el cliente puede mostrar el precio **antes** de solicitar.
 - **El curso muestra el monto a pagar desde el inicio** (2026-06-22): al solicitar un curso con grupo, el servidor copia `costo` del grupo a `special_courses.montoPago` y deja la solicitud en `PENDIENTE_PAGO`. Por eso `english-status.englishCourses[]` ahora trae `requierePago`, `pagoAprobado`, `montoPago` y `observaciones`: cuando `estatus = PENDIENTE_PAGO`, muestra `montoPago` con la instrucción "paga en banco → lleva el comprobante a Servicio Estudiantil". El monto es un snapshot al momento de solicitar (cambiar el `costo` del grupo no reescribe solicitudes existentes). En lista de espera (`LISTA_ESPERA`) `montoPago` es `null` hasta que el admin asigna grupo.
 - Nuevo estatus de actividad: **`LISTA_ESPERA`** — solicitud de curso sin grupo publicado. Los clientes deben mostrarlo como "en lista de espera" (no como inscripción activa) y permitir cancelarla.
 - **Cancelación del alumno (2026-06-24)**: igual que exámenes — solo `LISTA_ESPERA`/`PENDIENTE_PAGO`. Tras `INSCRITO` (pago aprobado) el `cancel` responde **`400`**; ocultar el botón y derivar a Servicio Estudiantil.
 - El avance del curso (calificación, aprobado) se refleja en `english-status.englishCourses`.
+
+### 2.4 Ciclo de vida del grupo de inglés (ADMIN) — nuevo 2026-06-24
+
+Relevante para una futura app/admin nativa que administre la oferta de cursos. No afecta al alumno (el servidor ya filtra lo que el alumno ve).
+
+| Acción | Endpoint | Notas |
+|--------|----------|-------|
+| Crear curso de inglés | `POST /api/groups` body `{ esCursoIngles: true, nivelIngles, costo, teacherId, periodo, ... }` | **`subjectId` ya no es obligatorio** cuando `esCursoIngles=true`: el backend asigna sola la **materia canónica del nivel** (`Inglés Nivel N`, clave `ING-N`). El cliente admin **no debe pedir materia** para inglés. |
+| Editar / cerrar curso | `PUT /api/groups/:id` | Acepta **cualquier** campo del grupo (antes exigía nombre/periodo/subjectId/teacherId). **Cerrar** un curso = `PUT` con `{ "estatus": "FINALIZADO" }`. |
+| Duplicar para nuevo periodo | (cliente) `POST /api/groups` con la config del origen | Se copia todo y se ajusta solo `periodo` + fechas; el `codigo` lo genera el servidor (único). |
+| Eliminar curso (baja lógica) | `DELETE /api/groups/:id` | **Soft delete**: marca `deletedAt`, no borra inscripciones. Sale de los listados activos y queda en historial. Idempotente (re-eliminar responde `404`). |
+| Restaurar curso | `POST /api/groups/:id/restore` | Revierte la baja lógica. |
+| Historial de eliminados | `GET /api/groups?eliminados=true` | Devuelve solo los dados de baja (`deletedAt != null`). |
+
+Reglas:
+- **`GET /api/groups` por defecto solo devuelve grupos activos** (`deletedAt = null`); usar `eliminados=true` para el historial.
+- **Filtro `estatus`** admite **lista separada por comas** (p. ej. `estatus=ABIERTO,EN_CURSO` para "vigentes"); junto con `esCursoIngles` permite separar vigentes / cerrados / cancelados / inglés.
+- **Costo no se muestra al maestro**: aunque `group.costo` viene en la respuesta, la UI del rol TEACHER **no** debe exhibirlo (es dato administrativo). Para STUDENT sí (lo paga).
 
 ---
 
@@ -120,7 +138,7 @@ Sin cambios de contrato, con la semántica post-limpieza:
 | `GET /api/enrollments/me` | Solo inscripciones de materias regulares (inglés legacy filtrado). **No usar en la app del alumno** (calificaciones SIS fuera de alcance, 2026-06-24); sigue disponible para ADMIN/herramientas |
 | `GET /api/enrollments/:id` | Resuelve también actividades V2 (cursos de inglés con grupo) por id de actividad |
 | `GET /api/enrollments/group/:groupId` | Fusiona inscripciones regulares + cursos de inglés V2 del grupo; campos `isSpecialCourse`, `courseType`, `nivelIngles`. **Solo cohorte activa (2026-06-24)**: excluye `CANCELADO`, `BAJA`, `PENDIENTE_PAGO`, `PAGO_PENDIENTE_APROBACION` y `LISTA_ESPERA` (es la foto de quienes están en el grupo). Para ver pendientes/cancelados usar `GET /api/enrollments?groupId=&estatus=` (ADMIN) |
-| `GET /api/groups` (+ `periodo`, `esCursoIngles`) | Sin cambios |
+| `GET /api/groups` (+ `periodo`, `subjectId`, `esCursoIngles`, `estatus`, `eliminados`) | **Actualizado 2026-06-24**: `estatus` admite lista separada por comas (p. ej. `ABIERTO,EN_CURSO`); `eliminados=true` devuelve el historial de bajas lógicas. Por **defecto solo grupos activos** (`deletedAt = null`). Ver ciclo de vida en §2.4 |
 | `GET /api/students`, `/api/teachers`, `/api/subjects` | Directorio admin, sin cambios |
 | `GET /api/careers` | **Nuevo** — catálogo de carreras (ADMIN/TEACHER). Para filtros por carrera con UTF-8 correcto |
 | `GET /api/search` | **Solo ADMIN (2026-06-24)** — antes lo consumía cualquier usuario autenticado; ahora responde **`403`** a STUDENT/TEACHER (exponía PII de toda la institución). Las apps de alumno/maestro no deben ofrecer búsqueda global. |
@@ -216,6 +234,14 @@ Fuente única: `GET .../exams/student/english-status` (ver sección 2.1). Subsec
 
 Fuera del alcance del alumno: listados `GET .../exams`, `GET .../special-courses`, aprobación de pagos (`receive-and-approve-payment`, `reject-payment`) y captura de resultados (`PUT .../exams/:id/result`, `PUT .../special-courses/:id/complete`). El maestro/admin tampoco usa búsqueda global desde apps de alumno.
 
+Cuando se implementen estos roles en nativo, alinear con la web (cambios 2026-06-24):
+
+- **TEACHER**:
+  - **No mostrar el `costo`** de los grupos (dato administrativo sin valor operativo para el maestro).
+  - **Aviso de calificación por fecha**: en los grupos con calificaciones pendientes, mostrar urgencia derivada de `group.fechaFin` — "Termina en N días" (≤ 7 días), "Termina hoy", o "Curso finalizado" (vencido); ordenar lo más urgente primero. El conteo de pendientes sale de `GET /api/enrollments/group/:groupId` (solo cohorte activa, §3).
+  - Vista de grupo del maestro es **solo lectura** (roster + horario); las acciones de administración (cerrar/duplicar/eliminar) son del ADMIN.
+- **ADMIN**: administrar la oferta con el ciclo de vida de **§2.4** (crear sin materia para inglés, cerrar con `PUT estatus=FINALIZADO`, duplicar para nuevo periodo, baja lógica + restaurar + historial). Listar/filtrar con `GET /api/groups` (`estatus`, `esCursoIngles`, `eliminados`).
+
 ---
 
 ## 5. Límites de tasa (rate limiting) y comportamiento del cliente
@@ -268,4 +294,4 @@ No hay endpoints nuevos por esta optimización: es política de consumo sobre lo
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-06-24 (sección 4 reescrita: define la **experiencia del alumno** con paridad web ↔ móvil nativo — navegación de 3 tabs + perfil, contenido por sección, reglas de derivación de alertas de inglés, umbrales de calificación, qué NO mostrar al alumno, estados/patrones nativos. Previo del día: cancelación del alumno restringida a `LISTA_ESPERA`/`PENDIENTE_PAGO` con `400` tras `INSCRITO`; `GET /api/search` solo ADMIN — `403` para STUDENT/TEACHER; `GET /api/enrollments/group/:groupId` solo cohorte activa. Contrato aplicable a iOS y Android)
+**Última actualización**: 2026-06-24 (ciclo de vida del grupo de inglés para ADMIN — nueva §2.4: `DELETE` es **baja lógica** con `POST /:id/restore` e historial `?eliminados=true`; `GET /api/groups` por defecto solo activos y `estatus` admite lista por comas; `PUT /api/groups/:id` acepta cualquier campo — cerrar curso = `estatus=FINALIZADO`; **materia canónica por nivel** → `subjectId` opcional al crear inglés; **costo oculto al maestro**; aviso de calificación por `fechaFin` para TEACHER en §4.7. Previo del día: §4 reescrita con la experiencia del alumno (2 tabs + perfil); cancelación del alumno restringida a `LISTA_ESPERA`/`PENDIENTE_PAGO` con `400` tras `INSCRITO`; `GET /api/search` solo ADMIN; `GET /api/enrollments/group/:groupId` solo cohorte activa. Contrato aplicable a iOS y Android)

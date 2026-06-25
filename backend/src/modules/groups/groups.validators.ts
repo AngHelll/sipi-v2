@@ -153,5 +153,43 @@ export class GroupValidators {
     }
     return { available: true, reason: null };
   }
+
+  /**
+   * Regla de "grupo asignable por el ADMIN" desde la lista de espera.
+   *
+   * A diferencia de `englishGroupAvailability` (regla del alumno), el admin
+   * **no** está sujeto a la ventana pública de inscripciones (coherente con
+   * `assign-period`): puede colocar a un alumno fuera de fechas. Sí exige que
+   * el grupo exista, no esté dado de baja, no esté terminado/cerrado/cancelado,
+   * y tenga cupo.
+   *
+   * Estados asignables: `ABIERTO` y `EN_CURSO` (el admin puede sumar a un grupo
+   * en curso). Bloqueados: `CERRADO`, `CANCELADO`, `FINALIZADO`.
+   */
+  static englishGroupAssignable(
+    group: {
+      estatus?: string | null;
+      deletedAt?: Date | null;
+      cupoActual?: number | null;
+      cupoMaximo?: number | null;
+    }
+  ): { available: boolean; reason: string | null } {
+    if (group.deletedAt) {
+      return { available: false, reason: 'El grupo está dado de baja.' };
+    }
+    const asignables = ['ABIERTO', 'EN_CURSO'];
+    if (!group.estatus || !asignables.includes(group.estatus)) {
+      return {
+        available: false,
+        reason: `No se puede asignar a un grupo en estatus ${group.estatus ?? 'desconocido'}.`,
+      };
+    }
+    const cupoActual = group.cupoActual ?? 0;
+    const cupoMaximo = group.cupoMaximo ?? 0;
+    if (cupoActual >= cupoMaximo) {
+      return { available: false, reason: 'El grupo seleccionado ya no tiene cupos disponibles.' };
+    }
+    return { available: true, reason: null };
+  }
 }
 

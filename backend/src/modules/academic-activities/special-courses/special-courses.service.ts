@@ -133,10 +133,12 @@ export const assignGroupToCourse = async (
   }
 
   await EntityValidators.validateGroupExists(groupId);
+  // Admin asignando desde lista de espera: regla "asignable" (sin ventana pública).
   await SpecialCoursesValidators.validateGroupMatchesCourse(
     groupId,
     activity.special_courses.courseType,
-    activity.special_courses.nivelIngles ?? undefined
+    activity.special_courses.nivelIngles ?? undefined,
+    { admin: true }
   );
 
   const group = await (prisma as any).groups.findUnique({

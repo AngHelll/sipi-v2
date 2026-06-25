@@ -169,6 +169,63 @@ describe('GroupValidators', () => {
       expect(result.reason).toMatch(/cupos/i);
     });
   });
+
+  // Regla de asignación del ADMIN (assign-group). A diferencia de la del alumno,
+  // NO exige la ventana pública de inscripciones y permite EN_CURSO; sí rechaza
+  // bajas, estados terminales y falta de cupo.
+  describe('englishGroupAssignable', () => {
+    const base = {
+      estatus: 'ABIERTO',
+      deletedAt: null as Date | null,
+      cupoActual: 0,
+      cupoMaximo: 30,
+    };
+
+    it('is assignable for an open group with capacity', () => {
+      expect(GroupValidators.englishGroupAssignable(base)).toEqual({
+        available: true,
+        reason: null,
+      });
+    });
+
+    it('is assignable for an in-progress group (EN_CURSO), unlike the student rule', () => {
+      expect(GroupValidators.englishGroupAssignable({ ...base, estatus: 'EN_CURSO' })).toEqual({
+        available: true,
+        reason: null,
+      });
+    });
+
+    it('ignores the inscription window (admin may assign outside dates)', () => {
+      // englishGroupAssignable no recibe fechas: aunque el grupo tuviera la
+      // ventana cerrada, el admin puede asignar mientras esté ABIERTO/EN_CURSO.
+      expect(GroupValidators.englishGroupAssignable(base).available).toBe(true);
+    });
+
+    it('rejects a soft-deleted group', () => {
+      const result = GroupValidators.englishGroupAssignable({ ...base, deletedAt: new Date() });
+      expect(result.available).toBe(false);
+      expect(result.reason).toMatch(/baja/i);
+    });
+
+    it.each(['CERRADO', 'FINALIZADO', 'CANCELADO'])(
+      'rejects terminal status %s',
+      (estatus) => {
+        const result = GroupValidators.englishGroupAssignable({ ...base, estatus });
+        expect(result.available).toBe(false);
+        expect(result.reason).toMatch(/no se puede asignar/i);
+      }
+    );
+
+    it('rejects when full', () => {
+      const result = GroupValidators.englishGroupAssignable({
+        ...base,
+        cupoActual: 30,
+        cupoMaximo: 30,
+      });
+      expect(result.available).toBe(false);
+      expect(result.reason).toMatch(/cupos/i);
+    });
+  });
 });
 
 
