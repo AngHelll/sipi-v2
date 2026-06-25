@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
-import { groupsApi, subjectsApi, exportApi } from '../../lib/api';
+import { groupsApi, subjectsApi, exportApi, enrollmentsApi } from '../../lib/api';
 import { fetchUniqueGroupPeriods } from '../../lib/groupPeriods';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -45,7 +45,8 @@ export const GroupsListPage = () => {
     isOpen: boolean;
     groupId: string | null;
     groupName: string;
-  }>({ isOpen: false, groupId: null, groupName: '' });
+    pendingCount: number;
+  }>({ isOpen: false, groupId: null, groupName: '', pendingCount: 0 });
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -171,11 +172,24 @@ export const GroupsListPage = () => {
     navigate(`/admin/groups/new?from=${id}`);
   };
 
-  const handleCloseClick = (group: Group) => {
+  const handleCloseClick = async (group: Group) => {
+    // Avisa si quedan alumnos de la cohorte activa sin calificar antes de cerrar.
+    let pendingCount = 0;
+    try {
+      const res = await enrollmentsApi.getByGroup(group.id);
+      pendingCount = res.enrollments.filter(
+        (e: any) =>
+          (e.calificacion === null || e.calificacion === undefined) &&
+          (e.calificacionFinal === null || e.calificacionFinal === undefined)
+      ).length;
+    } catch (err) {
+      console.error('Error checking pending grades before closing:', err);
+    }
     setCloseConfirm({
       isOpen: true,
       groupId: group.id,
       groupName: `${group.nombre} - ${group.subject?.nombre || 'N/A'} (${group.periodo})`,
+      pendingCount,
     });
   };
 
@@ -184,7 +198,7 @@ export const GroupsListPage = () => {
     try {
       await groupsApi.update(closeConfirm.groupId, { estatus: 'FINALIZADO' });
       showToast('Curso cerrado correctamente', 'success');
-      setCloseConfirm({ isOpen: false, groupId: null, groupName: '' });
+      setCloseConfirm({ isOpen: false, groupId: null, groupName: '', pendingCount: 0 });
       fetchGroups();
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Error al cerrar el curso';
@@ -194,7 +208,7 @@ export const GroupsListPage = () => {
   };
 
   const handleCloseCancel = () => {
-    setCloseConfirm({ isOpen: false, groupId: null, groupName: '' });
+    setCloseConfirm({ isOpen: false, groupId: null, groupName: '', pendingCount: 0 });
   };
 
   const handleRestore = async (id: string, e?: React.MouseEvent) => {
@@ -481,7 +495,7 @@ export const GroupsListPage = () => {
                       <GroupCard
                         key={group.id}
                         group={group}
-                        onClick={isAdmin || isTeacher ? () => handleView(group.id) : undefined}
+                        onClick={!isHistory && (isAdmin || isTeacher) ? () => handleView(group.id) : undefined}
                         onEdit={isAdmin && !isHistory ? (e) => handleEdit(group.id, e) : undefined}
                         onDuplicate={isAdmin && !isHistory ? (e) => handleDuplicate(group.id, e) : undefined}
                         onClose={isAdmin && !isHistory && (group.estatus === 'ABIERTO' || group.estatus === 'EN_CURSO')
@@ -580,7 +594,15 @@ export const GroupsListPage = () => {
         <ConfirmDialog
           isOpen={closeConfirm.isOpen}
           title="Cerrar curso"
-          message={`¿Cerrar el curso "${closeConfirm.groupName}"? Pasará a FINALIZADO: dejará de aparecer entre los vigentes y no admitirá nuevas inscripciones. Asegúrate de haber calificado a los alumnos antes de cerrarlo.`}
+          message={`${
+            closeConfirm.pendingCount > 0
+              ? `⚠️ Hay ${closeConfirm.pendingCount} alumno(s) sin calificar. `
+              : ''
+          }¿Cerrar el curso "${closeConfirm.groupName}"? Pasará a FINALIZADO: dejará de aparecer entre los vigentes y no admitirá nuevas inscripciones.${
+            closeConfirm.pendingCount > 0
+              ? ' Te recomendamos calificar a todos antes de cerrarlo.'
+              : ''
+          }`}
           confirmText="Cerrar curso"
           cancelText="Cancelar"
           variant="warning"

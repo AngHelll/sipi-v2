@@ -118,12 +118,16 @@ export class SpecialCoursesValidators {
    * @param groupId - ID of the group
    * @param courseType - Requested course type
    * @param nivelIngles - Requested English level (if INGLES)
+   * @param options.admin - true cuando lo invoca el admin (assign-group): aplica
+   *   la regla de "asignable" (sin exigir la ventana pública de inscripciones),
+   *   coherente con `assign-period`. Por defecto usa la regla del alumno.
    * @throws Error if the group doesn't match the course
    */
   static async validateGroupMatchesCourse(
     groupId: string,
     courseType: string,
-    nivelIngles?: number
+    nivelIngles?: number,
+    options: { admin?: boolean } = {}
   ): Promise<void> {
     const group = await prisma.groups.findUnique({
       where: { id: groupId },
@@ -154,8 +158,11 @@ export class SpecialCoursesValidators {
       }
     }
 
-    // Canonical availability rule shared with the student listing endpoint
-    const availability = GroupValidators.englishGroupAvailability(group, new Date());
+    // Regla de disponibilidad: el alumno usa la canónica (incluye la ventana de
+    // inscripción); el admin (assign-group) usa la de "asignable" (sin ventana).
+    const availability = options.admin
+      ? GroupValidators.englishGroupAssignable(group)
+      : GroupValidators.englishGroupAvailability(group, new Date());
     if (!availability.available) {
       throw new Error(availability.reason || 'El grupo no está disponible para inscripciones');
     }

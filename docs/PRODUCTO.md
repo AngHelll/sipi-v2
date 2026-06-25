@@ -85,9 +85,9 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 
 | Rol | Inglés | SIS básico |
 |-----|--------|------------|
-| **Alumno** | Solicitar examen/curso, ver progreso, pagos | Ver inscripciones regulares |
-| **Maestro** | Calificar / ver alumnos en grupos de inglés | Grupos y calificaciones |
-| **Admin** | Períodos, pagos, resultados de examen | Catálogos, inscripciones admin |
+| **Alumno** | Solicitar examen/curso, ver progreso, pagos | — (reenfocado a inglés; "Mis Calificaciones" SIS fuera de alcance, 2026-06-24) |
+| **Maestro** | Calificar; vista de grupo de solo lectura (roster/horario), avisos de calificación por fecha | Grupos (sin costo) y calificaciones |
+| **Admin** | Períodos, pagos, resultados; ciclo de vida de cursos (duplicar/cerrar/baja lógica+restaurar) | Catálogos, inscripciones admin |
 
 ---
 
