@@ -126,17 +126,35 @@ export const updateGroup = asyncHandler(async (req: Request, res: Response) => {
   const id = String(req.params.id);
   const data = req.body as UpdateGroupDto;
 
-  // Validate that at least one field is provided
-  if (
-    !data.nombre &&
-    !data.periodo &&
-    !data.subjectId &&
-    !data.teacherId
-  ) {
+  // Validate that at least one updatable field is provided. Acepta cualquier
+  // campo del grupo (no solo identidad): p. ej. cerrar un curso envía solo
+  // { estatus: 'FINALIZADO' } y debe ser válido.
+  const updatableFields: (keyof UpdateGroupDto)[] = [
+    'nombre',
+    'periodo',
+    'subjectId',
+    'teacherId',
+    'cupoMaximo',
+    'cupoMinimo',
+    'horario',
+    'aula',
+    'edificio',
+    'modalidad',
+    'estatus',
+    'fechaInicio',
+    'fechaFin',
+    'nivelIngles',
+    'costo',
+    'fechaInscripcionInicio',
+    'fechaInscripcionFin',
+    'esCursoIngles',
+  ];
+  const hasAnyField = updatableFields.some((field) => data[field] !== undefined);
+  if (!hasAnyField) {
     res.status(400).json({
       error: 'At least one field must be provided',
       details: {
-        allowedFields: ['nombre', 'periodo', 'subjectId', 'teacherId'],
+        allowedFields: updatableFields,
       },
     });
     return;
