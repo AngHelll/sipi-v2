@@ -189,7 +189,7 @@ export const DashboardTeacher = () => {
                 {pendientes.map(({ group, count, urgency }) => (
                   <button
                     key={group.id}
-                    onClick={() => navigate('/teacher/grades')}
+                    onClick={() => navigate(`/teacher/groups/${group.id}`)}
                     className="w-full flex items-center justify-between py-3 text-left hover:bg-surface-container/50 rounded-lg px-2 -mx-2 transition-colors gap-3"
                   >
                     <div className="min-w-0">
@@ -254,8 +254,8 @@ export const DashboardTeacher = () => {
           <h2 className="text-xl font-semibold text-on-surface mb-4">Accesos Rápidos</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <QuickAction
-              title="Gestión de Calificaciones"
-              description="Actualiza las calificaciones de tus estudiantes"
+              title="Calificar"
+              description="Elige un grupo para calificar y gestionar tu clase"
               icon="grades"
               onClick={() => navigate('/teacher/grades')}
             />
