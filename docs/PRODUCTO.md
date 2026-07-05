@@ -1,6 +1,6 @@
 # SIPI — Alcance de producto
 
-**Última actualización:** 2026-06-24
+**Última actualización:** 2026-07-05
 
 ## Enfoque: SIPI Inglés
 
@@ -86,7 +86,7 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 | Rol | Inglés | SIS básico |
 |-----|--------|------------|
 | **Alumno** | Solicitar examen/curso, ver progreso, pagos | — (reenfocado a inglés; "Mis Calificaciones" SIS fuera de alcance, 2026-06-24) |
-| **Maestro** | Calificar; vista de grupo de solo lectura (roster/horario), avisos de calificación por fecha | Grupos (sin costo) y calificaciones |
+| **Maestro** | Calificar cursos de inglés (`complete`); **centro de operación del grupo** (ver clase + calificar inline + herramientas: buscador, filtros, progreso, exportar CSV); avisos de urgencia por `fechaFin`; **sin costo** | Grupos asignados (listado); calificaciones de materias regulares vía `PUT /enrollments/:id` |
 | **Admin** | Períodos, pagos, resultados; ciclo de vida de cursos (duplicar/cerrar/baja lógica+restaurar) | Catálogos, inscripciones admin |
 
 ---
@@ -95,7 +95,7 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 
 | Cliente | Inglés V2 |
 |---------|-----------|
-| Web React | Sí — inglés solo en sus pantallas; hub "Mi Inglés" del alumno por ciclo de vida (solicitado / inscrito / historial), explorador de cursos disponibles y resumen de acciones pendientes en el dashboard; admin con dashboard de operación de inglés y **bandeja única** de aprobación de pagos (examen + curso); el formulario genérico de inscripciones es exclusivo de materias regulares |
+| Web React | Sí — inglés solo en sus pantallas; hub "Mi Inglés" del alumno por ciclo de vida (solicitado / inscrito / historial), explorador de cursos disponibles y resumen de acciones pendientes en el dashboard; admin con dashboard de operación de inglés y **bandeja única** de aprobación de pagos (examen + curso); el formulario genérico de inscripciones es exclusivo de materias regulares. **Maestro**: vista única por grupo (`/teacher/groups/:id`) que unifica detalle, calificación inline y herramientas de clase; `/teacher/grades` es selector de grupo |
 | iOS (`sipi-mobile-ios`) | Sí — journey STUDENT completo: estatus 70%, solicitar examen/curso (con lista de espera), cancelar, claridad de pago y "siguiente paso". Pendiente: roles TEACHER/ADMIN |
 | Android (`sipi-mobile-android`) | Sí — journey STUDENT completo: estatus 70%, solicitar examen/curso (con lista de espera), cancelar, claridad de pago y seguimiento. Pendiente: roles TEACHER/ADMIN |
 
@@ -111,7 +111,8 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 - **Materia automática por nivel**: un curso de inglés se define por **nivel**, no por materia. Al crearlo, el sistema asigna sola la materia canónica `Inglés Nivel N` (clave `ING-N`); el admin **no captura ni elige materia**. El costo no se muestra al maestro (es dato administrativo).
 - **Ciclo de cursos**: "cerrar" un curso lo deja en `FINALIZADO` (fuera de los vigentes, sin inscripciones). Para el siguiente periodo se **duplica** el curso del mismo nivel ajustando solo periodo y fechas; los cerrados se administran con el filtro de estatus.
 - **Grupo disponible (regla única)**: el alumno ve y puede solicitar un grupo de inglés **solo** si está `ABIERTO`, dentro de su ventana de inscripción y con cupo libre. La misma regla aplica al listar (`/groups/available/english-courses`) y al solicitar (`POST /special-courses`): lo que se ve es lo que se puede solicitar.
-- **Lista de espera (cursos)**: solicitar curso sin grupo publicado ⇒ `LISTA_ESPERA` (sin pago). El admin detecta la demanda por nivel, crea grupo y asigna desde la lista; el pago se define al asignar.
+- **Lista de espera (cursos)**: solicitar curso sin grupo publicado ⇒ `LISTA_ESPERA` (sin pago). El admin detecta la demanda por nivel, crea grupo y asigna desde la lista; el pago se define al asignar. Al asignar (`assign-group`), el admin **no** está sujeto a la ventana pública de inscripciones (coherente con `assign-period`); sí exige grupo no dado de baja, tipo/nivel, estatus `ABIERTO`/`EN_CURSO` y cupo.
+- **Maestro — vista única del grupo**: operar cada clase desde una sola pantalla (detalle + calificar + herramientas); el roster muestra solo la **cohorte activa** (sin cancelados ni pendientes de pago).
 - **Lista de espera (exámenes)**: primer diagnóstico sin período ⇒ `LISTA_ESPERA` (gratuito). El admin asigna período cuando publique uno; retake de diagnóstico solo vía período (puede tener costo).
 - **Cancelación**: alumno cancela sus solicitudes en estados tempranos (sin resultado/calificación); admin cancela con motivo. Toda cancelación revierte cupos (período/grupo).
 - **Nivel inicial (equivalencia)**: alumnos de transferencia se registran una sola vez vía `initial-level` (admin), que crea el historial canónico. Los campos de inglés de `students` nunca se editan a mano.
@@ -133,7 +134,7 @@ Más detalle: [REGLAS-NEGOCIO-ENROLLMENTS.md](REGLAS-NEGOCIO-ENROLLMENTS.md) (re
 1. ~~Migración Prisma V2~~
 2. ~~Deprecar `/api/enrollments/english` y eliminar código legacy~~
 3. ~~Cierre capa web: inglés solo en pantallas V2, typecheck en CI~~
-4. iOS y Android contra `academic-activities` (mismo contrato): journey STUDENT de inglés **completo** (estatus 70%, solicitar examen/curso con lista de espera, cancelar, claridad de pago); **pendiente** rol ADMIN en móvil (assign-period, assign-group, waitlist/summary, initial-level). Contrato en [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
+4. iOS y Android contra `academic-activities` (mismo contrato): journey STUDENT de inglés **completo** (estatus 70%, solicitar examen/curso con lista de espera, cancelar, claridad de pago); **pendiente** roles TEACHER/ADMIN en móvil (TEACHER: vista única del grupo §4.7; ADMIN: assign-period, assign-group, waitlist/summary, initial-level). Contrato en [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
 5. Opcional: otra `SpecialCourseType` cuando exista requisito de negocio
 
 Detalle por capas y próximos pasos: [ROADMAP.md](ROADMAP.md)
