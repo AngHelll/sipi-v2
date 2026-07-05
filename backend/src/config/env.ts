@@ -22,6 +22,7 @@ export const config = {
   },
   server: {
     port: parseInt(process.env.PORT || '3001', 10),
+    host: process.env.HOST || '127.0.0.1',
     nodeEnv: process.env.NODE_ENV || 'development',
   },
   cors: {

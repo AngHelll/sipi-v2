@@ -2,11 +2,11 @@
 import app from './app';
 import { config } from './config/env';
 
-const PORT = config.server.port;
+const { port: PORT, host: HOST } = config.server;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on ${HOST}:${PORT}`);
   console.log(`📝 Environment: ${config.server.nodeEnv}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔗 Health check: http://${HOST}:${PORT}/health`);
 });
 
