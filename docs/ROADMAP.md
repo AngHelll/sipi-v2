@@ -15,14 +15,14 @@ flowchart TB
 
 ## Capas y estado
 
-| Capa | Fuente de verdad | Estado (2026-06-24) |
+| Capa | Fuente de verdad | Estado (2026-07-05) |
 |------|------------------|---------------------|
 | 0. Producto | [PRODUCTO.md](PRODUCTO.md) | **Estable** — SIPI Inglés (requisito 70%, niveles 1–6); SIS básico como soporte |
 | 1. Flujos de negocio | [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md) | **Estable** — diagnóstico → pago → placement → cursos → certificación; grupos de inglés con nivel obligatorio y regla única de disponibilidad |
 | 2. Contratos API | [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md) + `/api/academic-activities/*` | **Estable** — canónico inglés en academic-activities; legacy `/enrollments/english/*` retirado (410); regla canónica de "grupo disponible" documentada para iOS y Android |
 | 3. Web (React) | `frontend/` | **Cerrada (consolidación + pasada por roles 2026-06-24)** — consume solo la API canónica para inglés; hub "Mi Inglés" del alumno por ciclo de vida; formulario de inscripciones limitado a materias regulares; typecheck (`tsc -b`) en verde y como gate en CI. Consolidación admin: dashboard con sección "SIPI Inglés — Operación" (acciones pendientes), bandeja **única** de aprobación de pagos (examen + curso), e higiene de patrones UI (un solo `ConfirmDialog`/`PromptDialog`, `Suspense` único para rutas lazy). **Pasada por rol (sesión 2)**: maestro con **vista única del grupo** (detalle + calificación inline + herramientas de clase), pendientes por calificar con urgencia por `fechaFin` y sin costo; alumno reenfocado a inglés (sin "Mis Calificaciones"); admin con ciclo de vida de cursos de inglés (duplicar para nuevo periodo, cerrar→`FINALIZADO`, baja lógica + restaurar + historial, materia canónica por nivel) y menú de acciones compacto. Tooling: `npm run audit:nav` (auditoría estática de navegación/roles). |
-| 4a. Móvil iOS | repo `sipi-mobile-ios` | **STUDENT completo** — journey de inglés del alumno completo: estatus 70%, solicitar examen/curso (con lista de espera), cancelar, claridad de pago y "siguiente paso"; reglas de contrato aplicadas (listado==solicitud, 429/410, caché corta). **Pendiente**: alineación visual/diseño del rol alumno (Capa 4 diseño), rol ADMIN (assign-period/assign-group/waitlist/initial-level) y R5 hardening |
-| 4b. Móvil Android | repo `sipi-mobile-android` | **STUDENT completo** — journey de inglés del alumno (pasos 1–7): estatus 70%, solicitar examen (con lista de espera) y curso (selección de nivel + lista de espera); mismo contrato que iOS. **Pendiente**: alineación visual/diseño del rol alumno (Capa 4 diseño), roles TEACHER/ADMIN |
+| 4a. Móvil iOS | repo `sipi-mobile-ios` | **STUDENT completo** — journey de inglés del alumno completo: estatus 70%, solicitar examen/curso (con lista de espera), cancelar, claridad de pago y "siguiente paso"; reglas de contrato aplicadas (listado==solicitud, 429/410, caché corta). **Pendiente**: alineación visual/diseño del rol alumno (Capa 4 diseño), rol **TEACHER** (vista única §4.7), rol **ADMIN** (assign-period/assign-group/waitlist/initial-level) y R5 hardening |
+| 4b. Móvil Android | repo `sipi-mobile-android` | **STUDENT completo** — journey de inglés del alumno (pasos 1–7): estatus 70%, solicitar examen (con lista de espera) y curso (selección de nivel + lista de espera); mismo contrato que iOS. **Pendiente**: alineación visual/diseño del rol alumno (Capa 4 diseño), roles **TEACHER** (§4.7) y **ADMIN** |
 | 4-UX. Diseño móvil (alumno) | repos iOS + Android | **Propuesto (no iniciado)** — alinear estructura visual de ambas apps para el rol alumno sin tocar lógica/flujos/contratos: tokens paritarios, componentes base comunes, higiene de IDs/campos crudos y plantilla de vistas compartida |
 
 ## Próximos pasos (en orden)
@@ -30,10 +30,11 @@ flowchart TB
 El journey STUDENT de inglés está completo en web, iOS y Android. La capa web (3) quedó cerrada para el alcance actual: cualquier trabajo nuevo debe venir de las capas 0–2 o del frente móvil.
 
 1. **iOS / Android — alineación visual y diseño del rol ALUMNO (móvil)**: refactor de presentación (sin tocar lógica, flujos ni contratos) para que ambas apps compartan estructura de vistas y se vean como un mismo producto. Detalle en [Capa 4 — Alineación visual y diseño (rol alumno)](#capa-4--alineación-visual-y-diseño-rol-alumno).
-2. **iOS / Android — rol ADMIN del flujo de inglés (móvil)**: assign-period, assign-group, waitlist/summary e initial-level sobre la API canónica ya existente. Es el único bloque grande pendiente en móvil.
-3. **iOS / Android — hardening (R5)**: filtros admin de docentes/materias, observabilidad, snackbar de feedback, pull-to-refresh; validación end-to-end en dispositivo con alumno real.
-4. ~~**Backend (no bloqueante)**: coherencia de `assign-group` con la regla canónica de disponibilidad~~ (**hecho 2026-06-24**): el admin usa regla "asignable" (tipo/nivel + no eliminado + `ABIERTO`/`EN_CURSO` + cupo, **sin** ventana pública); el alumno conserva la regla canónica completa. Ver `GroupValidators.englishGroupAssignable` y MOBILE-API-CONTRACT §2.3.
-5. **Opcional (requiere caso de negocio)**: nueva `SpecialCourseType` (verano, talleres) u otra actividad — el schema ya lo soporta; **no** crear API sin pasar por Capa 0.
+2. **iOS / Android — rol ADMIN del flujo de inglés (móvil)**: assign-period, assign-group, waitlist/summary e initial-level sobre la API canónica ya existente.
+3. **iOS / Android — rol TEACHER (móvil)**: vista única del grupo alineada con web (§4.7 del contrato): selector → detalle + calificar inline + herramientas de clase.
+4. **iOS / Android — hardening (R5)**: filtros admin de docentes/materias, observabilidad, snackbar de feedback, pull-to-refresh; validación end-to-end en dispositivo con alumno real.
+5. ~~**Backend (no bloqueante)**: coherencia de `assign-group` con la regla canónica de disponibilidad~~ (**hecho 2026-06-24**): el admin usa regla "asignable" (tipo/nivel + no eliminado + `ABIERTO`/`EN_CURSO` + cupo, **sin** ventana pública); el alumno conserva la regla canónica completa. Ver `GroupValidators.englishGroupAssignable` y MOBILE-API-CONTRACT §2.3.
+6. **Opcional (requiere caso de negocio)**: nueva `SpecialCourseType` (verano, talleres) u otra actividad — el schema ya lo soporta; **no** crear API sin pasar por Capa 0.
 
 ### Mantenimiento aplicado (2026-06-24)
 
@@ -127,4 +128,4 @@ Definir una **plantilla común** por pantalla y aplicarla en ambas plataformas.
 - Cambios de API que afecten a móvil se documentan en MOBILE-API-CONTRACT.md **antes** de desplegar.
 - Lo "escalable a futuro" vive solo en schema/enums (sin API ni UI) hasta que tenga justificación de producto: `social_service`, `professional_practices`, `enrollments_v2`, `prerequisites`, `student_documents`.
 
-**Última actualización**: 2026-07-05 — alineación producto: vista única del maestro (detalle + calificar + herramientas de clase en `/teacher/groups/:id`); `assign-group` admin marcado como hecho. Previo 2026-06-24 (sesión 2): pasada por rol y ciclo de vida de cursos; sesión 3: unificación de pantallas del maestro.
+**Última actualización**: 2026-07-05 — experiencia web por rol documentada en PRODUCTO; TEACHER móvil añadido a próximos pasos; capas fechadas al 2026-07-05. Previo: vista única del maestro, assign-group admin, pasada por rol y ciclo de vida de cursos.

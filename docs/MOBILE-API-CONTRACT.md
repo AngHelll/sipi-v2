@@ -234,7 +234,16 @@ Fuente única: `GET .../exams/student/english-status` (ver sección 2.1). Subsec
 
 Fuera del alcance del alumno: listados `GET .../exams`, `GET .../special-courses`, aprobación de pagos (`receive-and-approve-payment`, `reject-payment`) y captura de resultados (`PUT .../exams/:id/result`, `PUT .../special-courses/:id/complete`). El maestro/admin tampoco usa búsqueda global desde apps de alumno.
 
-Cuando se implementen estos roles en nativo, alinear con la web (cambios 2026-06-24):
+#### Referencia web — TEACHER (equivalente funcional)
+
+| Destino web | Propósito |
+|-------------|-----------|
+| **Dashboard** | Resumen de grupos; fila "Pendientes por calificar" con deep-link al grupo |
+| **Mis Grupos** (`/admin/groups`) | Listado → clic abre vista única |
+| **Calificar** (`/teacher/grades`) | Selector de grupos → vista única |
+| **Vista única** (`/teacher/groups/:id`) | Detalle + calificar inline + herramientas de clase |
+
+Cuando se implementen estos roles en nativo, alinear con la web (cambios 2026-06-24 / 2026-07-05):
 
 - **TEACHER** (alinear con web 2026-06-24):
   - **Navegación**: dashboard o "Calificar" → elegir grupo → **vista única del grupo** (equivalente web `/teacher/groups/:id`). No mantener dos pantallas separadas (detalle vs calificar) que pierdan contexto.
@@ -303,4 +312,4 @@ No hay endpoints nuevos por esta optimización: es política de consumo sobre lo
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-07-05 — **TEACHER §4.7**: vista única del grupo (detalle + calificar inline + herramientas de clase), alineada con web `/teacher/groups/:id`; ya no "solo lectura". Previo 2026-06-24: ciclo de vida del grupo (§2.4), assign-group admin sin ventana pública, costo oculto al maestro, cohorte activa en roster, experiencia del alumno (§4), cancelación restringida, search solo ADMIN. Contrato aplicable a iOS y Android.
+**Última actualización**: 2026-07-05 — §4.7: tabla de referencia web TEACHER (Dashboard / Mis Grupos / Calificar / vista única). Previo: vista única del maestro (detalle + calificar inline + herramientas), assign-group admin, cohorte activa, experiencia del alumno §4, cancelación restringida, search solo ADMIN. Contrato aplicable a iOS y Android.

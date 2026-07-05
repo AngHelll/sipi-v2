@@ -114,7 +114,7 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 - **Lista de espera (cursos)**: solicitar curso sin grupo publicado ⇒ `LISTA_ESPERA` (sin pago). El admin detecta la demanda por nivel, crea grupo y asigna desde la lista; el pago se define al asignar. Al asignar (`assign-group`), el admin **no** está sujeto a la ventana pública de inscripciones (coherente con `assign-period`); sí exige grupo no dado de baja, tipo/nivel, estatus `ABIERTO`/`EN_CURSO` y cupo.
 - **Maestro — vista única del grupo**: operar cada clase desde una sola pantalla (detalle + calificar + herramientas); el roster muestra solo la **cohorte activa** (sin cancelados ni pendientes de pago).
 - **Lista de espera (exámenes)**: primer diagnóstico sin período ⇒ `LISTA_ESPERA` (gratuito). El admin asigna período cuando publique uno; retake de diagnóstico solo vía período (puede tener costo).
-- **Cancelación**: alumno cancela sus solicitudes en estados tempranos (sin resultado/calificación); admin cancela con motivo. Toda cancelación revierte cupos (período/grupo).
+- **Cancelación (alumno)**: solo en `LISTA_ESPERA` o `PENDIENTE_PAGO` (antes de que el pago sea aprobado). Tras `INSCRITO`, **no puede auto-cancelar** — debe gestionarlo en Servicio Estudiantil. Admin cancela con motivo en cualquier estado no terminal.
 - **Nivel inicial (equivalencia)**: alumnos de transferencia se registran una sola vez vía `initial-level` (admin), que crea el historial canónico. Los campos de inglés de `students` nunca se editan a mano.
 
 Más detalle: [REGLAS-NEGOCIO-ENROLLMENTS.md](REGLAS-NEGOCIO-ENROLLMENTS.md) (reglas históricas; la implementación viva está en `academic-activities`).
@@ -138,3 +138,39 @@ Más detalle: [REGLAS-NEGOCIO-ENROLLMENTS.md](REGLAS-NEGOCIO-ENROLLMENTS.md) (re
 5. Opcional: otra `SpecialCourseType` cuando exista requisito de negocio
 
 Detalle por capas y próximos pasos: [ROADMAP.md](ROADMAP.md)
+
+---
+
+## Experiencia web por rol (Capa 3)
+
+Referencia de navegación e información por rol. El detalle de pantallas del **alumno en móvil** está en [MOBILE-API-CONTRACT.md §4](MOBILE-API-CONTRACT.md); el del **maestro en móvil (futuro)** en §4.7.
+
+### Alumno
+
+| Destino | Propósito |
+|---------|-----------|
+| **Dashboard** | Identidad, métricas de inglés (nivel, progreso 70%, requisito), alertas y acceso a Mi Inglés |
+| **Mi Inglés** | Hub único: progreso, exámenes/cursos, solicitudes embebidas según elegibilidad, cancelación |
+
+**Fuera de alcance:** "Mis Calificaciones" (SIS), "Mis Grupos", solicitar examen/curso como menús sueltos, búsqueda global.
+
+### Maestro
+
+| Destino | Propósito |
+|---------|-----------|
+| **Dashboard** | Resumen de grupos, pendientes por calificar (deep-link al grupo), accesos rápidos |
+| **Mis Grupos** (`/admin/groups`) | Listado de grupos asignados → clic abre la vista única |
+| **Calificar** (`/teacher/grades`) | Selector de grupo → entra a la vista única |
+| **Vista única del grupo** (`/teacher/groups/:id`) | Detalle + calificar inline + herramientas (buscar, filtrar, progreso, export CSV) |
+
+**Reglas de presentación:** sin costo del curso; roster = cohorte activa; urgencia por `fechaFin` si hay pendientes.
+
+### Admin
+
+| Bloque sidebar | Destinos | Propósito |
+|----------------|----------|-----------|
+| *(común)* | Dashboard | Operación general + sección **SIPI Inglés — Operación** (acciones pendientes con filtros) |
+| **General** | Materias, Grupos, Estudiantes, Maestros, Inscripciones | SIS de soporte |
+| **SIPI Inglés** | Cursos de inglés, Periodos de diagnóstico, Exámenes de diagnóstico, Aprobaciones de pago | Producto: oferta, demanda, pagos y resultados |
+
+**Operación de cursos:** duplicar/cerrar/baja lógica/restaurar desde listado de grupos (menú kebab). Búsqueda global solo admin.
