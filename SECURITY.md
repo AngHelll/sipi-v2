@@ -45,6 +45,27 @@ JWT_SECRET=tu_secret_generado_aqui
 ### 9. Dependencias
 
 - Mantener `react-router-dom` ≥ 7.15.1 (CVEs de open redirect / XSS en componentes de ruta).
+- Revisar `npm audit` periódicamente; `exceljs` (export admin) y deps de dev (`vite`, `tmp`) pueden requerir upgrades planificados.
+
+### 10. Endurecimiento P1–P2 (2026-07)
+
+**P1 (aplicado)**
+
+- `ForbiddenError` (403) en enrollments sin permiso; `errorHandler` sanitiza mensajes 500 en producción.
+- `JWT_SECRET` ≥ 32 caracteres validado al arranque.
+- `requestCache` del frontend se limpia en logout y 401.
+
+**P2 (aplicado / en curso)**
+
+- **`strictLimiter`** (10 req/hora por IP) en `GET /api/search` y todas las rutas `GET /api/export/*` — superficie masiva de PII.
+- **`sanitizeSoft`** global en el backend (trim de body/query); no se usa `sanitizeInput` con escape HTML en la API JSON (escapar al persistir corrompería datos; React escapa en salida).
+- **Tests RBAC** en CI: `groups.access`, `enrollments.access`, `auth.middleware`, `errorHandler`.
+
+**Pendiente (P3 — mejora continua)**
+
+- [ ] `npm audit fix` en frontend (`vite`, `form-data`) y evaluar upgrade de `exceljs`.
+- [ ] Tests de integración HTTP (supertest) para rutas críticas.
+- [ ] Política de contraseñas fuerte en creación de usuarios (opcional producto).
 
 ### 2. Variables de Entorno
 
@@ -69,7 +90,7 @@ git check-ignore backend/.env frontend/.env
 - [ ] Configurar HTTPS (no HTTP)
 - [ ] Usar variables de entorno para todas las configuraciones sensibles
 - [ ] Configurar CORS correctamente para tu dominio
-- [ ] Revisar y ajustar rate limiting según necesidades
+- [ ] Revisar y ajustar rate limiting según necesidades (search/export ya usan `strictLimiter`)
 - [ ] Habilitar logs de seguridad
 - [ ] Configurar backup automático de base de datos
 - [ ] Revisar permisos de archivos del servidor

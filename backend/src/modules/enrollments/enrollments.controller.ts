@@ -132,10 +132,6 @@ export const getEnrollmentsByGroup = asyncHandler(async (req: Request, res: Resp
       res.status(404).json({ error: 'Group not found' });
       return;
     }
-    if (error.message === 'You can only view enrollments for your own groups') {
-      res.status(403).json({ error: 'You can only view enrollments for your own groups' });
-      return;
-    }
     throw error;
   }
 });
@@ -233,14 +229,6 @@ export const updateEnrollment = asyncHandler(async (req: Request, res: Response)
     }
     if (error.message === 'Teacher not found') {
       res.status(404).json({ error: 'Teacher not found' });
-      return;
-    }
-    if (error.message === 'You can only update grades for your own groups') {
-      res.status(403).json({ error: 'You can only update grades for your own groups' });
-      return;
-    }
-    if (error.message === 'Teachers can only update calificacion') {
-      res.status(403).json({ error: 'Teachers can only update calificacion' });
       return;
     }
     if (error.message === 'Student not found') {

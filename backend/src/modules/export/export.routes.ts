@@ -2,57 +2,37 @@
 import { Router } from 'express';
 import * as exportController from './export.controller';
 import { authenticate, authorize } from '../../middleware/auth';
+import { strictLimiter } from '../../middleware/rateLimiter';
 import { UserRole } from '../../types';
 
 const router = Router();
 
+// Todas las exportaciones son ADMIN-only y descargan PII masiva → límite estricto.
+router.use(authenticate, authorize(UserRole.ADMIN), strictLimiter);
+
 /**
  * GET /api/export/students
  * Export students to Excel
- * ADMIN only
  */
-router.get(
-  '/students',
-  authenticate,
-  authorize(UserRole.ADMIN),
-  exportController.exportStudents
-);
+router.get('/students', exportController.exportStudents);
 
 /**
  * GET /api/export/teachers
  * Export teachers to Excel
- * ADMIN only
  */
-router.get(
-  '/teachers',
-  authenticate,
-  authorize(UserRole.ADMIN),
-  exportController.exportTeachers
-);
+router.get('/teachers', exportController.exportTeachers);
 
 /**
  * GET /api/export/subjects
  * Export subjects to Excel
- * ADMIN only
  */
-router.get(
-  '/subjects',
-  authenticate,
-  authorize(UserRole.ADMIN),
-  exportController.exportSubjects
-);
+router.get('/subjects', exportController.exportSubjects);
 
 /**
  * GET /api/export/groups
  * Export groups to Excel
- * ADMIN only
  */
-router.get(
-  '/groups',
-  authenticate,
-  authorize(UserRole.ADMIN),
-  exportController.exportGroups
-);
+router.get('/groups', exportController.exportGroups);
 
 export default router;
 
