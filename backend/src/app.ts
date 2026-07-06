@@ -2,6 +2,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import cors from 'cors';
+import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import { config } from './config/env';
@@ -20,6 +21,25 @@ import exportRoutes from './modules/export/export.routes';
 import careersRoutes from './modules/careers/careers.routes';
 
 const app = express();
+
+// Security headers (HSTS, X-Frame-Options, nosniff, etc.). CSP permite el SPA
+// servido desde /public (bundles propios + Google Fonts / Material Symbols).
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:', 'blob:'],
+        connectSrc: ["'self'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // Trust proxy - Required for rate limiting behind reverse proxy (Cloudflare Tunnel)
 // Trust only the first proxy (Cloudflare Tunnel) to prevent IP spoofing

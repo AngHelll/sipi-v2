@@ -38,7 +38,10 @@ router.get(
 /**
  * GET /api/groups/:id
  * Get a single group by ID
- * All authenticated users can access
+ * Role-based access:
+ * - ADMIN: cualquier grupo (incl. eliminados)
+ * - TEACHER: solo sus grupos activos (sin campo costo)
+ * - STUDENT: solo grupos donde está inscrito
  */
 router.get(
   '/:id',

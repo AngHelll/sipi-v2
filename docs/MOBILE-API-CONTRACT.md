@@ -234,12 +234,30 @@ Fuente única: `GET .../exams/student/english-status` (ver sección 2.1). Subsec
 
 Fuera del alcance del alumno: listados `GET .../exams`, `GET .../special-courses`, aprobación de pagos (`receive-and-approve-payment`, `reject-payment`) y captura de resultados (`PUT .../exams/:id/result`, `PUT .../special-courses/:id/complete`). El maestro/admin tampoco usa búsqueda global desde apps de alumno.
 
-Cuando se implementen estos roles en nativo, alinear con la web (cambios 2026-06-24):
+#### Referencia web — TEACHER (equivalente funcional)
 
-- **TEACHER**:
-  - **No mostrar el `costo`** de los grupos (dato administrativo sin valor operativo para el maestro).
-  - **Aviso de calificación por fecha**: en los grupos con calificaciones pendientes, mostrar urgencia derivada de `group.fechaFin` — "Termina en N días" (≤ 7 días), "Termina hoy", o "Curso finalizado" (vencido); ordenar lo más urgente primero. El conteo de pendientes sale de `GET /api/enrollments/group/:groupId` (solo cohorte activa, §3).
-  - Vista de grupo del maestro es **solo lectura** (roster + horario); las acciones de administración (cerrar/duplicar/eliminar) son del ADMIN.
+| Destino web | Propósito |
+|-------------|-----------|
+| **Dashboard** | Resumen de grupos; fila "Pendientes por calificar" con deep-link al grupo |
+| **Mis Grupos** (`/admin/groups`) | Listado → clic abre vista única |
+| **Calificar** (`/teacher/grades`) | Selector de grupos → vista única |
+| **Vista única** (`/teacher/groups/:id`) | Detalle + calificar inline + herramientas de clase |
+
+Cuando se implementen estos roles en nativo, alinear con la web (cambios 2026-06-24 / 2026-07-05):
+
+- **TEACHER** (alinear con web 2026-06-24):
+  - **Navegación**: dashboard o "Calificar" → elegir grupo → **vista única del grupo** (equivalente web `/teacher/groups/:id`). No mantener dos pantallas separadas (detalle vs calificar) que pierdan contexto.
+  - **Vista única del grupo** — una sola pantalla por grupo con:
+    1. **Encabezado**: materia/nombre, periodo, estatus, badge de inglés/nivel, horario, ubicación, modalidad, cupo. **No mostrar `costo`** (dato administrativo).
+    2. **Urgencia**: si hay pendientes por calificar, badge derivado de `group.fechaFin` — "Termina en N días" (≤ 7), "Termina hoy", "Curso finalizado" (vencido).
+    3. **Resumen de calificación**: progreso (% calificados), promedio, conteos aprobados (≥ 70) / reprobados / pendientes.
+    4. **Roster + calificación inline**: tabla de la **cohorte activa** (`GET /api/enrollments/group/:groupId`, §3 — excluye cancelados, pendientes de pago y lista de espera). Calificar en la misma fila:
+       - Curso de inglés (`isSpecialCourse: true`): `PUT /api/academic-activities/special-courses/:id/complete` body `{ calificacion }` — solo si `estatus` ∈ `INSCRITO`/`EN_CURSO` y pago aprobado si aplica.
+       - Materia regular: `PUT /api/enrollments/:id` body `{ calificacion }`.
+    5. **Herramientas de clase** (solo presentación, sin API nueva): buscador por nombre/matrícula; filtros Todos / Sin calificar / Aprobados / Reprobados; exportar roster filtrado a CSV (client-side).
+  - **Conteo de pendientes** (dashboard/lista de grupos): alumnos de la cohorte activa sin `calificacion`/`calificacionFinal`.
+  - **Sin acciones de administración** (cerrar/duplicar/eliminar grupo): son del ADMIN (§2.4).
+  - **Sin búsqueda global** (`GET /api/search` → 403 para TEACHER).
 - **ADMIN**: administrar la oferta con el ciclo de vida de **§2.4** (crear sin materia para inglés, cerrar con `PUT estatus=FINALIZADO`, duplicar para nuevo periodo, baja lógica + restaurar + historial). Listar/filtrar con `GET /api/groups` (`estatus`, `esCursoIngles`, `eliminados`).
 
 ---
@@ -294,4 +312,4 @@ No hay endpoints nuevos por esta optimización: es política de consumo sobre lo
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-06-24 (ciclo de vida del grupo de inglés para ADMIN — nueva §2.4: `DELETE` es **baja lógica** con `POST /:id/restore` e historial `?eliminados=true`; `GET /api/groups` por defecto solo activos y `estatus` admite lista por comas; `PUT /api/groups/:id` acepta cualquier campo — cerrar curso = `estatus=FINALIZADO`; **materia canónica por nivel** → `subjectId` opcional al crear inglés; **costo oculto al maestro**; aviso de calificación por `fechaFin` para TEACHER en §4.7. Previo del día: §4 reescrita con la experiencia del alumno (2 tabs + perfil); cancelación del alumno restringida a `LISTA_ESPERA`/`PENDIENTE_PAGO` con `400` tras `INSCRITO`; `GET /api/search` solo ADMIN; `GET /api/enrollments/group/:groupId` solo cohorte activa. Contrato aplicable a iOS y Android)
+**Última actualización**: 2026-07-05 — §4.7: tabla de referencia web TEACHER (Dashboard / Mis Grupos / Calificar / vista única). Previo: vista única del maestro (detalle + calificar inline + herramientas), assign-group admin, cohorte activa, experiencia del alumno §4, cancelación restringida, search solo ADMIN. Contrato aplicable a iOS y Android.

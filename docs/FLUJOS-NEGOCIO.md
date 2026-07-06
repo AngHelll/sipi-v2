@@ -1,6 +1,6 @@
 # 📋 Flujos de Negocio - SIPI-V2
 
-**Última actualización:** 2026-06-22
+**Última actualización:** 2026-07-05
 
 Este documento centraliza todos los flujos de negocio principales del sistema.
 
@@ -78,12 +78,27 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 1. Admin consulta demanda: `GET /api/academic-activities/special-courses/waitlist/summary` — interesados por tipo de curso y nivel.
 2. Si hay demanda suficiente, admin crea un grupo de inglés del nivel.
 3. Admin asigna el grupo a cada solicitud: `PUT /api/academic-activities/special-courses/:id/assign-group` body `{ groupId, requierePago }`.
+   - El grupo debe coincidir en tipo/nivel, **no estar dado de baja**, estar en `ABIERTO`/`EN_CURSO` y tener cupo. **No exige la ventana pública de inscripciones** (regla admin "asignable", coherente con `assign-period`).
    - Con pago → `PENDIENTE_PAGO` (el cupo se consume al aprobar el pago).
    - Sin pago → `INSCRITO` directo (consume cupo de inmediato).
 
 #### Calificación de Curso (Admin/Teacher)
 1. `PUT /api/academic-activities/special-courses/:id/complete` — solo en `INSCRITO`/`EN_CURSO`, pago aprobado si aplica, sin calificación previa; no aplica a cursos acreditados por diagnóstico.
 2. Al aprobar (≥70) un curso real de inglés, `nivelInglesActual` avanza al siguiente nivel (máx. 6).
+
+#### Operación del maestro — vista única del grupo (web)
+El maestro opera cada grupo desde **una sola pantalla** (`/teacher/groups/:id`), sin saltar entre "ver grupo" y "calificar":
+
+1. **Entrada**: desde el dashboard (tarjeta de grupo o fila de "Pendientes por calificar") o desde `/teacher/grades` (selector de grupos).
+2. **Datos del grupo**: `GET /api/groups/:id` — horario, ubicación, modalidad, cupo, estatus, nivel de inglés. **No se muestra el costo** (dato administrativo).
+3. **Roster de la cohorte activa**: `GET /api/enrollments/group/:groupId` — solo alumnos inscritos de verdad (excluye cancelados, pendientes de pago y lista de espera).
+4. **Calificación inline** en el mismo roster:
+   - Curso de inglés (`isSpecialCourse: true`): `PUT .../special-courses/:id/complete` con `{ calificacion }`.
+   - Materia regular: `PUT /api/enrollments/:id` con `{ calificacion }`.
+5. **Herramientas de clase** (presentación, sin API nueva): buscador por nombre/matrícula, filtros (todos / sin calificar / aprobados / reprobados), resumen de progreso y exportar roster a CSV.
+6. **Urgencia**: si quedan pendientes y `fechaFin` está próxima o vencida, mostrar aviso ("Termina en N días", "Termina hoy", "Curso finalizado").
+
+El maestro **no** administra el ciclo de vida del grupo (cerrar, duplicar, eliminar): eso es del admin.
 
 #### Cancelación de Solicitud
 - Estudiante: `PUT /api/academic-activities/special-courses/:id/cancel` — solo sus propias, en estados **previos a la aprobación del pago** (`LISTA_ESPERA`, `PENDIENTE_PAGO`), sin calificación. Una vez `INSCRITO` (pago aprobado) ya **no puede auto-cancelar**: debe gestionarlo en Servicio Estudiantil (el admin sí puede cancelar con motivo).
@@ -108,7 +123,7 @@ Para alumnos de transferencia que ya traen nivel de inglés acreditado:
 4. Sistema crea registro en `enrollment_history`
 
 ### Gestión de Calificaciones
-1. Teacher actualiza calificaciones: `PUT /api/enrollments/:id`
+1. Teacher actualiza calificaciones desde la **vista única del grupo** (web `/teacher/groups/:id`): `PUT /api/enrollments/:id` para materias regulares; `PUT .../special-courses/:id/complete` para cursos de inglés.
 2. Sistema calcula promedio automáticamente
 3. Sistema actualiza estatus (APROBADO/REPROBADO)
 4. Sistema registra en `enrollment_history`

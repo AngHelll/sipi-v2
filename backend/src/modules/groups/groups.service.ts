@@ -12,6 +12,151 @@ import {
 } from './groups.dtos';
 import { GroupValidators } from './groups.validators';
 
+const groupInclude = {
+  subjects: {
+    select: {
+      id: true,
+      clave: true,
+      nombre: true,
+      creditos: true,
+    },
+  },
+  teachers: {
+    select: {
+      id: true,
+      nombre: true,
+      apellidoPaterno: true,
+      apellidoMaterno: true,
+      departamento: true,
+    },
+  },
+} as const;
+
+type GroupRecordForDto = {
+  id: string;
+  subjectId: string;
+  teacherId: string;
+  nombre: string;
+  periodo: string;
+  codigo: string;
+  cupoMaximo: number | null;
+  cupoMinimo: number | null;
+  cupoActual: number;
+  horario: string | null;
+  aula: string | null;
+  edificio: string | null;
+  modalidad: string | null;
+  estatus: string | null;
+  nivelIngles: number | null;
+  costo: Prisma.Decimal | null;
+  fechaInscripcionInicio: Date | null;
+  fechaInscripcionFin: Date | null;
+  esCursoIngles: boolean | null;
+  subjects: { id: string; clave: string; nombre: string; creditos: number };
+  teachers: {
+    id: string;
+    nombre: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    departamento: string;
+  };
+};
+
+function mapGroupToResponseDto(group: GroupRecordForDto, includeCosto: boolean): GroupResponseDto {
+  const dto: GroupResponseDto = {
+    id: group.id,
+    subjectId: group.subjectId,
+    teacherId: group.teacherId,
+    nombre: group.nombre,
+    periodo: group.periodo,
+    codigo: group.codigo,
+    cupoMaximo: group.cupoMaximo ?? undefined,
+    cupoMinimo: group.cupoMinimo ?? undefined,
+    cupoActual: group.cupoActual,
+    horario: group.horario || undefined,
+    aula: group.aula || undefined,
+    edificio: group.edificio || undefined,
+    modalidad: (group.modalidad || undefined) as GroupResponseDto['modalidad'],
+    estatus: (group.estatus || undefined) as GroupResponseDto['estatus'],
+    nivelIngles: group.nivelIngles ?? undefined,
+    fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
+    fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
+    esCursoIngles: group.esCursoIngles ?? false,
+    subject: {
+      id: group.subjects.id,
+      clave: group.subjects.clave,
+      nombre: group.subjects.nombre,
+      creditos: group.subjects.creditos,
+    },
+    teacher: {
+      id: group.teachers.id,
+      nombre: group.teachers.nombre,
+      apellidoPaterno: group.teachers.apellidoPaterno,
+      apellidoMaterno: group.teachers.apellidoMaterno,
+      departamento: group.teachers.departamento,
+    },
+  };
+  if (includeCosto && group.costo != null) {
+    dto.costo = Number(group.costo);
+  }
+  return dto;
+}
+
+/** RBAC para detalle de grupo: mismo criterio que getAllGroups + inscripciones vía academic_activities. */
+async function canUserAccessGroup(
+  group: { id: string; teacherId: string; deletedAt: Date | null },
+  userId: string,
+  userRole: string
+): Promise<boolean> {
+  if (userRole === 'ADMIN') {
+    return true;
+  }
+  if (group.deletedAt) {
+    return false;
+  }
+
+  if (userRole === 'TEACHER') {
+    const teacher = await prisma.teachers.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    return !!teacher && group.teacherId === teacher.id;
+  }
+
+  if (userRole === 'STUDENT') {
+    const student = await prisma.students.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!student) {
+      return false;
+    }
+
+    const legacyEnrollment = await prisma.enrollments.findFirst({
+      where: { studentId: student.id, groupId: group.id },
+      select: { id: true },
+    });
+    if (legacyEnrollment) {
+      return true;
+    }
+
+    const activityEnrollment = await prisma.academic_activities.findFirst({
+      where: {
+        studentId: student.id,
+        deletedAt: null,
+        OR: [
+          { enrollments_v2: { groupId: group.id } },
+          { special_courses: { groupId: group.id } },
+        ],
+      },
+      select: { id: true },
+    });
+    return !!activityEnrollment;
+  }
+
+  return false;
+}
+
 /**
  * Get all groups with optional filters and pagination
  * Role-based filtering:
@@ -202,40 +347,7 @@ export const getAllGroups = async (
   });
 
   const result: GroupsListResponseDto = {
-    groups: groups.map((group) => ({
-      id: group.id,
-      subjectId: group.subjectId,
-      teacherId: group.teacherId,
-      nombre: group.nombre,
-      periodo: group.periodo,
-      codigo: group.codigo,
-      cupoMaximo: group.cupoMaximo,
-      cupoMinimo: group.cupoMinimo,
-      cupoActual: group.cupoActual,
-      horario: group.horario || undefined,
-      aula: group.aula || undefined,
-      edificio: group.edificio || undefined,
-      modalidad: group.modalidad || undefined,
-      estatus: group.estatus || undefined,
-      nivelIngles: group.nivelIngles ?? undefined,
-      costo: group.costo != null ? Number(group.costo) : undefined,
-      fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
-      fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
-      esCursoIngles: group.esCursoIngles ?? false,
-      subject: {
-        id: group.subjects.id,
-        clave: group.subjects.clave,
-        nombre: group.subjects.nombre,
-        creditos: group.subjects.creditos,
-      },
-      teacher: {
-        id: group.teachers.id,
-        nombre: group.teachers.nombre,
-        apellidoPaterno: group.teachers.apellidoPaterno,
-        apellidoMaterno: group.teachers.apellidoMaterno,
-        departamento: group.teachers.departamento,
-      },
-    })),
+    groups: groups.map((group) => mapGroupToResponseDto(group, userRole !== 'TEACHER')),
     pagination: {
       page,
       limit: take,
@@ -253,70 +365,28 @@ export const getAllGroups = async (
 };
 
 /**
- * Get a single group by ID
+ * Get a single group by ID (role-based access; TEACHER no recibe costo).
  */
-export const getGroupById = async (id: string): Promise<GroupResponseDto | null> => {
+export const getGroupById = async (
+  id: string,
+  userId: string,
+  userRole: string
+): Promise<GroupResponseDto | null> => {
   const group = await prisma.groups.findUnique({
     where: { id },
-    include: {
-      subjects: {
-        select: {
-          id: true,
-          clave: true,
-          nombre: true,
-          creditos: true,
-        },
-      },
-      teachers: {
-        select: {
-          id: true,
-          nombre: true,
-          apellidoPaterno: true,
-          apellidoMaterno: true,
-          departamento: true,
-        },
-      },
-    },
+    include: groupInclude,
   });
 
   if (!group) {
     return null;
   }
 
-  return {
-    id: group.id,
-    subjectId: group.subjectId,
-    teacherId: group.teacherId,
-    nombre: group.nombre,
-    periodo: group.periodo,
-    codigo: group.codigo,
-    cupoMaximo: group.cupoMaximo,
-    cupoMinimo: group.cupoMinimo,
-    cupoActual: group.cupoActual,
-    horario: group.horario || undefined,
-    aula: group.aula || undefined,
-    edificio: group.edificio || undefined,
-    modalidad: group.modalidad || undefined,
-    estatus: group.estatus || undefined,
-    nivelIngles: group.nivelIngles ?? undefined,
-    costo: group.costo != null ? Number(group.costo) : undefined,
-    fechaInscripcionInicio: group.fechaInscripcionInicio?.toISOString(),
-    fechaInscripcionFin: group.fechaInscripcionFin?.toISOString(),
-    esCursoIngles: group.esCursoIngles ?? false,
-    subject: {
-      id: group.subjects.id,
-      clave: group.subjects.clave,
-      nombre: group.subjects.nombre,
-      creditos: group.subjects.creditos,
-    },
-    teacher: {
-      id: group.teachers.id,
-      nombre: group.teachers.nombre,
-      apellidoPaterno: group.teachers.apellidoPaterno,
-      apellidoMaterno: group.teachers.apellidoMaterno,
-      departamento: group.teachers.departamento,
-    },
-  };
+  const hasAccess = await canUserAccessGroup(group, userId, userRole);
+  if (!hasAccess) {
+    return null;
+  }
+
+  return mapGroupToResponseDto(group, userRole !== 'TEACHER');
 };
 
 /**
