@@ -19,7 +19,7 @@ El script `npm run create:user` crea un usuario con credenciales por defecto:
 
 #### JWT Secret
 
-Genera un secret seguro y único:
+Genera un secret seguro y único (**mínimo 32 caracteres**; el servidor rechaza arranque con secret más corto):
 
 ```bash
 # Opción 1: OpenSSL
@@ -33,6 +33,18 @@ Actualiza `backend/.env`:
 ```env
 JWT_SECRET=tu_secret_generado_aqui
 ```
+
+### 8. Headers y RBAC (2026-07)
+
+- **Helmet** activo en el backend: CSP compatible con el SPA (`/public`), Google Fonts y `crossOriginEmbedderPolicy: false`.
+- **`GET /api/groups/:id`**: acceso por rol (ADMIN / TEACHER propio / STUDENT inscrito); grupos eliminados → 404 para no-admin; **`costo` oculto a TEACHER** en listado y detalle.
+- **`GET /api/enrollments/:id`**: sin permiso → **403** (`ForbiddenError`), no 500.
+- **Errores en producción**: mensajes internos de fallos 500 no se exponen al cliente; 4xx y errores de autenticación/autorización sí llevan mensaje seguro.
+- **Frontend**: caché en memoria (`requestCache`) se limpia en logout y al recibir **401**.
+
+### 9. Dependencias
+
+- Mantener `react-router-dom` ≥ 7.15.1 (CVEs de open redirect / XSS en componentes de ruta).
 
 ### 2. Variables de Entorno
 
@@ -53,7 +65,7 @@ git check-ignore backend/.env frontend/.env
 #### Checklist de Seguridad para Producción
 
 - [ ] Cambiar todas las credenciales por defecto
-- [ ] Generar JWT_SECRET único y seguro
+- [ ] Generar JWT_SECRET único y seguro (**≥ 32 caracteres**)
 - [ ] Configurar HTTPS (no HTTP)
 - [ ] Usar variables de entorno para todas las configuraciones sensibles
 - [ ] Configurar CORS correctamente para tu dominio

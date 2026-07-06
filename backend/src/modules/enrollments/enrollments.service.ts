@@ -15,6 +15,7 @@ import {
   ENGLISH_VIA_ACTIVITIES_MESSAGE,
   LEGACY_ENGLISH_ENROLLMENT_FILTER,
 } from './enrollment-legacy.constants';
+import { ForbiddenError } from '../../middleware/errorHandler';
 
 /**
  * Helper function to map Prisma enrollment to response DTO
@@ -459,7 +460,7 @@ export const getEnrollmentById = async (
       });
 
       if (!student || activity.studentId !== student.id) {
-        throw new Error('You can only view your own enrollments');
+        throw new ForbiddenError('You can only view your own enrollments');
       }
     } else if (userRole === 'TEACHER' && userId) {
       const teacher = await prisma.teachers.findUnique({
@@ -467,7 +468,7 @@ export const getEnrollmentById = async (
       });
 
       if (!teacher || group.teacherId !== teacher.id) {
-        throw new Error('You can only view enrollments for your own groups');
+        throw new ForbiddenError('You can only view enrollments for your own groups');
       }
     }
 
@@ -588,7 +589,7 @@ export const getEnrollmentById = async (
     });
 
     if (!student || enrollment.studentId !== student.id) {
-      throw new Error('You can only view your own enrollments');
+      throw new ForbiddenError('You can only view your own enrollments');
     }
   } else if (userRole === 'TEACHER' && userId) {
     const teacher = await prisma.teachers.findUnique({
@@ -596,7 +597,7 @@ export const getEnrollmentById = async (
     });
 
     if (!teacher || enrollment.groups.teacherId !== teacher.id) {
-      throw new Error('You can only view enrollments for your own groups');
+      throw new ForbiddenError('You can only view enrollments for your own groups');
     }
   }
 
@@ -648,7 +649,7 @@ export const getEnrollmentsByGroup = async (
     });
 
     if (!teacher || group.teacherId !== teacher.id) {
-      throw new Error('You can only view enrollments for your own groups');
+      throw new ForbiddenError('You can only view enrollments for your own groups');
     }
   }
 
@@ -1166,12 +1167,12 @@ export const updateEnrollment = async (
 
     // Check if this enrollment belongs to a group taught by this teacher
     if (existingEnrollment.groups.teacherId !== teacher.id) {
-      throw new Error('You can only update grades for your own groups');
+      throw new ForbiddenError('You can only update grades for your own groups');
     }
 
     // TEACHER can only update calificacion
     if (data.studentId !== undefined || data.groupId !== undefined) {
-      throw new Error('Teachers can only update calificacion');
+      throw new ForbiddenError('Teachers can only update calificacion');
     }
 
     // Validate calificacion if provided

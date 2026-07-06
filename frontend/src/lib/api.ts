@@ -80,8 +80,9 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Handle 401 Unauthorized - redirect to login
+    // Handle 401 Unauthorized - redirect to login and clear client cache
     if (error.response?.status === 401 && !originalRequest._retry) {
+      invalidateCached();
       // Clear any auth state
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
@@ -167,7 +168,11 @@ export const authApi = {
    * Clears HTTP-only cookie
    */
   logout: async (): Promise<void> => {
-    await api.post('/auth/logout');
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      invalidateCached();
+    }
   },
 
   /**
