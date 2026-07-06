@@ -3,6 +3,15 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const MIN_JWT_SECRET_LENGTH = 32;
+
+/** Validación explícita para tests y arranque. */
+export function validateJwtSecret(secret: string): void {
+  if (secret.length < MIN_JWT_SECRET_LENGTH) {
+    throw new Error(`JWT_SECRET must be at least ${MIN_JWT_SECRET_LENGTH} characters`);
+  }
+}
+
 // Validate required environment variables
 const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'PORT', 'FRONTEND_URL'];
 
@@ -11,6 +20,8 @@ for (const envVar of requiredEnvVars) {
     throw new Error(`Missing required environment variable: ${envVar}`);
   }
 }
+
+validateJwtSecret(process.env.JWT_SECRET!);
 
 export const config = {
   database: {
