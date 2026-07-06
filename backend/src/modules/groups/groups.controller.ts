@@ -54,11 +54,19 @@ export const getAllGroups = asyncHandler(async (req: Request, res: Response) => 
 /**
  * GET /api/groups/:id
  * Get a single group by ID
+ * Role-based access (mismo criterio que el listado); TEACHER no recibe costo.
  */
 export const getGroupById = asyncHandler(async (req: Request, res: Response) => {
   const id = String(req.params.id);
+  const userId = req.user?.userId;
+  const userRole = req.user?.role;
 
-  const group = await groupsService.getGroupById(id);
+  if (!userId || !userRole) {
+    res.status(401).json({ error: 'Not authenticated' });
+    return;
+  }
+
+  const group = await groupsService.getGroupById(id, userId, userRole);
 
   if (!group) {
     res.status(404).json({ error: 'Group not found' });
