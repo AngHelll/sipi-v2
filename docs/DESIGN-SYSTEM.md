@@ -105,7 +105,7 @@ Fuente móvil: `Labels.kt` / `DomainLabels` (iOS). Web: mapeos en vistas de ingl
 | **W0 — Fundación** | `designSystem.ts`, `englishAlerts.ts`, `components/ui/*` en MD3, token `rounded-card` | ✓ 2026-07-07 |
 | **W1 — Rol alumno** | Dashboard + 3 páginas inglés en `ds.*` | ✓ 2026-07-07 |
 | **W2 — Rol maestro** | Vista única grupo en semántica DS | ✓ 2026-07-07 |
-| **W3 — Admin** | Migrar `pages/admin/*` de `gray-*` → `ds.admin.*` (lote por módulo) | En curso — lote **SIPI Inglés** completo ✓ 2026-07-07 (cursos, exámenes, períodos, pagos, resultado); pendiente SIS genérico |
+| **W3 — Admin** | Migrar `pages/admin/*` de `gray-*` → `ds.admin.*` (lote por módulo) | ✓ 2026-07-07 — inglés, SIS listas/detalle, formularios (Student, Enrollment, Group, Teacher, Subject, ExamPeriod) |
 | **W4 — Rediseño** | Layout/navegación/densidad global cuando producto lo pida | Futuro |
 
 **Auditoría:** `cd frontend && npm run audit:ds` — lista archivos con clases legacy.

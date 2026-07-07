@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { subjectsApi, exportApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { ConfirmDialog, Loader, SubjectCard } from '../../components/ui';
+import { ConfirmDialog, Loader, SubjectCard, Icon } from '../../components/ui';
+import { ds } from '../../lib/designSystem';
 import type { Subject, SubjectsListResponse } from '../../types';
 
 export const SubjectsListPage = () => {
@@ -157,39 +158,35 @@ export const SubjectsListPage = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className={ds.admin.pageShellCompact}>
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Lista de Materias</h1>
+          <h1 className={ds.admin.pageTitle}>Lista de Materias</h1>
           <div className="flex items-center gap-3">
             <button
               onClick={handleExport}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              className={`${ds.btn.secondary} flex items-center gap-2`}
               title="Exportar a Excel"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              <Icon name="export" size={20} />
               Exportar Excel
             </button>
             <button
               onClick={handleNewSubject}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              className={`${ds.btn.primary} flex items-center gap-2`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
+              <Icon name="plus" size={20} />
               Nueva Materia
             </button>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className={ds.admin.filterPanel}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Search */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Buscar
               </label>
               <input
@@ -197,13 +194,13 @@ export const SubjectsListPage = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por nombre o clave..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               />
             </div>
             
             {/* Tipo filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Tipo
               </label>
               <select
@@ -212,7 +209,7 @@ export const SubjectsListPage = () => {
                   setTipoFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 <option value="OBLIGATORIA">OBLIGATORIA</option>
@@ -224,7 +221,7 @@ export const SubjectsListPage = () => {
             
             {/* Estatus filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Estatus
               </label>
               <select
@@ -233,7 +230,7 @@ export const SubjectsListPage = () => {
                   setEstatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 <option value="ACTIVA">ACTIVA</option>
@@ -245,7 +242,7 @@ export const SubjectsListPage = () => {
             
             {/* Nivel filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Nivel
               </label>
               <select
@@ -254,7 +251,7 @@ export const SubjectsListPage = () => {
                   setNivelFilter(e.target.value === '' ? '' : parseInt(e.target.value, 10));
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((nivel) => (
@@ -273,7 +270,7 @@ export const SubjectsListPage = () => {
             <div className="mt-4">
               <button
                 onClick={handleClearFilters}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className={ds.admin.clearFiltersLink}
               >
                 Limpiar filtros
               </button>
@@ -283,7 +280,7 @@ export const SubjectsListPage = () => {
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className={ds.admin.errorBox}>
             {error}
           </div>
         )}
@@ -297,9 +294,9 @@ export const SubjectsListPage = () => {
 
         {/* Subjects table */}
         {!loading && !error && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className={ds.admin.tableWrap}>
             {subjects.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
+              <div className={`text-center py-12 ${ds.semantic.mutedText}`}>
                 {hasActiveFilters ? 'No se encontraron materias con los filtros aplicados' : 'No hay materias registradas'}
               </div>
             ) : (
@@ -324,10 +321,10 @@ export const SubjectsListPage = () => {
 
                 {/* Pagination */}
                 {pagination && pagination.totalPages > 1 && (
-                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                  <div className={ds.admin.paginationFooter}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-700">
+                        <span className={ds.admin.paginationText}>
                           Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, pagination.total)} de {pagination.total} materias
                         </span>
                         <select
@@ -336,7 +333,7 @@ export const SubjectsListPage = () => {
                             setPageSize(parseInt(e.target.value, 10));
                             setCurrentPage(1);
                           }}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           <option value={10}>10 por página</option>
                           <option value={20}>20 por página</option>
@@ -348,31 +345,31 @@ export const SubjectsListPage = () => {
                         <button
                           onClick={() => setCurrentPage(1)}
                           disabled={currentPage === 1}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           Primera
                         </button>
                         <button
                           onClick={() => setCurrentPage(currentPage - 1)}
                           disabled={currentPage === 1}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           Anterior
                         </button>
-                        <span className="px-3 py-1 text-sm text-gray-700">
+                        <span className={`${ds.admin.paginationText} px-3 py-1`}>
                           Página {currentPage} de {pagination.totalPages}
                         </span>
                         <button
                           onClick={() => setCurrentPage(currentPage + 1)}
                           disabled={currentPage === pagination.totalPages}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           Siguiente
                         </button>
                         <button
                           onClick={() => setCurrentPage(pagination.totalPages)}
                           disabled={currentPage === pagination.totalPages}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           Última
                         </button>

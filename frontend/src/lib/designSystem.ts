@@ -143,6 +143,15 @@ export const ds = {
     sectionDivider: 'mt-4 pt-4 border-t border-outline-variant',
     checkbox: 'w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary-container',
     checkboxLabel: 'text-sm text-on-surface',
+    formSectionTitle: 'text-xl font-semibold font-headline text-on-surface mb-4 border-b border-outline-variant pb-2',
+    formSectionTitleSpaced: 'text-xl font-semibold font-headline text-on-surface mb-4 border-b border-outline-variant pb-2 mt-6',
+    formPanelInfo: 'rounded-lg border p-3 bg-primary-fixed/50 border-primary-fixed-dim',
+    formPanelInfoLg: 'md:col-span-2 rounded-lg border p-4 bg-primary-fixed/50 border-primary-fixed-dim',
+    formPanelWarning: 'rounded-lg p-4 bg-secondary-fixed/40 border border-secondary-fixed-dim',
+    formPanelWarningLg: 'md:col-span-2 rounded-lg p-4 bg-secondary-fixed/40 border border-secondary-fixed-dim',
+    formPanelError: 'rounded-lg p-3 bg-error-container border border-error/30',
+    formPanelErrorLg: 'md:col-span-2 rounded-lg p-3 bg-error-container border border-error/30',
+    formActions: 'flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end mt-6',
   },
 } as const;
 

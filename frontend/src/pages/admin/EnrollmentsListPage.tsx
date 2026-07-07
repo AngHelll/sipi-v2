@@ -5,6 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { enrollmentsApi, studentsApi, groupsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { ConfirmDialog, Badge, Icon, SkeletonTable, EmptyState, GradeDisplay, PartialGradesDisplay, AttendanceDisplay } from '../../components/ui';
+import { ds } from '../../lib/designSystem';
 import type { Enrollment, EnrollmentsListResponse, Student, Group } from '../../types';
 
 export const EnrollmentsListPage = () => {
@@ -201,12 +202,12 @@ export const EnrollmentsListPage = () => {
 
   const getSortIcon = (field: string) => {
     if (sortBy !== field) {
-      return <Icon name="filter" size={16} className="text-gray-400" />;
+      return <Icon name="filter" size={16} className={ds.admin.sortIconIdle} />;
     }
     return sortOrder === 'asc' ? (
-      <Icon name="chevron-up" size={16} className="text-blue-600" />
+      <Icon name="chevron-up" size={16} className={ds.admin.sortIconActive} />
     ) : (
-      <Icon name="chevron-down" size={16} className="text-blue-600" />
+      <Icon name="chevron-down" size={16} className={ds.admin.sortIconActive} />
     );
   };
 
@@ -214,14 +215,14 @@ export const EnrollmentsListPage = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className={ds.admin.pageShellCompact}>
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Lista de Inscripciones</h1>
+          <h1 className={ds.admin.pageTitle}>Lista de Inscripciones</h1>
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/admin/enrollments/new')}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg"
+              className={`${ds.btn.primary} flex items-center gap-2 shadow-soft hover:shadow-medium`}
             >
               <Icon name="plus" size={20} />
               Nueva Inscripción
@@ -230,11 +231,11 @@ export const EnrollmentsListPage = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+        <div className={ds.admin.filterPanel}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {/* Search */}
             <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Buscar
               </label>
               <input
@@ -242,13 +243,13 @@ export const EnrollmentsListPage = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por estudiante o materia..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               />
             </div>
 
             {/* Estudiante filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Estudiante
               </label>
               <select
@@ -257,7 +258,7 @@ export const EnrollmentsListPage = () => {
                   setStudentIdFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
                 disabled={loadingOptions}
               >
                 <option value="">Todos</option>
@@ -271,7 +272,7 @@ export const EnrollmentsListPage = () => {
 
             {/* Grupo filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Grupo
               </label>
               <select
@@ -280,7 +281,7 @@ export const EnrollmentsListPage = () => {
                   setGroupIdFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
                 disabled={loadingOptions}
               >
                 <option value="">Todos</option>
@@ -294,7 +295,7 @@ export const EnrollmentsListPage = () => {
 
             {/* Estatus filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Estatus
               </label>
               <select
@@ -303,7 +304,7 @@ export const EnrollmentsListPage = () => {
                   setEstatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 <option value="INSCRITO">INSCRITO</option>
@@ -317,7 +318,7 @@ export const EnrollmentsListPage = () => {
 
             {/* Tipo de Inscripción filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Tipo de Inscripción
               </label>
               <select
@@ -326,7 +327,7 @@ export const EnrollmentsListPage = () => {
                   setTipoInscripcionFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 <option value="NORMAL">NORMAL</option>
@@ -338,7 +339,7 @@ export const EnrollmentsListPage = () => {
 
             {/* Aprobado filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Aprobado
               </label>
               <select
@@ -347,7 +348,7 @@ export const EnrollmentsListPage = () => {
                   setAprobadoFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 <option value="true">Aprobado</option>
@@ -357,26 +358,26 @@ export const EnrollmentsListPage = () => {
           </div>
 
           {/* Column visibility toggle */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className={ds.admin.sectionDivider}>
+            <label className={`${ds.admin.filterLabel} mb-2`}>
               Columnas visibles:
             </label>
             <div className="flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
+              <label className={`flex items-center gap-2 ${ds.admin.checkboxLabel}`}>
                 <input
                   type="checkbox"
                   checked={showCalificacionesParciales}
                   onChange={(e) => setShowCalificacionesParciales(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className={ds.admin.checkbox}
                 />
                 Calificaciones Parciales
               </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
+              <label className={`flex items-center gap-2 ${ds.admin.checkboxLabel}`}>
                 <input
                   type="checkbox"
                   checked={showAsistencia}
                   onChange={(e) => setShowAsistencia(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className={ds.admin.checkbox}
                 />
                 Asistencia
               </label>
@@ -388,7 +389,7 @@ export const EnrollmentsListPage = () => {
             <div className="mt-4">
               <button
                 onClick={handleClearFilters}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className={ds.admin.clearFiltersLink}
               >
                 Limpiar filtros
               </button>
@@ -398,7 +399,7 @@ export const EnrollmentsListPage = () => {
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className={ds.admin.errorBox}>
             {error}
           </div>
         )}
@@ -408,7 +409,7 @@ export const EnrollmentsListPage = () => {
 
         {/* Enrollments table */}
         {!loading && !error && (
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+          <div className={ds.admin.tableWrap}>
             {enrollments.length === 0 ? (
               <EmptyState
                 icon="enrollments"
@@ -418,7 +419,7 @@ export const EnrollmentsListPage = () => {
                   !hasActiveFilters && (
                     <button
                       onClick={() => navigate('/admin/enrollments/new')}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                      className={`${ds.btn.primary} flex items-center gap-2`}
                     >
                       <Icon name="plus" size={16} />
                       Nueva Inscripción
@@ -429,31 +430,31 @@ export const EnrollmentsListPage = () => {
             ) : (
               <>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className={ds.admin.table}>
+                    <thead className={ds.admin.thead}>
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className={ds.admin.th}>
                           Estudiante
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className={ds.admin.th}>
                           Materia
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className={ds.admin.th}>
                           Grupo
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className={ds.admin.th}>
                           Estatus
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className={ds.admin.th}>
                           Tipo
                         </th>
                         {showCalificacionesParciales && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className={ds.admin.th}>
                             Calificaciones
                           </th>
                         )}
                         <th 
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                          className={ds.admin.thSortable}
                           onClick={() => handleSort('calificacionFinal')}
                         >
                           <div className="flex items-center gap-2">
@@ -462,59 +463,59 @@ export const EnrollmentsListPage = () => {
                           </div>
                         </th>
                         {showAsistencia && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className={ds.admin.th}>
                             Asistencia
                           </th>
                         )}
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className={ds.admin.th}>
                           Aprobado
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className={`${ds.admin.th} text-right`}>
                           Acciones
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className={ds.admin.tbody}>
                       {enrollments.map((enrollment) => (
                         <tr
                           key={enrollment.id}
-                          className="hover:bg-gray-50 transition-colors"
+                          className={ds.admin.trHover}
                         >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                          <td className={ds.admin.td}>
+                            <div className={ds.admin.tdStrong}>
                               {enrollment.student?.matricula || '-'}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className={ds.admin.tdMeta}>
                               {enrollment.student 
                                 ? `${enrollment.student.nombre} ${enrollment.student.apellidoPaterno}`
                                 : '-'}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                          <td className={ds.admin.td}>
+                            <div className={ds.admin.tdStrong}>
                               {enrollment.group?.subject?.nombre || '-'}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className={ds.admin.tdMeta}>
                               {enrollment.group?.subject?.clave || '-'}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          <td className={ds.admin.tdMuted}>
                             {enrollment.group?.nombre || '-'} ({enrollment.group?.periodo || '-'})
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className={ds.admin.td}>
                             {enrollment.estatus ? (
                               <Badge variant={getStatusBadgeVariant(enrollment.estatus)}>
                                 {enrollment.estatus.replace('_', ' ')}
                               </Badge>
                             ) : (
-                              <span className="text-sm text-gray-400">-</span>
+                              <span className={ds.semantic.mutedText}>-</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          <td className={ds.admin.tdMuted}>
                             {enrollment.tipoInscripcion ? enrollment.tipoInscripcion.replace('_', ' ') : '-'}
                           </td>
                           {showCalificacionesParciales && (
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className={ds.admin.td}>
                               <PartialGradesDisplay
                                 p1={enrollment.calificacionParcial1}
                                 p2={enrollment.calificacionParcial2}
@@ -524,14 +525,14 @@ export const EnrollmentsListPage = () => {
                               />
                             </td>
                           )}
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className={ds.admin.td}>
                             <GradeDisplay
                               grade={enrollment.calificacionFinal || enrollment.calificacion}
                               size="sm"
                             />
                           </td>
                           {showAsistencia && (
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className={ds.admin.td}>
                               <AttendanceDisplay
                                 asistencias={enrollment.asistencias || 0}
                                 faltas={enrollment.faltas || 0}
@@ -543,27 +544,27 @@ export const EnrollmentsListPage = () => {
                               />
                             </td>
                           )}
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className={ds.admin.td}>
                             {enrollment.aprobado !== undefined && enrollment.aprobado !== null ? (
                               <Badge variant={enrollment.aprobado ? 'success' : 'danger'}>
                                 {enrollment.aprobado ? 'Aprobado' : 'Reprobado'}
                               </Badge>
                             ) : (
-                              <span className="text-sm text-gray-400">-</span>
+                              <span className={ds.semantic.mutedText}>-</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <td className={`${ds.admin.td} text-right font-medium`}>
                             <div className="flex items-center justify-end gap-3">
                               <button
                                 onClick={() => handleEdit(enrollment.id)}
-                                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                                className={`p-2 ${ds.admin.actionLink} hover:bg-surface-container rounded-lg transition-colors`}
                                 title="Editar inscripción"
                               >
                                 <Icon name="edit" size={18} />
                               </button>
                               <button
                                 onClick={() => handleDeleteClick(enrollment)}
-                                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                                className={`p-2 ${ds.admin.actionLinkDanger} hover:bg-error-container rounded-lg transition-colors`}
                                 title="Eliminar inscripción"
                               >
                                 <Icon name="delete" size={18} />
@@ -578,10 +579,10 @@ export const EnrollmentsListPage = () => {
 
                 {/* Pagination */}
                 {pagination && pagination.totalPages > 1 && (
-                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                  <div className={ds.admin.paginationFooter}>
                     <div className="flex items-center justify-between flex-wrap gap-4">
                       <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-700">
+                        <span className={ds.admin.paginationText}>
                           Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, pagination.total)} de {pagination.total} inscripciones
                         </span>
                         <select
@@ -590,7 +591,7 @@ export const EnrollmentsListPage = () => {
                             setPageSize(parseInt(e.target.value, 10));
                             setCurrentPage(1);
                           }}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           <option value={10}>10 por página</option>
                           <option value={20}>20 por página</option>
@@ -602,31 +603,31 @@ export const EnrollmentsListPage = () => {
                         <button
                           onClick={() => setCurrentPage(1)}
                           disabled={currentPage === 1}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           Primera
                         </button>
                         <button
                           onClick={() => setCurrentPage(currentPage - 1)}
                           disabled={currentPage === 1}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           Anterior
                         </button>
-                        <span className="px-3 py-1 text-sm text-gray-700">
+                        <span className={`${ds.admin.paginationText} px-3 py-1`}>
                           Página {currentPage} de {pagination.totalPages}
                         </span>
                         <button
                           onClick={() => setCurrentPage(currentPage + 1)}
                           disabled={currentPage === pagination.totalPages}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           Siguiente
                         </button>
                         <button
                           onClick={() => setCurrentPage(pagination.totalPages)}
                           disabled={currentPage === pagination.totalPages}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           Última
                         </button>

@@ -5,6 +5,8 @@ import { Layout } from '../../components/layout/Layout';
 import { enrollmentsApi, studentsApi, groupsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { FormField, StatusSelector, PageLoader, ButtonLoader, ConfirmDialog } from '../../components/ui';
+import { Icon } from '../../components/ui/Icon';
+import { ds } from '../../lib/designSystem';
 import type { Student, Group } from '../../types';
 
 export const EnrollmentFormPage = () => {
@@ -651,17 +653,17 @@ export const EnrollmentFormPage = () => {
 
   return (
     <Layout>
-      <div className="p-6">
+      <div className={ds.admin.pageShellCompact}>
         <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">
-              {isEdit ? 'Editar Inscripción' : 'Nueva Inscripción'}
-            </h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className={ds.admin.pageTitle}>
+            {isEdit ? 'Editar Inscripción' : 'Nueva Inscripción'}
+          </h1>
+          <p className={ds.admin.pageSubtitle}>
             Inscribe un estudiante en un grupo
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-2xl border border-gray-200">
+        <form onSubmit={handleSubmit} className={`${ds.admin.detailSection} max-w-2xl mb-0`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               label="Estudiante"
@@ -684,8 +686,8 @@ export const EnrollmentFormPage = () => {
               ]}
             />
             {selectedStudent && (selectedStudent.estatus === 'INACTIVO' || selectedStudent.estatus === 'EGRESADO') && (
-              <div className="md:col-span-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-sm text-yellow-800">
+              <div className={`md:col-span-2 ${ds.admin.formPanelWarning}`}>
+                <p className={`text-sm ${ds.admin.noteBannerText}`}>
                   ⚠️ Advertencia: El estudiante seleccionado tiene estatus {selectedStudent.estatus}. 
                   No se recomienda inscribirlo en nuevos grupos.
                 </p>
@@ -717,15 +719,15 @@ export const EnrollmentFormPage = () => {
               ]}
             />
             {selectedGroup && (selectedGroup.estatus === 'CERRADO' || selectedGroup.estatus === 'CANCELADO' || selectedGroup.estatus === 'FINALIZADO') && (
-              <div className="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-800">
+              <div className={`md:col-span-2 ${ds.admin.formPanelError}`}>
+                <p className={`text-sm ${ds.semantic.errorText}`}>
                   ⚠️ Error: El grupo seleccionado tiene estatus {selectedGroup.estatus} y no está disponible para inscripciones.
                 </p>
               </div>
             )}
             {isEdit && originalEnrollment && formData.estatus !== 'INSCRITO' && formData.estatus !== 'EN_CURSO' && (
-              <div className="md:col-span-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-sm text-yellow-800">
+              <div className={`md:col-span-2 ${ds.admin.formPanelWarning}`}>
+                <p className={`text-sm ${ds.admin.noteBannerText}`}>
                   ℹ️ No se puede cambiar de grupo cuando el estatus es {formData.estatus}. 
                   Solo se permite cambiar de grupo si el estatus es INSCRITO o EN_CURSO.
                 </p>
@@ -734,35 +736,33 @@ export const EnrollmentFormPage = () => {
 
             {/* Capacity information */}
             {selectedGroup && (
-              <div className={`p-4 rounded-lg border-2 ${
+              <div className={`md:col-span-2 p-4 rounded-lg border-2 ${
                 selectedGroup.cupoActual !== undefined && selectedGroup.cupoMaximo !== undefined && selectedGroup.cupoActual >= selectedGroup.cupoMaximo
-                  ? 'bg-red-50 border-red-200'
-                  : 'bg-blue-50 border-blue-200'
+                  ? `${ds.admin.formPanelError} border-error/40`
+                  : `${ds.admin.formPanelInfo} border-primary-fixed-dim`
               }`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className={ds.admin.checkboxLabel}>
                       Cupos disponibles
                     </p>
                     <p className={`text-lg font-bold mt-1 ${
                       selectedGroup.cupoActual !== undefined && selectedGroup.cupoMaximo !== undefined && selectedGroup.cupoActual >= selectedGroup.cupoMaximo
-                        ? 'text-red-600'
-                        : 'text-blue-600'
+                        ? ds.semantic.errorText
+                        : 'text-primary'
                     }`}>
                       {(selectedGroup.cupoMaximo || 30) - (selectedGroup.cupoActual || 0)} / {selectedGroup.cupoMaximo || 30}
                     </p>
                   </div>
                   {selectedGroup.cupoActual !== undefined && selectedGroup.cupoMaximo !== undefined && selectedGroup.cupoActual >= selectedGroup.cupoMaximo && (
                     <div className="flex items-center gap-2">
-                      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      <span className="text-red-600 font-semibold">Grupo lleno</span>
+                      <Icon name="warning" size={24} className={ds.semantic.errorIcon} />
+                      <span className={`${ds.semantic.errorText} font-semibold`}>Grupo lleno</span>
                     </div>
                   )}
                 </div>
                 {selectedGroup.modalidad && (
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className={`${ds.page.meta} mt-2`}>
                     Modalidad: {selectedGroup.modalidad}
                     {selectedGroup.horario && ` | Horario: ${selectedGroup.horario}`}
                   </p>
@@ -787,7 +787,7 @@ export const EnrollmentFormPage = () => {
             />
 
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+              <h2 className={ds.admin.formSectionTitleSpaced}>
                 Información de Inscripción
               </h2>
             </div>
@@ -824,15 +824,15 @@ export const EnrollmentFormPage = () => {
               disabled={getFieldDisabled('estatus')}
             />
             {(formData.estatus === 'APROBADO' || formData.estatus === 'REPROBADO' || formData.estatus === 'BAJA' || formData.estatus === 'CANCELADO') && (
-              <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-800">
+              <div className={`md:col-span-2 ${ds.admin.formPanelInfo}`}>
+                <p className={`text-sm ${ds.page.body}`}>
                   ℹ️ Estado {formData.estatus}: Solo se pueden editar observaciones{formData.estatus === 'BAJA' ? ' y fecha de baja' : ''}.
                 </p>
               </div>
             )}
 
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+              <h2 className={ds.admin.formSectionTitleSpaced}>
                 Calificaciones Parciales
               </h2>
             </div>
@@ -916,7 +916,7 @@ export const EnrollmentFormPage = () => {
 
                 {/* Attendance Section */}
                 <div className="md:col-span-2">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                  <h2 className={ds.admin.formSectionTitleSpaced}>
                     Asistencia
                   </h2>
                 </div>
@@ -975,7 +975,7 @@ export const EnrollmentFormPage = () => {
 
                 {/* Evaluation Section */}
                 <div className="md:col-span-2">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                  <h2 className={ds.admin.formSectionTitleSpaced}>
                     Evaluación
                   </h2>
                 </div>
@@ -988,9 +988,9 @@ export const EnrollmentFormPage = () => {
                       checked={formData.aprobado}
                       onChange={handleChange}
                       disabled={getFieldDisabled('aprobado')}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`${ds.admin.checkbox} disabled:opacity-50 disabled:cursor-not-allowed`}
                     />
-                    <span className="text-sm font-medium text-gray-700">¿Aprobado?</span>
+                    <span className={ds.admin.checkboxLabel}>¿Aprobado?</span>
                   </label>
                 </div>
 
@@ -1023,18 +1023,18 @@ export const EnrollmentFormPage = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-end gap-4">
+          <div className={ds.admin.formActions}>
             <button
               type="button"
               onClick={() => navigate('/admin/groups')}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className={ds.btn.secondary}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || hasErrors}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${ds.btn.primary} flex items-center gap-2`}
             >
               {loading ? (
                 <>

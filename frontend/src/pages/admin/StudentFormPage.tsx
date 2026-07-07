@@ -5,6 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { studentsApi, specialCoursesApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { FormField, StatusSelector, CareerSelector, PageLoader, ButtonLoader } from '../../components/ui';
+import { ds } from '../../lib/designSystem';
 
 export const StudentFormPage = () => {
   const navigate = useNavigate();
@@ -488,25 +489,25 @@ export const StudentFormPage = () => {
 
   return (
     <Layout>
-      <div className="p-4 sm:p-6">
+      <div className={ds.admin.pageShellCompact}>
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          <h1 className={`${ds.admin.pageTitle} text-2xl sm:text-3xl`}>
             {isEdit ? 'Editar Estudiante' : 'Nuevo Estudiante'}
           </h1>
-          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
+          <p className={`${ds.admin.pageSubtitle} mt-1 sm:mt-2 text-sm sm:text-base`}>
             {isEdit
               ? 'Modifica la información del estudiante'
               : 'Completa el formulario para crear un nuevo estudiante'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-4 sm:p-6 border border-gray-200">
+        <form onSubmit={handleSubmit} className={`${ds.admin.detailSection} mb-0 p-4 sm:p-6`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* User fields (only for new students) */}
             {!isEdit && (
               <>
                 <div className="md:col-span-2">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+                  <h2 className={ds.admin.formSectionTitle}>
                     Información de Usuario
                   </h2>
                 </div>
@@ -552,7 +553,7 @@ export const StudentFormPage = () => {
 
             {/* Student fields */}
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+              <h2 className={ds.admin.formSectionTitle}>
                 Información del Estudiante
               </h2>
             </div>
@@ -669,7 +670,7 @@ export const StudentFormPage = () => {
 
             {/* Contact Information Section */}
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+              <h2 className={ds.admin.formSectionTitleSpaced}>
                 Información de Contacto
               </h2>
             </div>
@@ -711,7 +712,7 @@ export const StudentFormPage = () => {
 
             {/* Personal Information Section */}
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+              <h2 className={ds.admin.formSectionTitleSpaced}>
                 Información Personal
               </h2>
             </div>
@@ -829,7 +830,7 @@ export const StudentFormPage = () => {
 
             {/* Academic Information Section */}
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+              <h2 className={ds.admin.formSectionTitleSpaced}>
                 Información Académica
               </h2>
             </div>
@@ -923,29 +924,29 @@ export const StudentFormPage = () => {
             {isEdit && (
               <>
                 <div className="md:col-span-2">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+                  <h2 className={ds.admin.formSectionTitleSpaced}>
                     Información de Inglés
                   </h2>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className={`${ds.page.body} mb-4`}>
                     Esta información se actualiza automáticamente cuando se procesan exámenes de diagnóstico y cursos de inglés.
                   </p>
                 </div>
 
-                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className={`${ds.admin.formPanelInfoLg} grid grid-cols-1 md:grid-cols-2 gap-4`}>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className={ds.admin.filterLabel}>
                       Nivel Actual de Inglés
                     </label>
-                    <p className="text-sm text-gray-900">
+                    <p className={ds.admin.kvValue}>
                       {student?.nivelInglesActual ? `Nivel ${student.nivelInglesActual}` : 'No asignado'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className={ds.admin.filterLabel}>
                       Porcentaje de Inglés
                     </label>
-                    <p className="text-sm text-gray-900">
+                    <p className={ds.admin.kvValue}>
                       {student?.porcentajeIngles !== undefined && student.porcentajeIngles !== null
                         ? `${student.porcentajeIngles.toFixed(1)}%`
                         : 'No disponible'}
@@ -953,10 +954,10 @@ export const StudentFormPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className={ds.admin.filterLabel}>
                       Promedio de Inglés
                     </label>
-                    <p className="text-sm text-gray-900">
+                    <p className={ds.admin.kvValue}>
                       {student?.promedioIngles !== undefined && student.promedioIngles !== null
                         ? `${student.promedioIngles.toFixed(2)}`
                         : 'No disponible'}
@@ -964,26 +965,26 @@ export const StudentFormPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className={ds.admin.filterLabel}>
                       Cumple Requisito de Inglés
                     </label>
-                    <p className="text-sm text-gray-900">
+                    <p className={ds.admin.kvValue}>
                       {student?.cumpleRequisitoIngles ? (
-                        <span className="text-green-600 font-semibold">✓ Sí</span>
+                        <span className={ds.semantic.successTextStrong}>✓ Sí</span>
                       ) : (
-                        <span className="text-red-600 font-semibold">✗ No</span>
+                        <span className={`${ds.semantic.errorText} font-semibold`}>✗ No</span>
                       )}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`${ds.page.meta} mt-1`}>
                       Requiere: Promedio ≥70% y niveles 1-6 completados
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className={ds.admin.filterLabel}>
                       Fecha de Examen de Diagnóstico
                     </label>
-                    <p className="text-sm text-gray-900">
+                    <p className={ds.admin.kvValue}>
                       {student?.fechaExamenDiagnostico
                         ? new Date(student.fechaExamenDiagnostico).toLocaleDateString('es-MX')
                         : 'No realizado'}
@@ -991,10 +992,10 @@ export const StudentFormPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className={ds.admin.filterLabel}>
                       Nivel Certificado
                     </label>
-                    <p className="text-sm text-gray-900">
+                    <p className={ds.admin.kvValue}>
                       {student?.nivelInglesCertificado
                         ? `Nivel ${student.nivelInglesCertificado}`
                         : 'No certificado'}
@@ -1004,11 +1005,11 @@ export const StudentFormPage = () => {
 
                 {/* Registrar nivel inicial (equivalencia) — solo si el alumno aún no tiene nivel */}
                 {student && !student.nivelInglesActual && (
-                  <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-amber-900 mb-1">
+                  <div className={`md:col-span-2 ${ds.admin.formPanelWarning}`}>
+                    <h3 className={`text-sm font-semibold ${ds.semantic.pendingText} mb-1`}>
                       Registrar nivel inicial (transferencia / equivalencia)
                     </h3>
-                    <p className="text-xs text-amber-800 mb-3">
+                    <p className={`text-xs ${ds.admin.noteBannerText} mb-3`}>
                       Para alumnos que ya traen nivel de inglés acreditado de otra institución. 
                       Crea el historial canónico (niveles previos aprobados) y posiciona al alumno en el nivel indicado. 
                       Solo se puede registrar una vez; después el nivel se mueve por diagnóstico y cursos.
@@ -1067,7 +1068,7 @@ export const StudentFormPage = () => {
                             }
                           }}
                           disabled={savingInitialLevel}
-                          className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                          className={`${ds.btn.primary} flex items-center gap-2`}
                         >
                           {savingInitialLevel ? <ButtonLoader /> : null}
                           Registrar
@@ -1076,7 +1077,7 @@ export const StudentFormPage = () => {
                           type="button"
                           onClick={() => setShowInitialLevel(false)}
                           disabled={savingInitialLevel}
-                          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                          className={ds.btn.secondary}
                         >
                           Cancelar
                         </button>
@@ -1085,7 +1086,7 @@ export const StudentFormPage = () => {
                       <button
                         type="button"
                         onClick={() => setShowInitialLevel(true)}
-                        className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm"
+                        className={`${ds.btn.primary} text-sm`}
                       >
                         Registrar nivel inicial
                       </button>
@@ -1097,7 +1098,7 @@ export const StudentFormPage = () => {
 
             {/* Administrative Information Section */}
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+              <h2 className={ds.admin.formSectionTitleSpaced}>
                 Información Administrativa
               </h2>
             </div>
@@ -1112,9 +1113,9 @@ export const StudentFormPage = () => {
                     setFormData((prev) => ({ ...prev, beca: e.target.checked }));
                     setTouchedFields((prev) => ({ ...prev, beca: true }));
                   }}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className={ds.admin.checkbox}
                 />
-                <span className="text-sm font-medium text-gray-700">¿Tiene beca?</span>
+                <span className={ds.admin.checkboxLabel}>¿Tiene beca?</span>
               </label>
             </div>
 
@@ -1147,18 +1148,18 @@ export const StudentFormPage = () => {
             </div>
           </div>
 
-          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
+          <div className={ds.admin.formActions}>
             <button
               type="button"
               onClick={() => navigate('/admin/students')}
-              className="w-full sm:w-auto px-4 sm:px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm sm:text-base"
+              className={`${ds.btn.secondary} w-full sm:w-auto text-sm sm:text-base`}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || hasErrors}
-              className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              className={`${ds.btn.primary} w-full sm:w-auto text-sm sm:text-base`}
             >
               {loading ? (
                 <>

@@ -10,6 +10,7 @@ import { Loader } from '../../components/ui/Loader';
 import { StudentCard } from '../../components/ui/StudentCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import type { Student, StudentsListResponse } from '../../types';
+import { ds } from '../../lib/designSystem';
 
 export const StudentsListPage = () => {
   const navigate = useNavigate();
@@ -199,14 +200,14 @@ export const StudentsListPage = () => {
 
   return (
     <Layout>
-      <div className="space-y-4 sm:space-y-6">
+      <div className={ds.admin.pageShellCompact}>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Lista de Estudiantes</h1>
+          <h1 className={`${ds.admin.pageTitle} text-2xl sm:text-3xl`}>Lista de Estudiantes</h1>
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handleExport}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 sm:px-4 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg text-sm sm:text-base"
+              className={`${ds.btn.secondary} flex items-center gap-2 text-sm sm:text-base shadow-soft hover:shadow-medium`}
               title="Exportar a Excel"
             >
               <Icon name="export" size={18} className="sm:w-5 sm:h-5" />
@@ -215,7 +216,7 @@ export const StudentsListPage = () => {
             </button>
             <button
               onClick={handleNewStudent}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 sm:px-4 rounded-lg transition-colors flex items-center gap-2 shadow-md hover:shadow-lg text-sm sm:text-base"
+              className={`${ds.btn.primary} flex items-center gap-2 text-sm sm:text-base shadow-soft hover:shadow-medium`}
             >
               <Icon name="plus" size={18} className="sm:w-5 sm:h-5" />
               <span className="hidden sm:inline">Nuevo Estudiante</span>
@@ -225,11 +226,11 @@ export const StudentsListPage = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4">
+        <div className={`${ds.admin.filterPanel} p-3 sm:p-4`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
             {/* Search */}
             <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Buscar
               </label>
               <input
@@ -237,13 +238,13 @@ export const StudentsListPage = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por nombre..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               />
             </div>
 
             {/* Carrera filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Carrera
               </label>
               <select
@@ -252,7 +253,7 @@ export const StudentsListPage = () => {
                   setCarreraFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todas</option>
                 {uniqueCarreras.map((carrera) => (
@@ -265,7 +266,7 @@ export const StudentsListPage = () => {
 
             {/* Semestre filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Semestre
               </label>
               <select
@@ -274,7 +275,7 @@ export const StudentsListPage = () => {
                   setSemestreFilter(e.target.value === '' ? '' : parseInt(e.target.value, 10));
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((sem) => (
@@ -287,7 +288,7 @@ export const StudentsListPage = () => {
 
             {/* Estatus filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Estatus
               </label>
               <select
@@ -296,7 +297,7 @@ export const StudentsListPage = () => {
                   setEstatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 <option value="ACTIVO">ACTIVO</option>
@@ -310,7 +311,7 @@ export const StudentsListPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Tipo de Ingreso filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Tipo de Ingreso
               </label>
               <select
@@ -319,7 +320,7 @@ export const StudentsListPage = () => {
                   setTipoIngresoFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 <option value="NUEVO_INGRESO">NUEVO INGRESO</option>
@@ -331,7 +332,7 @@ export const StudentsListPage = () => {
 
             {/* Beca filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Beca
               </label>
               <select
@@ -340,7 +341,7 @@ export const StudentsListPage = () => {
                   setBecaFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 <option value="true">Con Beca</option>
@@ -350,7 +351,7 @@ export const StudentsListPage = () => {
 
             {/* Promedio Min filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Promedio Mínimo
               </label>
               <input
@@ -364,13 +365,13 @@ export const StudentsListPage = () => {
                 min={0}
                 max={100}
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               />
             </div>
 
             {/* Promedio Max filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={ds.admin.filterLabel}>
                 Promedio Máximo
               </label>
               <input
@@ -384,7 +385,7 @@ export const StudentsListPage = () => {
                 min={0}
                 max={100}
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               />
             </div>
           </div>
@@ -394,7 +395,7 @@ export const StudentsListPage = () => {
             <div className="mt-4">
               <button
                 onClick={handleClearFilters}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className={ds.admin.clearFiltersLink}
               >
                 Limpiar filtros
               </button>
@@ -404,7 +405,7 @@ export const StudentsListPage = () => {
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className={ds.admin.errorBox}>
             {error}
           </div>
         )}
@@ -418,7 +419,7 @@ export const StudentsListPage = () => {
 
         {/* Students table */}
         {!loading && !error && (
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+          <div className={ds.admin.tableWrap}>
             {students.length === 0 ? (
               <EmptyState
                 icon="students"
@@ -428,7 +429,7 @@ export const StudentsListPage = () => {
                   !hasActiveFilters && (
                     <button
                       onClick={handleNewStudent}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                      className={`${ds.btn.primary} flex items-center gap-2`}
                     >
                       <Icon name="plus" size={16} />
                       Nuevo Estudiante
@@ -438,7 +439,7 @@ export const StudentsListPage = () => {
               />
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 bg-gray-50/50">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 bg-surface-container-low/50">
                   {students.map((student) => (
                     <StudentCard
                       key={student.id}
@@ -458,10 +459,10 @@ export const StudentsListPage = () => {
 
                 {/* Pagination */}
                 {pagination && pagination.totalPages > 1 && (
-                  <div className="bg-gray-50 px-4 sm:px-6 py-4 border-t border-gray-200">
+                  <div className={ds.admin.paginationFooter}>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-                        <span className="text-sm text-gray-700 text-center sm:text-left">
+                        <span className={`${ds.admin.paginationText} text-center sm:text-left`}>
                           Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, pagination.total)} de {pagination.total} estudiantes
                         </span>
                         <select
@@ -470,7 +471,7 @@ export const StudentsListPage = () => {
                             setPageSize(parseInt(e.target.value, 10));
                             setCurrentPage(1);
                           }}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className={`${ds.admin.paginationBtn} text-sm`}
                         >
                           <option value={10}>10 por página</option>
                           <option value={20}>20 por página</option>
@@ -482,7 +483,7 @@ export const StudentsListPage = () => {
                         <button
                           onClick={() => setCurrentPage(1)}
                           disabled={currentPage === 1}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className={ds.admin.paginationBtn}
                         >
                           <span className="hidden sm:inline">Primera</span>
                           <span className="sm:hidden">«</span>
@@ -490,18 +491,18 @@ export const StudentsListPage = () => {
                         <button
                           onClick={() => setCurrentPage(currentPage - 1)}
                           disabled={currentPage === 1}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className={ds.admin.paginationBtn}
                         >
                           <span className="hidden sm:inline">Anterior</span>
                           <span className="sm:hidden">‹</span>
                         </button>
-                        <span className="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">
+                        <span className={`${ds.admin.paginationText} px-3 py-2 whitespace-nowrap`}>
                           Página {currentPage} de {pagination.totalPages}
                         </span>
                         <button
                           onClick={() => setCurrentPage(currentPage + 1)}
                           disabled={currentPage === pagination.totalPages}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className={ds.admin.paginationBtn}
                         >
                           <span className="hidden sm:inline">Siguiente</span>
                           <span className="sm:hidden">›</span>
@@ -509,7 +510,7 @@ export const StudentsListPage = () => {
                         <button
                           onClick={() => setCurrentPage(pagination.totalPages)}
                           disabled={currentPage === pagination.totalPages}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                          className={ds.admin.paginationBtn}
                         >
                           <span className="hidden sm:inline">Última</span>
                           <span className="sm:hidden">»</span>

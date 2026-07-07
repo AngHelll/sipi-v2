@@ -5,6 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { subjectsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { FormField, PageLoader, ButtonLoader } from '../../components/ui';
+import { ds } from '../../lib/designSystem';
 
 export const SubjectFormPage = () => {
   const navigate = useNavigate();
@@ -242,19 +243,19 @@ export const SubjectFormPage = () => {
 
   return (
     <Layout>
-      <div className="p-6">
+      <div className={ds.admin.pageShellCompact}>
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className={ds.admin.pageTitle}>
             {isEdit ? 'Editar Materia' : 'Nueva Materia'}
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className={ds.admin.pageSubtitle}>
             {isEdit
               ? 'Modifica la información de la materia'
               : 'Completa el formulario para crear una nueva materia'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-2xl border border-gray-200">
+        <form onSubmit={handleSubmit} className={`${ds.admin.detailSection} max-w-2xl mb-0`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               label="Clave"
@@ -301,7 +302,7 @@ export const SubjectFormPage = () => {
 
             {/* Subject Information Section */}
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+              <h2 className={ds.admin.formSectionTitleSpaced}>
                 Información Adicional
               </h2>
             </div>
@@ -355,7 +356,7 @@ export const SubjectFormPage = () => {
 
             {/* Hours Section */}
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-6">
+              <h2 className={ds.admin.formSectionTitleSpaced}>
                 Horas de Clase
               </h2>
             </div>
@@ -408,18 +409,18 @@ export const SubjectFormPage = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-end gap-4">
+          <div className={ds.admin.formActions}>
             <button
               type="button"
               onClick={() => navigate('/admin/subjects')}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className={ds.btn.secondary}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || hasErrors}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${ds.btn.primary} flex items-center gap-2`}
             >
               {loading ? (
                 <>

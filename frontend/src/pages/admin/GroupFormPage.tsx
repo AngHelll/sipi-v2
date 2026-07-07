@@ -5,6 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { groupsApi, subjectsApi, teachersApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { FormField, ModalitySelector, StatusSelector, PeriodSelector, PageLoader, ButtonLoader } from '../../components/ui';
+import { ds } from '../../lib/designSystem';
 import type { Subject, Teacher } from '../../types';
 
 export const GroupFormPage = () => {
@@ -362,12 +363,12 @@ export const GroupFormPage = () => {
 
   return (
     <Layout>
-      <div className="p-6">
+      <div className={ds.admin.pageShellCompact}>
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className={ds.admin.pageTitle}>
             {isEdit ? 'Editar Grupo' : isDuplicate ? 'Duplicar Grupo' : 'Nuevo Grupo'}
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className={ds.admin.pageSubtitle}>
             {isEdit
               ? 'Modifica la información del grupo'
               : isDuplicate
@@ -376,7 +377,7 @@ export const GroupFormPage = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-2xl border border-gray-200">
+        <form onSubmit={handleSubmit} className={`${ds.admin.detailSection} max-w-2xl mb-0`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* La materia solo se captura en grupos regulares; en cursos de inglés
                 el sistema usa la materia canónica del nivel (Inglés Nivel N). */}
@@ -558,8 +559,8 @@ export const GroupFormPage = () => {
           </div>
 
           {/* English Course Fields */}
-          <div className="mt-8 border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Configuración para Curso de Inglés</h3>
+          <div className={`mt-8 ${ds.admin.sectionDivider}`}>
+            <h3 className={`${ds.page.sectionTitle} mb-4`}>Configuración para Curso de Inglés</h3>
             <div className="mb-4">
               <label className="flex items-center gap-2">
                 <input
@@ -567,14 +568,14 @@ export const GroupFormPage = () => {
                   name="esCursoIngles"
                   checked={formData.esCursoIngles}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className={ds.admin.checkbox}
                 />
-                <span className="text-sm font-medium text-gray-700">Marcar como curso de inglés</span>
+                <span className={ds.admin.checkboxLabel}>Marcar como curso de inglés</span>
               </label>
             </div>
 
             {formData.esCursoIngles && (
-              <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
+              <p className={`${ds.page.body} mb-4 flex items-center gap-1.5`}>
                 <span className="material-symbols-outlined text-[18px]">info</span>
                 La materia se asigna automáticamente según el nivel (Inglés Nivel N); no necesitas crearla ni seleccionarla.
               </p>
@@ -631,18 +632,18 @@ export const GroupFormPage = () => {
             )}
           </div>
 
-          <div className="mt-8 flex justify-end gap-4">
+          <div className={ds.admin.formActions}>
             <button
               type="button"
               onClick={() => navigate('/admin/groups')}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className={ds.btn.secondary}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || hasErrors}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className={`${ds.btn.primary} flex items-center justify-center`}
             >
               {loading ? (
                 <>
