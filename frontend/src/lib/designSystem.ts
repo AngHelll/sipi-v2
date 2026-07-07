@@ -7,9 +7,17 @@
 import type { BadgeVariant } from '../components/ui/Badge';
 
 /** Radio de card canónico (12px — paridad móvil `Shape.cardCornerRadius`). */
-export const CARD_RADIUS = 'rounded-[12px]';
+export const CARD_RADIUS = 'rounded-xl';
 
 export const ds = {
+  layout: {
+    sidebarWidth: 'w-64',
+    mainOffset: 'lg:ml-64',
+    contentShell: 'max-w-container-max mx-auto px-margin-mobile lg:px-margin-desktop',
+    contentPaddingBottom: 'pb-28 lg:pb-12',
+    stackSection: 'space-y-stack-lg',
+  },
+
   page: {
     shell: 'p-6 space-y-6',
     title: 'text-3xl font-bold font-headline text-on-surface',
@@ -22,10 +30,10 @@ export const ds = {
   },
 
   card: {
-    base: `bg-surface-container-lowest ${CARD_RADIUS} shadow-soft border border-outline-variant/20`,
-    interactive: 'cursor-pointer hover:shadow-medium transition-shadow',
-    hero: `bg-gradient-to-br from-primary to-primary-container ${CARD_RADIUS} shadow-soft p-6 text-on-primary`,
-    accentBorderL: `${CARD_RADIUS} shadow-soft p-6 border-l-4 border-secondary bg-surface-container-lowest border border-outline-variant/20`,
+    base: `bg-surface-container-lowest ${CARD_RADIUS} shadow-metric border border-outline-variant/20`,
+    interactive: 'cursor-pointer hover:shadow-medium hover:-translate-y-0.5 transition-all duration-200',
+    hero: `bg-primary-container ${CARD_RADIUS} shadow-metric p-6 sm:p-8 text-on-primary`,
+    accentBorderL: `${CARD_RADIUS} shadow-metric p-6 border-l-4 border-tertiary-fixed-dim bg-surface-container-lowest border border-outline-variant/20`,
   },
 
   btn: {
@@ -69,6 +77,19 @@ export const ds = {
     espera: { dot: 'bg-outline', text: 'text-on-surface-variant' },
     info: { dot: 'bg-primary-container', text: 'text-on-surface' },
   } as const,
+
+  urgencyBadge: {
+    overdue: 'bg-error-container text-on-error-container',
+    soon: 'bg-tertiary-fixed/50 text-on-tertiary-fixed-variant',
+    normal: 'bg-surface-container text-on-surface-variant',
+  },
+
+  chart: {
+    tooltip: 'bg-surface-container-lowest p-4 rounded-xl shadow-strong border border-outline-variant',
+    tooltipTitle: 'font-bold text-on-surface mb-3 text-base',
+    tooltipRow: 'text-sm text-on-surface-variant',
+    tooltipValue: 'font-bold text-on-surface',
+  },
 
   row: {
     item: 'flex items-start justify-between gap-4 py-4 border-b border-outline-variant last:border-b-0',

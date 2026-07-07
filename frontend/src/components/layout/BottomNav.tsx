@@ -13,42 +13,43 @@ export const BottomNav = ({ onMenuClick }: BottomNavProps) => {
 
   if (!user) return null;
 
-  // Calculate items to show: up to 3 main items + 1 menu button
-  const mainItems = navItems.filter((item) => 
-    item.roles.includes(user.role as UserRole) && item.isMain
-  ).slice(0, 3); // Max 3 items on bottom nav (+1 menu)
+  const mainItems = navItems
+    .filter((item) => item.roles.includes(user.role as UserRole) && item.isMain)
+    .slice(0, 3);
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-safe pt-2 h-16 bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-md border-t-[0.5px] border-primary/5 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+    <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-safe pt-2 h-16 bg-surface-container-lowest/90 backdrop-blur-md border-t border-outline-variant/30 shadow-[0_-4px_20px_rgba(4,47,44,0.05)]">
       {mainItems.map((item) => {
-        const isActive = location.pathname.startsWith(item.path);
+        const isActive =
+          item.path === '/dashboard'
+            ? location.pathname === '/dashboard'
+            : location.pathname.startsWith(item.path);
         return (
           <Link
             key={item.path}
             to={item.path}
-            className={`flex flex-col items-center justify-center transition-colors active:scale-90 duration-150 ${
-              isActive 
-                ? 'text-secondary font-bold' 
-                : 'text-primary-container/50 hover:text-secondary'
+            className={`flex flex-col items-center justify-center transition-colors active:scale-95 duration-150 ${
+              isActive ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+            <span
+              className="material-symbols-outlined text-[22px]"
+              style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
+            >
               {item.icon}
             </span>
-            <span className="font-label text-[11px] font-medium tracking-wide uppercase mt-1">
-              {item.label}
-            </span>
+            <span className="text-label-sm mt-0.5 truncate max-w-[72px]">{item.label}</span>
           </Link>
         );
       })}
 
-      {/* Static Menu Option */}
       <button
+        type="button"
         onClick={onMenuClick}
-        className="flex flex-col items-center justify-center text-primary-container/50 hover:text-secondary transition-colors active:scale-90 duration-150"
+        className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-95 duration-150"
       >
-        <span className="material-symbols-outlined">menu</span>
-        <span className="font-label text-[11px] font-medium tracking-wide uppercase mt-1">Menú</span>
+        <span className="material-symbols-outlined text-[22px]">menu</span>
+        <span className="text-label-sm mt-0.5">Menú</span>
       </button>
     </nav>
   );

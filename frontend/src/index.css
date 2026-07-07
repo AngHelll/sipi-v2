@@ -13,8 +13,19 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #1a1c1c;
-  background-color: #f9f9f9;
+  color: #191c1e;
+  background-color: #f7f9fb;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(113, 152, 147, 0.2);
+  border-radius: 10px;
 }
 
 code {

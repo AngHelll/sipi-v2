@@ -1,4 +1,4 @@
-// Student dashboard — identidad + resumen de inglés (contrato §4.2 web)
+// Student dashboard — identidad + resumen de inglés (contrato §4.2 web, layout W4b Stitch)
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
@@ -13,6 +13,8 @@ import {
   buildEnglishAlerts,
   englishStatusChipLabel,
   pendingEnglishActionCount,
+  type EnglishAlert,
+  type EnglishAlertTone,
 } from '../../lib/englishAlerts';
 
 interface StudentDashboardStats {
@@ -20,6 +22,9 @@ interface StudentDashboardStats {
 }
 
 type EnglishStatusData = Awaited<ReturnType<typeof examsApi.getStudentEnglishStatusV2>>;
+
+const GAUGE_R = 88;
+const GAUGE_C = 2 * Math.PI * GAUGE_R;
 
 export const DashboardStudent = () => {
   const navigate = useNavigate();
@@ -67,244 +72,422 @@ export const DashboardStudent = () => {
     );
   }
 
-  if (!stats) {
+  if (!stats?.student) {
     return (
       <Layout>
-        <div className={ds.page.shell}>
-          <div className={`${ds.banner.error} px-4 py-3 rounded-lg`}>
-            Error al cargar los datos del dashboard
-          </div>
+        <div className={`${ds.banner.error} px-4 py-3 rounded-lg`}>
+          Error al cargar los datos del dashboard
         </div>
       </Layout>
     );
   }
 
+  const student = stats.student;
+  const fullName = [student.nombre, student.apellidoPaterno, student.apellidoMaterno]
+    .filter(Boolean)
+    .join(' ');
+
   const englishAlerts = english ? buildEnglishAlerts(english) : [];
   const englishActionCount = pendingEnglishActionCount(englishAlerts);
   const englishRequirementMet = english?.cumpleRequisitoIngles ?? false;
+  const progressPct = english?.progress.percentage ?? 0;
+  const gaugeOffset = GAUGE_C * (1 - progressPct / 100);
 
   return (
     <Layout>
-      <div className={ds.page.shell}>
-        <div>
-          <h1 className={ds.page.title}>Panel del Estudiante</h1>
-          <p className={ds.page.subtitle}>
-            {stats.student && (
-              <>
-                Bienvenido,{' '}
-                <span className="font-semibold text-on-surface">
-                  {stats.student.nombre} {stats.student.apellidoPaterno}
+      <div className="space-y-stack-lg">
+        {/* Hero — perfil del alumno (mismos campos, presentación Stitch) */}
+        <section className="rounded-3xl overflow-hidden bg-primary-container text-on-primary shadow-metric">
+          <div className="p-8 sm:p-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+            <div className="space-y-4 min-w-0">
+              <div className="inline-block px-4 py-1 bg-tertiary-fixed text-tertiary rounded-full text-label-sm uppercase tracking-wider">
+                Estatus: {student.estatus}
+              </div>
+              <h1 className="font-display-lg text-headline-lg-mobile sm:text-display-lg text-on-primary leading-tight">
+                {fullName}
+              </h1>
+              <div className="flex flex-wrap gap-x-8 gap-y-2 text-on-primary/80 text-body-md">
+                <span className="inline-flex items-center gap-2">
+                  <span className="material-symbols-outlined text-base">badge</span>
+                  {student.matricula}
                 </span>
-              </>
-            )}
-          </p>
-        </div>
-
-        {stats.student && (
-          <div className={ds.card.hero}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <HeroField label="Matrícula" value={stats.student.matricula} />
-              <HeroField label="Carrera" value={stats.student.carrera} />
-              <HeroField label="Semestre" value={String(stats.student.semestre)} />
-              <HeroField label="Estatus" value={stats.student.estatus} />
-            </div>
-            {(stats.student.promedioGeneral !== undefined ||
-              stats.student.promedioIngles !== undefined) && (
-              <div className="mt-6 pt-6 border-t border-on-primary/20">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {stats.student.promedioGeneral !== undefined && (
-                    <HeroField
-                      label="Promedio General"
-                      value={stats.student.promedioGeneral.toFixed(2)}
-                      large
-                    />
-                  )}
-                  {stats.student.promedioIngles !== undefined && (
-                    <HeroField
-                      label="Promedio Inglés"
-                      value={stats.student.promedioIngles.toFixed(2)}
-                      large
-                    />
-                  )}
-                </div>
+                <span className="inline-flex items-center gap-2">
+                  <span className="material-symbols-outlined text-base">school</span>
+                  {student.carrera}
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <span className="material-symbols-outlined text-base">calendar_month</span>
+                  Semestre {student.semestre}
+                </span>
               </div>
-            )}
+            </div>
           </div>
-        )}
+        </section>
 
-        {english && (
-          <div className={ds.card.accentBorderL}>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className={`${ds.semantic.pendingBg} p-2 rounded-lg`}>
-                  <Icon name="book" size={22} className={ds.semantic.pendingIcon} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-lg font-semibold text-on-surface">Mi Inglés</h2>
-                    <Badge variant={englishActionCount > 0 ? 'warning' : 'success'}>
-                      {englishStatusChipLabel(englishActionCount)}
-                    </Badge>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+          {/* Columna principal */}
+          <div className="lg:col-span-8 space-y-gutter">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+              {student.promedioGeneral !== undefined && (
+                <MetricCard
+                  label="Promedio general"
+                  value={student.promedioGeneral.toFixed(2)}
+                  hint={
+                    student.promedioIngles !== undefined
+                      ? `Inglés: ${student.promedioIngles.toFixed(2)}`
+                      : undefined
+                  }
+                  icon="star"
+                  accent="gold"
+                  progress={Math.min(100, (student.promedioGeneral / 10) * 100)}
+                />
+              )}
+              {english && (
+                <MetricCard
+                  label="Progreso de inglés"
+                  value={`${english.progress.completed}/${english.progress.totalLevels}`}
+                  hint={`${Math.round(progressPct)}% del requisito`}
+                  icon="award"
+                  accent="primary"
+                  progress={progressPct}
+                  onClick={() => navigate('/student/english/status')}
+                />
+              )}
+            </div>
+
+            {english ? (
+              <div className={`${ds.card.base} p-6 sm:p-8`}>
+                <div className="flex items-center justify-between gap-4 mb-8 flex-wrap">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="font-headline text-headline-md text-on-surface">Mi inglés</h2>
+                      <Badge variant={englishActionCount > 0 ? 'warning' : 'success'}>
+                        {englishStatusChipLabel(englishActionCount)}
+                      </Badge>
+                    </div>
+                    <p className={`${ds.page.meta} mt-1`}>
+                      Requisito de graduación:{' '}
+                      <span
+                        className={
+                          englishRequirementMet ? ds.semantic.successText : ds.semantic.errorText
+                        }
+                      >
+                        {englishRequirementMet ? 'Cumplido' : 'Pendiente'}
+                      </span>
+                    </p>
                   </div>
-                  <p className={`${ds.page.meta} mt-0.5`}>
-                    Requisito de graduación:{' '}
-                    <span className={englishRequirementMet ? ds.semantic.successText : ds.semantic.errorText}>
-                      {englishRequirementMet ? 'Cumplido' : 'Pendiente'}
-                    </span>
-                    {english.nivelInglesActual
-                      ? ` · Nivel actual ${english.nivelInglesActual}`
-                      : ' · Sin nivel definido'}
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/student/english/status')}
+                    className={`${ds.btn.link} inline-flex items-center gap-1`}
+                  >
+                    Ver detalle
+                    <span className="material-symbols-outlined text-base">arrow_forward</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-col md:flex-row items-center gap-10">
+                  <EnglishLevelGauge
+                    level={english.nivelInglesActual}
+                    progressPct={progressPct}
+                    offset={gaugeOffset}
+                  />
+
+                  <div className="flex-1 w-full space-y-3">
+                    <p className="font-label-md text-primary">Avance del requisito</p>
+                    <RequirementRow
+                      done={englishRequirementMet}
+                      label="Requisito de graduación (70%)"
+                      meta={englishRequirementMet ? 'Cumplido' : 'Pendiente'}
+                    />
+                    <RequirementRow
+                      done={english.progress.completed >= english.progress.totalLevels}
+                      label="Niveles completados"
+                      meta={`${english.progress.completed}/${english.progress.totalLevels}`}
+                    />
+                    {english.nivelInglesActual != null && (
+                      <RequirementRow
+                        done
+                        label="Nivel actual certificado"
+                        meta={`Nivel ${english.nivelInglesActual}`}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => navigate('/student/english/status')}
-                className={`shrink-0 ${ds.btn.link}`}
-              >
-                Ver mi inglés →
-              </button>
-            </div>
-
-            {englishAlerts.length > 0 ? (
-              <ul className="mt-4 space-y-2">
-                {englishAlerts.map((alert, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span
-                      className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${ds.alertTone[alert.tone].dot}`}
-                    />
-                    <span className={ds.alertTone[alert.tone].text}>{alert.text}</span>
-                  </li>
-                ))}
-              </ul>
             ) : (
-              <p className={`mt-4 ${ds.page.body}`}>
-                No tienes acciones de inglés pendientes por ahora.
-              </p>
+              <div className={`${ds.card.base} p-6 sm:p-8`}>
+                <p className={ds.page.body}>
+                  No se pudo cargar el resumen de inglés. Intenta recargar la página o visita{' '}
+                  <button
+                    type="button"
+                    className={ds.btn.link}
+                    onClick={() => navigate('/student/english/status')}
+                  >
+                    Mi inglés
+                  </button>
+                  .
+                </p>
+              </div>
             )}
           </div>
-        )}
 
-        {english && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard
-              title="Nivel de inglés actual"
-              value={english.nivelInglesActual ? `Nivel ${english.nivelInglesActual}` : 'No definido'}
-              icon="book"
-              valueClass={ds.semantic.successIcon}
-              onClick={() => navigate('/student/english/status')}
-            />
-            <StatCard
-              title="Niveles completados"
-              value={`${english.progress.completed}/${english.progress.totalLevels}`}
-              icon="award"
-              valueClass="text-tertiary"
-              onClick={() => navigate('/student/english/status')}
-            />
-            <StatCard
-              title="Requisito de inglés"
-              value={english.cumpleRequisitoIngles ? 'Cumplido' : 'Pendiente'}
-              icon={english.cumpleRequisitoIngles ? 'check-circle' : 'x-circle'}
-              valueClass={
-                english.cumpleRequisitoIngles ? ds.semantic.successTextStrong : ds.semantic.errorText
-              }
-              onClick={() => navigate('/student/english/status')}
-            />
+          {/* Columna lateral — alertas reales + accesos rápidos existentes */}
+          <div className="lg:col-span-4 space-y-gutter">
+            {english && (
+              <div className={`${ds.card.base} p-6 sm:p-8`}>
+                <div className="flex items-center gap-2 mb-6">
+                  <span className="material-symbols-outlined text-primary">priority_high</span>
+                  <h2 className="font-headline text-headline-md text-on-surface">Pendientes</h2>
+                </div>
+                {englishAlerts.length > 0 ? (
+                  <div className="space-y-4">
+                    {englishAlerts.map((alert, i) => (
+                      <UpcomingAlertCard
+                        key={i}
+                        alert={alert}
+                        onAction={() => navigate('/student/english/status')}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className={ds.page.body}>No tienes acciones de inglés pendientes por ahora.</p>
+                )}
+              </div>
+            )}
+
+            <div className="bg-primary rounded-2xl p-6 sm:p-8 text-on-primary shadow-metric">
+              <h2 className="font-headline text-headline-md mb-6">Accesos rápidos</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <QuickActionTile
+                  label="Mi inglés"
+                  icon="book"
+                  onClick={() => navigate('/student/english/status')}
+                />
+              </div>
+            </div>
           </div>
-        )}
-
-        <div className={`${ds.card.base} p-6`}>
-          <h2 className={`${ds.page.sectionTitle} mb-4`}>Accesos Rápidos</h2>
-          <QuickAction
-            title="Mi Inglés"
-            description="Consulta tu progreso y solicita exámenes o cursos"
-            icon="book"
-            onClick={() => navigate('/student/english/status')}
-          />
         </div>
       </div>
     </Layout>
   );
 };
 
-const HeroField = ({
+function MetricCard({
   label,
   value,
-  large,
+  hint,
+  icon,
+  accent,
+  progress,
+  onClick,
 }: {
   label: string;
   value: string;
-  large?: boolean;
-}) => (
-  <div>
-    <p className="text-sm opacity-90">{label}</p>
-    <p className={large ? 'text-2xl font-bold' : 'text-xl font-bold'}>{value}</p>
-  </div>
-);
-
-const StatCard = ({
-  title,
-  value,
-  icon,
-  valueClass,
-  onClick,
-}: {
-  title: string;
-  value: number | string;
+  hint?: string;
   icon: IconName;
-  valueClass: string;
+  accent: 'gold' | 'primary';
+  progress: number;
   onClick?: () => void;
-}) => (
-  <div
-    onClick={onClick}
-    className={`${ds.card.base} p-6 ${onClick ? ds.card.interactive : ''}`}
-    role={onClick ? 'button' : undefined}
-    tabIndex={onClick ? 0 : undefined}
-    onKeyDown={
-      onClick
-        ? (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onClick();
+}) {
+  const borderClass = accent === 'gold' ? 'border-tertiary-fixed-dim' : 'border-primary';
+  const barClass = accent === 'gold' ? 'bg-tertiary-fixed-dim' : 'bg-primary-container';
+
+  return (
+    <div
+      className={`${ds.card.base} p-6 sm:p-8 border-l-4 ${borderClass} ${onClick ? ds.card.interactive : ''}`}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
             }
-          }
-        : undefined
-    }
-  >
-    <div className="flex items-center justify-between">
-      <div>
-        <p className={ds.page.label}>{title}</p>
-        <p className={`text-3xl font-bold mt-2 ${valueClass}`}>{value}</p>
+          : undefined
+      }
+    >
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <p className="text-outline font-label-md">{label}</p>
+          <p className="font-headline text-headline-lg text-primary mt-1">{value}</p>
+        </div>
+        <div className="w-12 h-12 bg-primary-fixed/30 rounded-full flex items-center justify-center shrink-0">
+          <Icon name={icon} size={24} className="text-primary" />
+        </div>
       </div>
-      <div className={`${valueClass} bg-current/10 p-3 rounded-full`}>
-        <Icon name={icon} size={28} className={valueClass} />
+      <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${barClass}`}
+          style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+        />
+      </div>
+      {hint && <p className="mt-4 text-xs text-outline italic">{hint}</p>}
+    </div>
+  );
+}
+
+function EnglishLevelGauge({
+  level,
+  progressPct,
+  offset,
+}: {
+  level: number | null;
+  progressPct: number;
+  offset: number;
+}) {
+  return (
+    <div className="relative w-44 h-44 flex items-center justify-center shrink-0">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 192 192" aria-hidden>
+        <circle
+          className="text-surface-container"
+          cx="96"
+          cy="96"
+          fill="transparent"
+          r={GAUGE_R}
+          stroke="currentColor"
+          strokeWidth="12"
+        />
+        <circle
+          className="text-tertiary-fixed-dim transition-all duration-700"
+          cx="96"
+          cy="96"
+          fill="transparent"
+          r={GAUGE_R}
+          stroke="currentColor"
+          strokeDasharray={GAUGE_C}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          strokeWidth="12"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
+        <span className="font-display-lg text-headline-lg text-primary leading-none">
+          {level != null ? `Nivel ${level}` : '—'}
+        </span>
+        <span className="text-label-sm uppercase font-bold tracking-widest text-outline mt-1">
+          {progressPct >= 100 ? 'Completo' : 'En curso'}
+        </span>
       </div>
     </div>
-  </div>
-);
+  );
+}
 
-const QuickAction = ({
-  title,
-  description,
+function RequirementRow({
+  done,
+  label,
+  meta,
+}: {
+  done: boolean;
+  label: string;
+  meta: string;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between p-3 rounded-lg ${
+        done ? 'bg-surface-container-low' : 'border border-outline-variant'
+      }`}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <span
+          className={`material-symbols-outlined shrink-0 ${done ? 'text-primary' : 'text-outline'}`}
+          style={{ fontVariationSettings: done ? "'FILL' 1" : "'FILL' 0" }}
+        >
+          {done ? 'check_circle' : 'radio_button_unchecked'}
+        </span>
+        <span className={`text-sm font-medium ${done ? 'text-on-surface' : 'text-outline'}`}>
+          {label}
+        </span>
+      </div>
+      <span className="text-xs font-bold text-on-surface-variant shrink-0 ml-2">{meta}</span>
+    </div>
+  );
+}
+
+function alertToneStyles(tone: EnglishAlertTone): {
+  panel: string;
+  tag: string;
+  tagText: string;
+} {
+  switch (tone) {
+    case 'rechazo':
+      return {
+        panel: 'bg-error-container/30 border border-error/10',
+        tag: 'text-on-error-container',
+        tagText: 'Urgente',
+      };
+    case 'pago':
+      return {
+        panel: 'bg-tertiary-fixed/10 border border-tertiary/10',
+        tag: 'text-on-tertiary-container',
+        tagText: 'Pago',
+      };
+    case 'revision':
+      return {
+        panel: 'bg-secondary-fixed/30 border border-secondary-fixed-dim',
+        tag: 'text-on-secondary-fixed-variant',
+        tagText: 'Revisión',
+      };
+    case 'espera':
+      return {
+        panel: 'bg-surface-container-low border border-outline-variant',
+        tag: 'text-on-surface-variant',
+        tagText: 'Lista de espera',
+      };
+    default:
+      return {
+        panel: 'bg-primary-fixed/40 border border-primary-fixed-dim',
+        tag: 'text-on-primary-fixed-variant',
+        tagText: 'Información',
+      };
+  }
+}
+
+function UpcomingAlertCard({ alert, onAction }: { alert: EnglishAlert; onAction: () => void }) {
+  const styles = alertToneStyles(alert.tone);
+  return (
+    <div className={`p-4 rounded-xl hover:shadow-medium transition-all ${styles.panel}`}>
+      <div className="flex justify-between items-start mb-2 gap-2">
+        <span className={`text-xs font-bold uppercase ${styles.tag}`}>{styles.tagText}</span>
+      </div>
+      <p className="text-sm text-on-surface-variant mb-4">{alert.text}</p>
+      {alert.actionable && (
+        <button
+          type="button"
+          onClick={onAction}
+          className={`w-full py-2 rounded-lg text-xs font-bold transition-all ${
+            alert.tone === 'rechazo'
+              ? 'bg-primary-container text-on-primary hover:brightness-110'
+              : 'border border-primary text-primary hover:bg-primary hover:text-on-primary'
+          }`}
+        >
+          Ir a Mi inglés
+        </button>
+      )}
+    </div>
+  );
+}
+
+function QuickActionTile({
+  label,
   icon,
   onClick,
 }: {
-  title: string;
-  description: string;
+  label: string;
   icon: IconName;
   onClick: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="flex items-center gap-4 p-4 bg-surface hover:bg-surface-container rounded-[12px] transition-colors text-left border border-outline-variant/20 w-full"
-  >
-    <div className="bg-primary p-3 rounded-lg text-on-primary">
-      <Icon name={icon} size={24} />
-    </div>
-    <div>
-      <p className="font-semibold text-on-surface">{title}</p>
-      <p className={ds.page.body}>{description}</p>
-    </div>
-  </button>
-);
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="col-span-2 flex flex-col items-center justify-center p-4 rounded-xl bg-on-primary/10 hover:bg-on-primary/20 transition-all gap-2"
+    >
+      <Icon name={icon} size={28} className="text-on-primary" />
+      <span className="text-xs font-medium text-on-primary">{label}</span>
+    </button>
+  );
+}

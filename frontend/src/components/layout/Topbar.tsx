@@ -1,10 +1,11 @@
-// TopAppBar component with inline navigation, user info, and avatar
+// Top bar — sticky dentro del área principal; logo solo en móvil
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { GlobalSearch } from '../ui/GlobalSearch';
 import { AvatarDropdown } from '../ui/Avatar';
 import { UserRole } from '../../types';
 import { navItems } from '../../lib/navigation';
+import { ds } from '../../lib/designSystem';
 
 const roleLabels: Record<UserRole, string> = {
   [UserRole.STUDENT]: 'Estudiante',
@@ -22,89 +23,91 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
 
   if (!user) return null;
 
-  // Render navigation links based on user role and visibility (isMain)
-  const renderNavLinks = () => {
-    const mainItems = navItems.filter(
-      (item) => item.roles.includes(user.role as UserRole) && item.isMain
-    );
-    const hasSubItems = navItems.filter(
-      (item) => item.roles.includes(user.role as UserRole) && !item.isMain
-    ).length > 0;
+  const mainItems = navItems.filter(
+    (item) => item.roles.includes(user.role as UserRole) && item.isMain
+  );
+  const hasSubItems = navItems.some(
+    (item) => item.roles.includes(user.role as UserRole) && !item.isMain
+  );
 
-    return (
-      <nav className="hidden md:flex gap-8 items-center h-full">
+  return (
+    <header
+      className={`sticky top-0 z-30 bg-surface/80 backdrop-blur-md border-b border-outline-variant/20 ${ds.layout.contentShell} py-4 flex items-center gap-4`}
+    >
+      {/* Móvil: menú + marca */}
+      <div className="flex items-center gap-3 lg:hidden shrink-0">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors"
+          aria-label="Abrir menú"
+        >
+          <span className="material-symbols-outlined text-[24px]">menu</span>
+        </button>
+        <Link to="/dashboard" className="flex items-center gap-2 text-primary">
+          <span className="material-symbols-outlined text-2xl">account_balance</span>
+          <span className="font-headline text-headline-md font-bold tracking-tight">SIPI</span>
+        </Link>
+      </div>
+
+      {user.role === UserRole.ADMIN && (
+        <div className="hidden lg:block w-full max-w-sm shrink-0">
+          <GlobalSearch />
+        </div>
+      )}
+
+      <nav className="hidden md:flex items-center gap-6 flex-1 justify-center min-w-0">
         {mainItems.map((item) => {
-          const isActive = location.pathname.startsWith(item.path);
+          const isActive =
+            item.path === '/dashboard'
+              ? location.pathname === '/dashboard'
+              : location.pathname.startsWith(item.path);
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`font-label tracking-tight text-lg transition-all px-2 rounded-lg py-1 ${
+              className={`text-body-md transition-colors pb-0.5 border-b-2 ${
                 isActive
-                  ? 'text-primary dark:text-[#f2f2f2] font-bold'
-                  : 'text-primary-container/60 dark:text-[#f2f2f2]/60 hover:bg-surface-container-low dark:hover:bg-[#1a1a1a]'
+                  ? 'text-primary font-bold border-primary'
+                  : 'text-on-surface-variant border-transparent hover:text-primary'
               }`}
             >
               {item.label}
             </Link>
           );
         })}
-        {/* Draw a menu button if user has extra options (e.g. Admin) */}
         {hasSubItems && (
           <button
+            type="button"
             onClick={onMenuClick}
-            className="flex items-center gap-1 font-label tracking-tight text-lg text-primary-container/60 dark:text-[#f2f2f2]/60 hover:bg-surface-container-low dark:hover:bg-[#1a1a1a] transition-all px-2 rounded-lg py-1"
+            className="flex items-center gap-1 text-body-md text-on-surface-variant hover:text-primary transition-colors lg:hidden"
           >
-            Administración <span className="material-symbols-outlined text-[20px]">arrow_drop_down</span>
+            Más
+            <span className="material-symbols-outlined text-[18px]">expand_more</span>
           </button>
         )}
       </nav>
-    );
-  };
 
-  return (
-    <header className="flex justify-between items-center w-full px-6 py-4 bg-surface/80 dark:bg-[#121212]/80 backdrop-blur-xl fixed top-0 z-30 transition-colors duration-300 border-b border-outline-variant/20">
-      {/* Left section: Logo */}
-      <div className="flex items-center gap-4">
-        {/* Mobile menu trigger explicitly placed here for accessibility or if preferred, though it's inside BottomNav too */}
-        <button
-          onClick={onMenuClick}
-          className="md:hidden p-1 rounded-lg text-primary hover:bg-surface-container-low transition-colors"
-          aria-label="Abrir menú"
-        >
-          <span className="material-symbols-outlined text-[24px]">menu</span>
-        </button>
-
-        <Link to="/dashboard" className="flex items-center gap-4 text-primary dark:text-[#f2f2f2]">
-          <span className="material-symbols-outlined text-3xl">account_balance</span>
-          <h1 className="text-2xl font-black tracking-[-0.02em] font-headline">SIPI</h1>
-        </Link>
-      </div>
-
-      {/* Center/Right section: Search & Navigation */}
-      <div className="flex items-center gap-6">
-        {/* La búsqueda global expone entidades de toda la institución: solo admin. */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
         {user.role === UserRole.ADMIN && (
-          <div className="hidden lg:flex w-64 mr-4">
-            <GlobalSearch />
-          </div>
+          <button
+            type="button"
+            className="lg:hidden p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors"
+            aria-label="Buscar"
+          >
+            <span className="material-symbols-outlined">search</span>
+          </button>
         )}
-
-        {/* Dynamic Nav Links */}
-        {renderNavLinks()}
-
-        {/* User profile actions */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <AvatarDropdown name={user.username} role={roleLabels[user.role]}>
-            <button
-              onClick={logout}
-              className="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container transition-colors font-sans flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-[18px]">logout</span>
-              Cerrar Sesión
-            </button>
-          </AvatarDropdown>
-        </div>
+        <AvatarDropdown name={user.username} role={roleLabels[user.role]}>
+          <button
+            type="button"
+            onClick={logout}
+            className="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container transition-colors font-sans flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            Cerrar sesión
+          </button>
+        </AvatarDropdown>
       </div>
     </header>
   );

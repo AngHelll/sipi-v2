@@ -1,8 +1,9 @@
-// Main layout component with TopAppBar, BottomNavBar and Drawer (Sidebar)
+// Main layout — sidebar fijo desktop + drawer móvil (W4a / Stitch Academic Prestige)
 import { useState, type ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { BottomNav } from './BottomNav';
+import { ds } from '../../lib/designSystem';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,28 +13,26 @@ export const Layout = ({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen transition-colors duration-300">
-      {/* Top Navigation AppBar (Desktop & Mobile header) */}
-      <Topbar onMenuClick={() => setSidebarOpen(true)} />
+    <div className="bg-surface text-on-surface min-h-screen">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main content area */}
-      <main className="pt-24 pb-32 px-6 md:px-20 max-w-7xl mx-auto">
-        {children}
-      </main>
+      <div className={ds.layout.mainOffset}>
+        <Topbar onMenuClick={() => setSidebarOpen(true)} />
 
-      {/* Bottom Navigation Bar (Mobile only) */}
-      <BottomNav onMenuClick={() => setSidebarOpen(true)} />
+        <main className={`${ds.layout.contentShell} ${ds.layout.contentPaddingBottom} pt-stack-md animate-fade-in`}>
+          {children}
+        </main>
 
-      {/* Drawer Overlay */}
+        <BottomNav onMenuClick={() => setSidebarOpen(true)} />
+      </div>
+
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden
         />
       )}
-
-      {/* Off-canvas Sidebar / Drawer Menu for remaining items */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </div>
   );
 };

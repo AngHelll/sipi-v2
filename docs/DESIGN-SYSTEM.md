@@ -106,7 +106,7 @@ Fuente móvil: `Labels.kt` / `DomainLabels` (iOS). Web: mapeos en vistas de ingl
 | **W1 — Rol alumno** | Dashboard + 3 páginas inglés en `ds.*` | ✓ 2026-07-07 |
 | **W2 — Rol maestro** | Vista única grupo en semántica DS | ✓ 2026-07-07 |
 | **W3 — Admin** | Migrar `pages/admin/*` de `gray-*` → `ds.admin.*` (lote por módulo) | ✓ 2026-07-07 — inglés, SIS listas/detalle, formularios (Student, Enrollment, Group, Teacher, Subject, ExamPeriod) |
-| **W4 — Rediseño** | Layout/navegación/densidad global cuando producto lo pida | Futuro |
+| **W4 — Rediseño** | Layout/navegación/densidad global (Stitch Academic Prestige) | ✓ 2026-07-07 — W4a shell, W4b dashboard alumno, W4c dashboards admin/maestro + errores |
 
 **Auditoría:** `cd frontend && npm run audit:ds` — lista archivos con clases legacy.
 

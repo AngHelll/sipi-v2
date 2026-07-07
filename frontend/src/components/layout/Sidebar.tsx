@@ -1,27 +1,51 @@
-// Sidebar component morphed into an Off-Canvas Drawer for all screen sizes
+// Sidebar — fijo en desktop (Stitch W4), drawer en móvil
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
-import { navItems } from '../../lib/navigation';
+import { navItems, type NavItem } from '../../lib/navigation';
+import { ds } from '../../lib/designSystem';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+const isPathActive = (pathname: string, path: string) => {
+  if (path === '/dashboard') return pathname === '/dashboard';
+  return pathname.startsWith(path);
+};
+
+function SidebarBrand() {
+  return (
+    <div className="mb-8 px-2 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center shrink-0">
+        <span className="material-symbols-outlined text-tertiary text-2xl">account_balance</span>
+      </div>
+      <div>
+        <h1 className="font-headline text-headline-md leading-tight text-on-primary">SIPI</h1>
+        <p className="text-xs text-on-primary/70">Gestión Académica</p>
+      </div>
+    </div>
+  );
+}
+
+function SidebarNav({
+  onNavigate,
+  showClose,
+  onClose,
+}: {
+  onNavigate?: () => void;
+  showClose?: boolean;
+  onClose?: () => void;
+}) {
   const { user } = useAuth();
   const location = useLocation();
 
   if (!user) return null;
 
-  // Render all allowed items in the Drawer
   const filteredNavItems = navItems.filter((item) =>
     item.roles.includes(user.role as UserRole)
   );
-
-  // Items sin sección forman el bloque superior; el resto se agrupa por sección
-  // (en orden de primera aparición) con su encabezado.
   const topItems = filteredNavItems.filter((item) => !item.section);
   const sectionOrder: string[] = [];
   for (const item of filteredNavItems) {
@@ -30,28 +54,22 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     }
   }
 
-  const isItemActive = (path: string) => {
-    const isActive = location.pathname.startsWith(path) && path !== '/dashboard';
-    const isDashboardActive = location.pathname === '/dashboard' && path === '/dashboard';
-    return isActive || isDashboardActive;
-  };
-
-  const renderItem = (item: (typeof navItems)[number]) => {
-    const isCurrentlyActive = isItemActive(item.path);
+  const renderItem = (item: NavItem) => {
+    const active = isPathActive(location.pathname, item.path);
     return (
       <Link
         key={item.path}
         to={item.path}
-        onClick={onClose}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-sans font-medium ${
-          isCurrentlyActive
-            ? 'bg-primary-container/10 text-primary font-bold'
-            : 'text-on-surface-variant hover:bg-surface-container hover:text-primary'
+        onClick={onNavigate}
+        className={`flex items-center gap-3 px-4 py-3 font-label-md transition-all duration-200 ${
+          active
+            ? 'bg-on-primary/10 text-on-primary border-l-4 border-tertiary-fixed rounded-r-lg'
+            : 'text-on-primary/70 hover:bg-on-primary/5 hover:text-on-primary rounded-lg'
         }`}
       >
         <span
           className="material-symbols-outlined text-[20px]"
-          style={{ fontVariationSettings: isCurrentlyActive ? "'FILL' 1" : "'FILL' 0" }}
+          style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
         >
           {item.icon}
         </span>
@@ -60,46 +78,63 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     );
   };
 
+  const renderSectionLabel = (label: string) => (
+    <div className="text-label-sm font-semibold text-on-primary/50 uppercase tracking-widest mb-2 mt-6 ml-2 first:mt-0">
+      {label}
+    </div>
+  );
+
   return (
-    <aside
-      className={`fixed inset-y-0 left-0 z-50 w-72 bg-surface text-on-surface transform transition-transform duration-300 ease-in-out shadow-strong border-r border-outline-variant/30 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}
-    >
-      <div className="flex flex-col h-full">
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between p-6 border-b border-surface-container-high bg-surface-container-low/50">
-          <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-primary text-2xl">account_balance</span>
-            <div>
-              <h2 className="text-xl font-bold font-headline tracking-tight text-primary">SIPI</h2>
-              <p className="text-xs text-on-surface-variant font-medium mt-0.5">Gestión Académica</p>
-            </div>
-          </div>
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <SidebarBrand />
+        {showClose && onClose && (
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors"
+            className="lg:hidden p-2 rounded-lg text-on-primary/70 hover:bg-on-primary/10 transition-colors shrink-0"
             aria-label="Cerrar menú"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
-        </div>
-
-        {/* Drawer Navigation Links */}
-        <nav className="mt-4 flex-1 overflow-y-auto px-4 pb-6 space-y-1">
-          <div className="text-xs font-bold text-secondary uppercase tracking-widest mb-3 mt-4 ml-2">Menú Principal</div>
-          {topItems.map(renderItem)}
-
-          {sectionOrder.map((section) => (
-            <div key={section}>
-              <div className="text-xs font-bold text-secondary uppercase tracking-widest mb-3 mt-6 ml-2">
-                {section}
-              </div>
-              {filteredNavItems.filter((item) => item.section === section).map(renderItem)}
-            </div>
-          ))}
-        </nav>
+        )}
       </div>
-    </aside>
+
+      <nav className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-1">
+        {renderSectionLabel('Menú principal')}
+        {topItems.map(renderItem)}
+        {sectionOrder.map((section) => (
+          <div key={section}>
+            {renderSectionLabel(section)}
+            {filteredNavItems.filter((item) => item.section === section).map(renderItem)}
+          </div>
+        ))}
+      </nav>
+    </>
+  );
+}
+
+export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+  const { user } = useAuth();
+  if (!user) return null;
+
+  const shellClass = `fixed inset-y-0 left-0 z-50 ${ds.layout.sidebarWidth} bg-primary text-on-primary flex flex-col py-8 px-4`;
+
+  return (
+    <>
+      {/* Desktop — sidebar fijo */}
+      <aside className={`${shellClass} hidden lg:flex`}>
+        <SidebarNav />
+      </aside>
+
+      {/* Móvil — drawer */}
+      <aside
+        className={`${shellClass} lg:hidden transform transition-transform duration-300 ease-in-out shadow-strong ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <SidebarNav showClose onClose={onClose} onNavigate={onClose} />
+      </aside>
+    </>
   );
 };

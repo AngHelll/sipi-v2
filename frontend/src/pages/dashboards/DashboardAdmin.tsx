@@ -6,6 +6,7 @@ import { studentsApi, teachersApi, subjectsApi, groupsApi, specialCoursesApi, ex
 import { getCached } from '../../lib/requestCache';
 import { useToast } from '../../context/ToastContext';
 import { PageLoader } from '../../components/ui';
+import { ds } from '../../lib/designSystem';
 import {
   BarChart,
   Bar,
@@ -82,21 +83,18 @@ export const DashboardAdmin = () => {
   const [englishOps, setEnglishOps] = useState<EnglishOps | null>(null);
 
 
-  // Custom tooltip component with improved contrast
+  // Custom tooltip — tokens MD3 (W4)
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-4 rounded-lg shadow-xl border-2 border-gray-300">
-          <p className="font-bold text-gray-900 mb-3 text-base">{label}</p>
+        <div className={ds.chart.tooltip}>
+          <p className={ds.chart.tooltipTitle}>{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-2 mb-1">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <p className="text-sm text-gray-800">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
+              <p className={ds.chart.tooltipRow}>
                 <span className="font-semibold">{entry.name || 'Valor'}:</span>{' '}
-                <span className="font-bold text-gray-900">{entry.value}</span>
+                <span className={ds.chart.tooltipValue}>{entry.value}</span>
               </p>
             </div>
           ))}
@@ -288,10 +286,8 @@ export const DashboardAdmin = () => {
   if (!stats) {
     return (
       <Layout>
-        <div className="p-6">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            Error al cargar los datos del dashboard
-          </div>
+        <div className={`${ds.banner.error} px-4 py-3 rounded-lg`}>
+          Error al cargar los datos del dashboard
         </div>
       </Layout>
     );
@@ -310,62 +306,90 @@ export const DashboardAdmin = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        {/* Atrium Header */}
-        <section className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary to-primary-container p-8 sm:p-12 text-on-primary shadow-medium">
-          <div className="relative z-10">
-            <span className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase opacity-70 mb-2 block font-label">Panel de Control</span>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-[-0.03em] mb-4 font-headline text-white">Resumen Institucional</h2>
-            <p className="text-sm sm:text-lg opacity-80 max-w-2xl font-light leading-relaxed font-sans text-white/90">Infraestructura digital para la gestión académica de alto rendimiento. Supervise el estado de su institución en tiempo real.</p>
+      <div className="space-y-stack-lg">
+        <section className="relative rounded-3xl overflow-hidden bg-primary-container text-on-primary shadow-metric">
+          <div className="relative z-10 p-8 sm:p-12">
+            <span className="text-label-sm font-semibold tracking-[0.2em] uppercase text-on-primary/70 mb-2 block">
+              Panel de control
+            </span>
+            <h1 className="font-display-lg text-headline-lg-mobile sm:text-display-lg text-on-primary leading-tight mb-4">
+              Resumen institucional
+            </h1>
+            <p className="text-body-md text-on-primary/80 max-w-2xl">
+              Infraestructura digital para la gestión académica. Supervise el estado de su
+              institución en tiempo real.
+            </p>
           </div>
           <div className="absolute top-0 right-0 w-1/3 h-full opacity-10 pointer-events-none flex items-center justify-end pr-6">
-            <span className="material-symbols-outlined text-white text-[180px] leading-none" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <span
+              className="material-symbols-outlined text-on-primary text-[180px] leading-none"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
               account_balance
             </span>
           </div>
         </section>
 
-        {/* Stats Bento Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <div className="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-primary shadow-soft hover:shadow-medium transition-shadow cursor-pointer" onClick={() => navigate('/admin/students')}>
-            <span className="text-secondary font-bold text-[10px] sm:text-xs uppercase tracking-widest mb-2 block font-label">Estudiantes</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-black text-primary font-headline">{stats.totalStudents}</span>
-              <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">{stats.activeStudents} activos</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+          <button
+            type="button"
+            className={`${ds.card.base} p-6 text-left border-l-4 border-primary ${ds.card.interactive}`}
+            onClick={() => navigate('/admin/students')}
+          >
+            <span className="text-label-sm font-semibold uppercase tracking-widest text-outline mb-2 block">
+              Estudiantes
+            </span>
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span className="font-headline text-headline-lg text-primary">{stats.totalStudents}</span>
+              <span className="text-label-sm font-bold text-primary bg-primary-fixed/50 px-2 py-0.5 rounded-full">
+                {stats.activeStudents} activos
+              </span>
             </div>
-            <p className="text-xs text-on-surface-variant mt-2 font-medium font-sans">Matrícula total registrada</p>
-          </div>
-          
-          <div className="bg-surface-container-lowest p-6 rounded-xl shadow-soft hover:shadow-medium transition-shadow cursor-pointer" onClick={() => navigate('/admin/teachers')}>
-            <span className="text-secondary font-bold text-[10px] sm:text-xs uppercase tracking-widest mb-2 block font-label">Docentes Activos</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-black text-primary font-headline">{stats.totalTeachers}</span>
-            </div>
-            <p className="text-xs text-on-surface-variant mt-2 font-medium font-sans">Personal académico verificado</p>
-          </div>
-          
-          <div className="bg-surface-container-lowest p-6 rounded-xl shadow-soft hover:shadow-medium transition-shadow cursor-pointer" onClick={() => navigate('/admin/subjects')}>
-            <span className="text-secondary font-bold text-[10px] sm:text-xs uppercase tracking-widest mb-2 block font-label">Materias Programadas</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-black text-primary font-headline">{stats.totalSubjects}</span>
-            </div>
-            <p className="text-xs text-on-surface-variant mt-2 font-medium font-sans">Catálogo activo institucional</p>
-          </div>
-          
-          <div className="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-secondary shadow-soft hover:shadow-medium transition-shadow cursor-pointer" onClick={() => navigate('/admin/groups')}>
-            <span className="text-secondary font-bold text-[10px] sm:text-xs uppercase tracking-widest mb-2 block font-label">Grupos Activos</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-black text-primary font-headline">{stats.totalGroups}</span>
-            </div>
-            <p className="text-xs text-on-surface-variant mt-2 font-medium font-sans">Ciclo escolar en curso</p>
-          </div>
+            <p className={`${ds.page.meta} mt-2`}>Matrícula total registrada</p>
+          </button>
+
+          <button
+            type="button"
+            className={`${ds.card.base} p-6 text-left ${ds.card.interactive}`}
+            onClick={() => navigate('/admin/teachers')}
+          >
+            <span className="text-label-sm font-semibold uppercase tracking-widest text-outline mb-2 block">
+              Docentes activos
+            </span>
+            <span className="font-headline text-headline-lg text-primary">{stats.totalTeachers}</span>
+            <p className={`${ds.page.meta} mt-2`}>Personal académico verificado</p>
+          </button>
+
+          <button
+            type="button"
+            className={`${ds.card.base} p-6 text-left ${ds.card.interactive}`}
+            onClick={() => navigate('/admin/subjects')}
+          >
+            <span className="text-label-sm font-semibold uppercase tracking-widest text-outline mb-2 block">
+              Materias programadas
+            </span>
+            <span className="font-headline text-headline-lg text-primary">{stats.totalSubjects}</span>
+            <p className={`${ds.page.meta} mt-2`}>Catálogo activo institucional</p>
+          </button>
+
+          <button
+            type="button"
+            className={`${ds.card.base} p-6 text-left border-l-4 border-tertiary-fixed-dim ${ds.card.interactive}`}
+            onClick={() => navigate('/admin/groups')}
+          >
+            <span className="text-label-sm font-semibold uppercase tracking-widest text-outline mb-2 block">
+              Grupos activos
+            </span>
+            <span className="font-headline text-headline-lg text-primary">{stats.totalGroups}</span>
+            <p className={`${ds.page.meta} mt-2`}>Ciclo escolar en curso</p>
+          </button>
         </div>
 
         {/* SIPI Inglés — operación del producto (acciones pendientes del admin) */}
         {englishOps && (
-          <div className="bg-surface-container-lowest rounded-xl shadow-soft p-5 border border-outline-variant/20">
+          <div className={`${ds.card.base} p-5 sm:p-6`}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-primary tracking-tight font-headline">SIPI Inglés — Operación</h3>
+              <h3 className="font-headline text-headline-md text-primary">SIPI Inglés — Operación</h3>
               <span className="material-symbols-outlined text-secondary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>translate</span>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -398,21 +422,20 @@ export const DashboardAdmin = () => {
         )}
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Students by Carrera - Bar Chart */}
-          <div className="bg-surface-container-lowest rounded-xl shadow-soft p-5 sm:p-6 border border-outline-variant/20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+          <div className={`${ds.card.base} p-5 sm:p-6`}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-primary tracking-tight font-headline">Estudiantes por Carrera</h3>
+              <h3 className="font-headline text-headline-md text-primary">Estudiantes por carrera</h3>
               <span className="material-symbols-outlined text-secondary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>bar_chart</span>
             </div>
             {carreraChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={carreraChartData} margin={{ top: 10, right: 10, left: 0, bottom: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e2e2" opacity={0.5} />
-                  <XAxis dataKey="name" tick={{ fill: '#424847', fontSize: 11, fontWeight: 500 }} angle={-45} textAnchor="end" height={80} interval={0} />
-                  <YAxis tick={{ fill: '#424847', fontSize: 11, fontWeight: 500 }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(23, 44, 41, 0.05)' }} />
-                  <Bar dataKey="value" fill="#d0e7e3" radius={[6, 6, 0, 0]} animationDuration={1000} stroke="#172c29" strokeWidth={1} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#c0c8c6" opacity={0.5} />
+                  <XAxis dataKey="name" tick={{ fill: '#414847', fontSize: 11, fontWeight: 500 }} angle={-45} textAnchor="end" height={80} interval={0} />
+                  <YAxis tick={{ fill: '#414847', fontSize: 11, fontWeight: 500 }} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0, 25, 23, 0.05)' }} />
+                  <Bar dataKey="value" fill="#c2ebe5" radius={[6, 6, 0, 0]} animationDuration={1000} stroke="#001917" strokeWidth={1} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -422,20 +445,19 @@ export const DashboardAdmin = () => {
             )}
           </div>
 
-          {/* Groups by Periodo - Line Chart */}
-          <div className="bg-surface-container-lowest rounded-xl shadow-soft p-5 sm:p-6 border border-outline-variant/20">
+          <div className={`${ds.card.base} p-5 sm:p-6`}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-primary tracking-tight font-headline">Crecimiento de Grupos</h3>
+              <h3 className="font-headline text-headline-md text-primary">Crecimiento de grupos</h3>
               <span className="material-symbols-outlined text-secondary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
             </div>
             {periodoLineData.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={periodoLineData} margin={{ top: 10, right: 10, left: 0, bottom: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e2e2" opacity={0.5} />
-                  <XAxis dataKey="periodo" tick={{ fill: '#424847', fontSize: 11, fontWeight: 500 }} angle={-45} textAnchor="end" height={80} interval={0} />
-                  <YAxis tick={{ fill: '#424847', fontSize: 11, fontWeight: 500 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#c0c8c6" opacity={0.5} />
+                  <XAxis dataKey="periodo" tick={{ fill: '#414847', fontSize: 11, fontWeight: 500 }} angle={-45} textAnchor="end" height={80} interval={0} />
+                  <YAxis tick={{ fill: '#414847', fontSize: 11, fontWeight: 500 }} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Line type="monotone" dataKey="grupos" stroke="#944925" strokeWidth={3} dot={{ fill: '#944925', strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} animationDuration={1200} />
+                  <Line type="monotone" dataKey="grupos" stroke="#505f76" strokeWidth={3} dot={{ fill: '#505f76', strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} animationDuration={1200} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -446,25 +468,24 @@ export const DashboardAdmin = () => {
           </div>
         </div>
 
-        {/* Quick Actions (Bento Links) */}
-        <div className="bg-surface-container-lowest rounded-xl shadow-soft p-5 border border-outline-variant/20">
-          <h3 className="text-lg font-bold text-primary tracking-tight font-headline mb-4">Administración Rápida</h3>
+        <div className={`${ds.card.base} p-5 sm:p-6`}>
+          <h3 className="font-headline text-headline-md text-primary mb-4">Administración rápida</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button onClick={() => navigate('/admin/students/new')} className="flex flex-col items-center justify-center p-4 bg-primary-container/5 hover:bg-primary-container/10 border border-primary-container/10 rounded-xl transition-colors">
+            <button type="button" onClick={() => navigate('/admin/students/new')} className="flex flex-col items-center justify-center p-4 bg-primary-fixed/30 hover:bg-primary-fixed/50 border border-primary-fixed-dim rounded-xl transition-colors">
               <span className="material-symbols-outlined text-primary text-3xl mb-2">person_add</span>
-              <span className="text-xs font-bold text-primary uppercase tracking-wide">Nuevo Alumno</span>
+              <span className="text-label-sm font-bold text-primary uppercase tracking-wide">Nuevo alumno</span>
             </button>
-            <button onClick={() => navigate('/admin/teachers/new')} className="flex flex-col items-center justify-center p-4 bg-primary-container/5 hover:bg-primary-container/10 border border-primary-container/10 rounded-xl transition-colors">
+            <button type="button" onClick={() => navigate('/admin/teachers/new')} className="flex flex-col items-center justify-center p-4 bg-primary-fixed/30 hover:bg-primary-fixed/50 border border-primary-fixed-dim rounded-xl transition-colors">
               <span className="material-symbols-outlined text-primary text-3xl mb-2">badge</span>
-              <span className="text-xs font-bold text-primary uppercase tracking-wide">Nuevo Maestro</span>
+              <span className="text-label-sm font-bold text-primary uppercase tracking-wide">Nuevo maestro</span>
             </button>
-            <button onClick={() => navigate('/admin/subjects/new')} className="flex flex-col items-center justify-center p-4 bg-secondary-container/5 hover:bg-secondary-container/10 border border-secondary-container/10 rounded-xl transition-colors">
+            <button type="button" onClick={() => navigate('/admin/subjects/new')} className="flex flex-col items-center justify-center p-4 bg-secondary-fixed/30 hover:bg-secondary-fixed/50 border border-secondary-fixed-dim rounded-xl transition-colors">
               <span className="material-symbols-outlined text-secondary text-3xl mb-2">menu_book</span>
-              <span className="text-xs font-bold text-secondary uppercase tracking-wide">Nueva Materia</span>
+              <span className="text-label-sm font-bold text-secondary uppercase tracking-wide">Nueva materia</span>
             </button>
-            <button onClick={() => navigate('/admin/groups/new')} className="flex flex-col items-center justify-center p-4 bg-secondary-container/5 hover:bg-secondary-container/10 border border-secondary-container/10 rounded-xl transition-colors">
-              <span className="material-symbols-outlined text-secondary text-3xl mb-2">group_add</span>
-              <span className="text-xs font-bold text-secondary uppercase tracking-wide">Nuevo Grupo</span>
+            <button type="button" onClick={() => navigate('/admin/groups/new')} className="flex flex-col items-center justify-center p-4 bg-tertiary-fixed/30 hover:bg-tertiary-fixed/50 border border-tertiary-fixed-dim rounded-xl transition-colors">
+              <span className="material-symbols-outlined text-tertiary text-3xl mb-2">group_add</span>
+              <span className="text-label-sm font-bold text-tertiary uppercase tracking-wide">Nuevo grupo</span>
             </button>
           </div>
         </div>

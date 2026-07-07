@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { PageLoader, GroupCard, Icon } from '../../components/ui';
 import type { IconName } from '../../components/ui/Icon';
 import type { Group } from '../../types';
+import { ds } from '../../lib/designSystem';
 
 interface TeacherDashboardStats {
   totalGroups: number;
@@ -42,9 +43,9 @@ const gradingUrgency = (fechaFin?: string): GradingUrgency => {
 };
 
 const URGENCY_BADGE: Record<UrgencyTone, string> = {
-  overdue: 'bg-red-100 text-red-700',
-  soon: 'bg-amber-100 text-amber-700',
-  normal: 'bg-surface-container text-on-surface-variant',
+  overdue: ds.urgencyBadge.overdue,
+  soon: ds.urgencyBadge.soon,
+  normal: ds.urgencyBadge.normal,
 };
 
 export const DashboardTeacher = () => {
@@ -117,10 +118,8 @@ export const DashboardTeacher = () => {
   if (!stats) {
     return (
       <Layout>
-        <div className="p-6">
-          <div className="bg-error-container/30 border border-error/30 text-error px-4 py-3 rounded-lg">
-            Error al cargar los datos del dashboard
-          </div>
+        <div className={`${ds.banner.error} px-4 py-3 rounded-lg`}>
+          Error al cargar los datos del dashboard
         </div>
       </Layout>
     );
@@ -128,15 +127,18 @@ export const DashboardTeacher = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-on-surface font-headline">Panel del Maestro</h1>
-          <p className="text-on-surface-variant mt-2">Resumen de tus grupos y estudiantes</p>
-        </div>
+      <div className="space-y-stack-lg">
+        <section className="rounded-3xl overflow-hidden bg-primary-container text-on-primary shadow-metric p-8 sm:p-10">
+          <span className="text-label-sm font-semibold tracking-[0.2em] uppercase text-on-primary/70 mb-2 block">
+            Panel del maestro
+          </span>
+          <h1 className="font-display-lg text-headline-lg-mobile sm:text-headline-lg text-on-primary">
+            Resumen de tus grupos
+          </h1>
+          <p className="text-body-md text-on-primary/80 mt-2">Estudiantes, calificaciones pendientes y accesos rápidos</p>
+        </section>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
           <StatCard
             title="Mis Grupos"
             value={stats.totalGroups}
@@ -177,20 +179,30 @@ export const DashboardTeacher = () => {
           if (pendientes.length === 0) return null;
           const hasUrgent = pendientes.some((x) => x.urgency.tone !== 'normal');
           return (
-            <div className={`bg-surface-container-lowest rounded-2xl shadow-soft p-6 border-l-4 ${hasUrgent ? 'border-red-400' : 'border-amber-400'}`}>
-              <div className="flex items-center gap-2 mb-4">
-                <Icon name="grades" size={20} className={hasUrgent ? 'text-red-600' : 'text-amber-600'} />
-                <h2 className="text-xl font-semibold text-on-surface">Pendientes por calificar</h2>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700">
-                  {pendientes.reduce((s, x) => s + x.count, 0)} en {pendientes.length} grupo{pendientes.length > 1 ? 's' : ''}
+            <div
+              className={`${ds.card.base} p-6 border-l-4 ${
+                hasUrgent ? 'border-error' : 'border-tertiary-fixed-dim'
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <Icon
+                  name="grades"
+                  size={20}
+                  className={hasUrgent ? ds.semantic.errorIcon : 'text-tertiary-fixed-dim'}
+                />
+                <h2 className={ds.page.sectionTitle}>Pendientes por calificar</h2>
+                <span className={`px-2 py-0.5 text-label-sm font-semibold rounded-full ${ds.urgencyBadge.soon}`}>
+                  {pendientes.reduce((s, x) => s + x.count, 0)} en {pendientes.length} grupo
+                  {pendientes.length > 1 ? 's' : ''}
                 </span>
               </div>
               <div className="divide-y divide-outline-variant/20">
                 {pendientes.map(({ group, count, urgency }) => (
                   <button
                     key={group.id}
+                    type="button"
                     onClick={() => navigate(`/teacher/groups/${group.id}`)}
-                    className="w-full flex items-center justify-between py-3 text-left hover:bg-surface-container/50 rounded-lg px-2 -mx-2 transition-colors gap-3"
+                    className="w-full flex items-center justify-between py-3 text-left hover:bg-surface-container-low rounded-lg px-2 -mx-2 transition-colors gap-3"
                   >
                     <div className="min-w-0">
                       <p className="font-medium text-on-surface truncate">
@@ -209,7 +221,7 @@ export const DashboardTeacher = () => {
                           {urgency.label}
                         </span>
                       )}
-                      <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700">
+                      <span className={`px-2.5 py-1 text-label-sm font-bold rounded-full ${ds.urgencyBadge.soon}`}>
                         {count} sin calificar
                       </span>
                     </div>
@@ -221,12 +233,13 @@ export const DashboardTeacher = () => {
         })()}
 
         {/* My Groups */}
-        <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">
+        <div className={`${ds.card.base} p-6`}>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-on-surface">Mis Grupos</h2>
+            <h2 className={ds.page.sectionTitle}>Mis grupos</h2>
             <button
+              type="button"
               onClick={() => navigate('/admin/groups')}
-              className="text-primary hover:opacity-80 text-sm font-medium"
+              className={ds.btn.link}
             >
               Ver todos →
             </button>
@@ -250,8 +263,8 @@ export const DashboardTeacher = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">
-          <h2 className="text-xl font-semibold text-on-surface mb-4">Accesos Rápidos</h2>
+        <div className={`${ds.card.base} p-6`}>
+          <h2 className={`${ds.page.sectionTitle} mb-4`}>Accesos rápidos</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <QuickAction
               title="Calificar"
@@ -287,13 +300,11 @@ const StatCard = ({
 }) => (
   <div
     onClick={onClick}
-    className={`bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20 transition-shadow ${
-      onClick ? 'cursor-pointer hover:shadow-medium' : ''
-    }`}
+    className={`${ds.card.base} p-6 ${onClick ? ds.card.interactive : ''}`}
   >
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-on-surface-variant">{title}</p>
+        <p className={ds.page.label}>{title}</p>
         <p className={`text-3xl font-bold mt-2 ${color}`}>{value}</p>
       </div>
       <div className={`${color} bg-current/10 p-3 rounded-full`}>
@@ -315,15 +326,16 @@ const QuickAction = ({
   onClick: () => void;
 }) => (
   <button
+    type="button"
     onClick={onClick}
-    className="flex items-center gap-4 p-4 bg-surface hover:bg-surface-container rounded-xl transition-colors text-left border border-outline-variant/20"
+    className="flex items-center gap-4 p-4 bg-surface-container-low hover:bg-surface-container rounded-xl transition-colors text-left border border-outline-variant/20 w-full"
   >
     <div className="bg-primary p-3 rounded-lg text-on-primary">
       <Icon name={icon} size={24} />
     </div>
     <div>
       <p className="font-semibold text-on-surface">{title}</p>
-      <p className="text-sm text-on-surface-variant">{description}</p>
+      <p className={ds.page.body}>{description}</p>
     </div>
   </button>
 );
