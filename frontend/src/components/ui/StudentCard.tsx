@@ -43,7 +43,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onClick, onEd
             </button>
           )}
           {onDelete && (
-            <button onClick={onDelete} className="p-1 rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Eliminar">
+            <button onClick={onDelete} className="p-1 rounded-md text-error hover:bg-error-container transition-colors" title="Eliminar">
               <span className="material-symbols-outlined text-[16px]">delete</span>
             </button>
           )}

@@ -39,10 +39,10 @@ export const CapacityIndicator = ({
   };
 
   const getColor = (): string => {
-    if (isFull) return 'text-red-600';
-    if (isLow) return 'text-yellow-600';
-    if (isBelowMin) return 'text-blue-600';
-    return 'text-green-600';
+    if (isFull) return 'text-error';
+    if (isLow) return 'text-on-secondary-fixed-variant';
+    if (isBelowMin) return 'text-primary';
+    return 'text-primary';
   };
 
   return (
@@ -51,16 +51,16 @@ export const CapacityIndicator = ({
         <>
           <div className={`flex items-center gap-1 ${sizeClasses[size]} ${getColor()}`}>
             <span className="font-semibold">{current}</span>
-            <span className="text-gray-500">/</span>
+            <span className="text-on-surface-variant">/</span>
             <span className="font-semibold">{max}</span>
           </div>
-          <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-24">
+          <div className="flex-1 bg-surface-container-high rounded-full h-2 max-w-24">
             <div
               className={`h-2 rounded-full transition-all ${
-                isFull ? 'bg-red-600' :
-                isLow ? 'bg-yellow-600' :
-                isBelowMin ? 'bg-blue-600' :
-                'bg-green-600'
+                isFull ? 'bg-error' :
+                isLow ? 'bg-secondary' :
+                isBelowMin ? 'bg-primary' :
+                'bg-primary'
               }`}
               style={{ width: `${Math.min(percentage, 100)}%` }}
             />
@@ -77,13 +77,13 @@ export const CapacityIndicator = ({
             {current}/{max}
           </span>
           {isFull && (
-            <div className="flex items-center gap-1 text-red-600">
+            <div className="flex items-center gap-1 text-error">
               <Icon name="warning" size={16} />
               <span className="text-xs">Lleno</span>
             </div>
           )}
           {isLow && !isFull && (
-            <div className="flex items-center gap-1 text-yellow-600">
+            <div className="flex items-center gap-1 text-on-secondary-fixed-variant">
               <Icon name="warning" size={16} />
               <span className="text-xs">Pocos cupos</span>
             </div>

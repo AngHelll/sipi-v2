@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { specialCoursesApi } from '../../lib/api';
 import { Badge, SkeletonTable, EmptyState, FormField } from '../../components/ui';
+import { ds } from '../../lib/designSystem';
 
 interface SpecialCourse {
   id: string;
@@ -186,7 +187,7 @@ export const SpecialCoursesListPage = () => {
     return (
       <Layout>
         <div className="p-6">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className={`${ds.banner.error} px-4 py-3 rounded-lg`}>
             {error}
           </div>
         </div>
@@ -196,18 +197,17 @@ export const SpecialCoursesListPage = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={ds.admin.pageShell}>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Cursos Especiales</h1>
-          <p className="text-gray-600">Gestiona las solicitudes de cursos especiales de los estudiantes</p>
+          <h1 className={ds.admin.pageTitle}>Cursos Especiales</h1>
+          <p className={ds.admin.pageSubtitle}>Gestiona las solicitudes de cursos especiales de los estudiantes</p>
         </div>
 
-        {/* Waitlist demand */}
         {waitlist && waitlist.total > 0 && (
-          <div className="mb-6 bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+          <div className={`mb-6 ${ds.admin.waitlistBanner}`}>
             <div className="flex items-start justify-between flex-wrap gap-3">
               <div>
-                <h2 className="font-semibold text-indigo-900 mb-1">
+                <h2 className={`${ds.admin.waitlistTitle} mb-1`}>
                   Lista de espera: {waitlist.total} solicitud{waitlist.total === 1 ? '' : 'es'} sin grupo
                 </h2>
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -218,20 +218,20 @@ export const SpecialCoursesListPage = () => {
                     </Badge>
                   ))}
                 </div>
-                <p className="text-sm text-indigo-800 mt-2">
+                <p className={ds.admin.waitlistHint}>
                   Si hay suficientes interesados, crea un grupo del nivel y asígnalos desde el detalle de cada solicitud.
                 </p>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setEstatusFilter('LISTA_ESPERA')}
-                  className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  className={ds.admin.btnSmPrimary}
                 >
                   Ver solicitudes
                 </button>
                 <button
                   onClick={() => navigate('/admin/groups/new')}
-                  className="px-3 py-1.5 text-sm border border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors"
+                  className={ds.admin.btnSmSecondary}
                 >
                   Crear grupo
                 </button>
@@ -241,7 +241,7 @@ export const SpecialCoursesListPage = () => {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 mb-6">
+        <div className={ds.admin.filterPanel}>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <FormField
               name="search"
@@ -309,84 +309,84 @@ export const SpecialCoursesListPage = () => {
           />
         ) : (
           <>
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+            <div className={ds.admin.tableWrap}>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className={ds.admin.table}>
+                  <thead className={ds.admin.thead}>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Código
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Estudiante
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Tipo
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Nivel
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Grupo
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Estatus
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Fecha Inicio
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Pago
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Calificación
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={ds.admin.th}>
                         Acciones
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className={ds.admin.tbody}>
                     {courses.map((course) => (
-                      <tr key={course.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={course.id} className={ds.admin.trHover}>
+                        <td className={`${ds.admin.td} font-medium`}>
                           {course.codigo}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={ds.admin.td}>
                           {course.student ? (
                             <div>
                               <div className="font-medium">
                                 {course.student.nombre} {course.student.apellidoPaterno} {course.student.apellidoMaterno}
                               </div>
-                              <div className="text-gray-500 text-xs">{course.student.matricula}</div>
+                              <div className="text-on-surface-variant text-xs">{course.student.matricula}</div>
                             </div>
                           ) : (
                             '-'
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={ds.admin.td}>
                           {course.course ? getCourseTypeLabel(course.course.courseType) : '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={ds.admin.td}>
                           {course.course?.nivelIngles ? `Nivel ${course.course.nivelIngles}` : '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={ds.admin.td}>
                           {course.course?.group ? (
                             <div>
                               <div className="font-medium">{course.course.group.nombre}</div>
-                              <div className="text-gray-500 text-xs">{course.course.group.periodo}</div>
+                              <div className="text-on-surface-variant text-xs">{course.course.group.periodo}</div>
                             </div>
                           ) : (
                             '-'
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className={ds.admin.td}>
                           {getStatusBadge(course.estatus)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={ds.admin.td}>
                           {course.course?.fechaInicio ? formatDate(course.course.fechaInicio) : '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={ds.admin.td}>
                           {course.course?.requierePago ? (
                             <div>
                               {course.course.pagoAprobado === true ? (
@@ -397,7 +397,7 @@ export const SpecialCoursesListPage = () => {
                                 <Badge variant="warning">Pendiente</Badge>
                               )}
                               {course.course.montoPago && (
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="text-xs text-on-surface-variant mt-1">
                                   ${course.course.montoPago.toFixed(2)}
                                 </div>
                               )}
@@ -406,7 +406,7 @@ export const SpecialCoursesListPage = () => {
                             <Badge variant="info">No requiere</Badge>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={ds.admin.td}>
                           {course.course?.calificacion !== null && course.course?.calificacion !== undefined ? (
                             <div>
                               <span className="font-medium">{course.course.calificacion}%</span>
@@ -418,18 +418,18 @@ export const SpecialCoursesListPage = () => {
                             '-'
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td className={`${ds.admin.td} font-medium`}>
                           {course.estatus === 'PENDIENTE_PAGO' && (
                             <button
                               onClick={() => navigate(`/admin/english/payment-approvals`)}
-                              className="text-blue-600 hover:text-blue-900 mr-4"
+                              className={`${ds.admin.actionLink} mr-4`}
                             >
                               Gestionar Pago
                             </button>
                           )}
                           <button
                             onClick={() => navigate(`/admin/special-courses/${course.id}`)}
-                            className="text-indigo-600 hover:text-indigo-900"
+                            className={ds.admin.actionLink}
                           >
                             Ver Detalles
                           </button>
@@ -444,21 +444,21 @@ export const SpecialCoursesListPage = () => {
             {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between">
-                <div className="text-sm text-gray-700">
+                <div className={ds.admin.paginationText}>
                   Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, pagination.total)} de {pagination.total} resultados
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={ds.admin.paginationBtn}
                   >
                     Anterior
                   </button>
                   <button
                     onClick={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))}
                     disabled={currentPage === pagination.totalPages}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={ds.admin.paginationBtn}
                   >
                     Siguiente
                   </button>

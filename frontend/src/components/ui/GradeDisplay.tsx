@@ -9,11 +9,11 @@ interface GradeDisplayProps {
 }
 
 const getGradeColor = (grade: number | null | undefined): string => {
-  if (grade === null || grade === undefined) return 'text-gray-500';
-  if (grade >= 90) return 'text-green-600 font-semibold';
-  if (grade >= 80) return 'text-blue-600 font-semibold';
-  if (grade >= 70) return 'text-yellow-600 font-semibold';
-  return 'text-red-600 font-semibold';
+  if (grade === null || grade === undefined) return 'text-on-surface-variant';
+  if (grade >= 90) return 'text-primary font-semibold';
+  if (grade >= 80) return 'text-primary font-semibold';
+  if (grade >= 70) return 'text-on-secondary-fixed-variant font-semibold';
+  return 'text-error font-semibold';
 };
 
 const getGradeVariant = (grade: number | null | undefined): 'success' | 'info' | 'warning' | 'error' | 'default' => {
@@ -84,25 +84,25 @@ export const PartialGradesDisplay = ({
     <div className={`flex flex-wrap gap-2 items-center ${className}`}>
       {p1 !== null && p1 !== undefined && (
         <div className="flex items-center gap-1">
-          {showLabels && <span className="text-xs text-gray-500">P1:</span>}
+          {showLabels && <span className="text-xs text-on-surface-variant">P1:</span>}
           <GradeDisplay grade={p1} size="sm" />
         </div>
       )}
       {p2 !== null && p2 !== undefined && (
         <div className="flex items-center gap-1">
-          {showLabels && <span className="text-xs text-gray-500">P2:</span>}
+          {showLabels && <span className="text-xs text-on-surface-variant">P2:</span>}
           <GradeDisplay grade={p2} size="sm" />
         </div>
       )}
       {p3 !== null && p3 !== undefined && (
         <div className="flex items-center gap-1">
-          {showLabels && <span className="text-xs text-gray-500">P3:</span>}
+          {showLabels && <span className="text-xs text-on-surface-variant">P3:</span>}
           <GradeDisplay grade={p3} size="sm" />
         </div>
       )}
       {final !== null && final !== undefined && (
         <div className="flex items-center gap-1 border-l pl-2 ml-2">
-          {showLabels && <span className="text-xs font-semibold text-gray-700">Final:</span>}
+          {showLabels && <span className="text-xs font-semibold text-on-surface">Final:</span>}
           <GradeDisplay grade={final} size="sm" />
         </div>
       )}

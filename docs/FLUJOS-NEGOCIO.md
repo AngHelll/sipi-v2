@@ -1,6 +1,6 @@
 # 📋 Flujos de Negocio - SIPI-V2
 
-**Última actualización:** 2026-07-05
+**Última actualización:** 2026-07-07
 
 Este documento centraliza todos los flujos de negocio principales del sistema.
 
@@ -90,7 +90,7 @@ Este documento centraliza todos los flujos de negocio principales del sistema.
 El maestro opera cada grupo desde **una sola pantalla** (`/teacher/groups/:id`), sin saltar entre "ver grupo" y "calificar":
 
 1. **Entrada**: desde el dashboard (tarjeta de grupo o fila de "Pendientes por calificar") o desde `/teacher/grades` (selector de grupos).
-2. **Datos del grupo**: `GET /api/groups/:id` — horario, ubicación, modalidad, cupo, estatus, nivel de inglés. **No se muestra el costo** (dato administrativo).
+2. **Datos del grupo**: `GET /api/groups/:id` — horario, ubicación, modalidad, cupo, estatus, nivel de inglés. **RBAC (2026-07)**: solo grupos propios (TEACHER ajeno → 404); **`costo` omitido en API** para TEACHER (dato administrativo; la UI tampoco lo muestra).
 3. **Roster de la cohorte activa**: `GET /api/enrollments/group/:groupId` — solo alumnos inscritos de verdad (excluye cancelados, pendientes de pago y lista de espera).
 4. **Calificación inline** en el mismo roster:
    - Curso de inglés (`isSpecialCourse: true`): `PUT .../special-courses/:id/complete` con `{ calificacion }`.

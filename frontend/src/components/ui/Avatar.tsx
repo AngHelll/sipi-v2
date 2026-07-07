@@ -28,7 +28,7 @@ export const Avatar = ({ name, size = 'md', className = '', onClick }: AvatarPro
 
   return (
     <div
-      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold shadow-md ${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''} ${className}`}
+      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-on-primary font-semibold shadow-md ${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''} ${className}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -59,7 +59,7 @@ export const AvatarDropdown = ({ name, role, children }: AvatarDropdownProps) =>
         name={name}
         size="md"
         onClick={() => setIsOpen(!isOpen)}
-        className="ring-2 ring-offset-2 ring-blue-500"
+        className="ring-2 ring-offset-2 ring-primary"
       />
       {isOpen && (
         <>
@@ -67,10 +67,10 @@ export const AvatarDropdown = ({ name, role, children }: AvatarDropdownProps) =>
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
-            <div className="px-4 py-2 border-b border-gray-200">
-              <p className="text-sm font-medium text-gray-900">{name}</p>
-              <p className="text-xs text-gray-500">{role}</p>
+          <div className="absolute right-0 mt-2 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant z-20 py-1">
+            <div className="px-4 py-2 border-b border-outline-variant">
+              <p className="text-sm font-medium text-on-surface">{name}</p>
+              <p className="text-xs text-on-surface-variant">{role}</p>
             </div>
             {children}
           </div>

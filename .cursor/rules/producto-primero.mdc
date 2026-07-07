@@ -18,3 +18,10 @@ Antes de implementar una feature nueva:
 - Las rutas retiradas responden 410 vía `deprecatedRoute` (ver `backend/src/modules/enrollments/english/deprecated.routes.ts`); no las revivas.
 - Los modelos "futuros" (`social_service`, `professional_practices`, `enrollments_v2`, `prerequisites`, `student_documents`) viven solo en schema. **No crear API/UI para ellos** sin justificación de producto en Capa 0.
 - Todo cambio de schema Prisma requiere su migración SQL en `backend/prisma/migrations/` (el deploy en RaspyLab corre `prisma migrate deploy`); nada de confiar en `db push` para producción.
+
+## Design system
+
+- Fuente de verdad: `docs/DESIGN-SYSTEM.md`. Evolución de hipótesis DS: `docs/EVOLUCION.md`.
+- **Web:** en archivos modificados, usar tokens MD3 de `tailwind.config.js` (`on-surface`, `surface-container`, `outline-variant`, `error`, etc.). No introducir `gray-*` ni `blue-*` sueltos. `frontend/src/components/ui/` es catálogo de referencia — solo tokens semánticos.
+- **Móvil alumno (Capa 4-UX):** paridad iOS ↔ Android según `sipi-mobile-android/contexto/DISENO-PARIDAD.md`. Cambios solo presentación; sin tocar API ni lógica.
+- Propuestas de UI que rompan leyes DS → rechazar o proponer entrada en `EVOLUCION.md` antes de implementar.

@@ -1,95 +1,25 @@
-// Student dashboard component with enrollments and grades
+// Student dashboard — identidad + resumen de inglés (contrato §4.2 web)
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { examsApi, studentsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
-import { PageLoader, Icon } from '../../components/ui';
+import { Badge, PageLoader, Icon } from '../../components/ui';
 import type { IconName } from '../../components/ui/Icon';
 import type { Student } from '../../types';
+import { ds } from '../../lib/designSystem';
+import {
+  buildEnglishAlerts,
+  englishStatusChipLabel,
+  pendingEnglishActionCount,
+} from '../../lib/englishAlerts';
 
 interface StudentDashboardStats {
   student: Student | null;
 }
 
 type EnglishStatusData = Awaited<ReturnType<typeof examsApi.getStudentEnglishStatusV2>>;
-
-type EnglishAlertTone = 'pago' | 'rechazo' | 'revision' | 'espera' | 'info';
-
-interface EnglishAlert {
-  tone: EnglishAlertTone;
-  text: string;
-  /** Cuenta como acción que el alumno debe atender (no solo informativa) */
-  actionable: boolean;
-}
-
-const ENGLISH_ALERT_STYLES: Record<EnglishAlertTone, { dot: string; text: string }> = {
-  pago: { dot: 'bg-orange-500', text: 'text-orange-800' },
-  rechazo: { dot: 'bg-red-500', text: 'text-red-800' },
-  revision: { dot: 'bg-purple-500', text: 'text-purple-800' },
-  espera: { dot: 'bg-indigo-500', text: 'text-indigo-800' },
-  info: { dot: 'bg-blue-500', text: 'text-blue-800' },
-};
-
-/** Deriva las acciones de inglés pendientes a partir del estado del alumno. */
-const buildEnglishAlerts = (e: EnglishStatusData): EnglishAlert[] => {
-  const items = [
-    ...e.diagnosticExams.map((x) => ({ estatus: x.estatus, pagoAprobado: x.pagoAprobado })),
-    ...e.englishCourses.map((x) => ({ estatus: x.estatus, pagoAprobado: x.pagoAprobado })),
-  ];
-
-  const pagosPendientes = items.filter(
-    (i) => i.estatus === 'PENDIENTE_PAGO' && i.pagoAprobado !== false
-  ).length;
-  const pagosRechazados = items.filter(
-    (i) => i.estatus === 'PENDIENTE_PAGO' && i.pagoAprobado === false
-  ).length;
-  const enRevision = items.filter((i) => i.estatus === 'PAGO_PENDIENTE_APROBACION').length;
-  const enEspera = items.filter((i) => i.estatus === 'LISTA_ESPERA').length;
-  const sinDiagnostico =
-    !e.nivelInglesActual && !e.pendingExam && e.diagnosticExams.length === 0;
-
-  const alerts: EnglishAlert[] = [];
-
-  if (pagosPendientes > 0) {
-    alerts.push({
-      tone: 'pago',
-      actionable: true,
-      text: `${pagosPendientes} pago${pagosPendientes > 1 ? 's' : ''} pendiente${pagosPendientes > 1 ? 's' : ''}: lleva tu comprobante a Servicio Estudiantil.`,
-    });
-  }
-  if (pagosRechazados > 0) {
-    alerts.push({
-      tone: 'rechazo',
-      actionable: true,
-      text: `${pagosRechazados} pago${pagosRechazados > 1 ? 's' : ''} rechazado${pagosRechazados > 1 ? 's' : ''}: cancela y vuelve a solicitar con el comprobante correcto.`,
-    });
-  }
-  if (sinDiagnostico) {
-    alerts.push({
-      tone: 'info',
-      actionable: true,
-      text: 'Aún no presentas tu examen de diagnóstico de inglés.',
-    });
-  }
-  if (enRevision > 0) {
-    alerts.push({
-      tone: 'revision',
-      actionable: false,
-      text: `${enRevision} pago${enRevision > 1 ? 's' : ''} en revisión por el administrador.`,
-    });
-  }
-  if (enEspera > 0) {
-    alerts.push({
-      tone: 'espera',
-      actionable: false,
-      text: `${enEspera} solicitud${enEspera > 1 ? 'es' : ''} en lista de espera.`,
-    });
-  }
-
-  return alerts;
-};
 
 export const DashboardStudent = () => {
   const navigate = useNavigate();
@@ -106,8 +36,6 @@ export const DashboardStudent = () => {
     }
   }, [user]);
 
-  // El estado de inglés es informativo en el dashboard: si falla, no debe
-  // tumbar el resto del panel.
   const fetchEnglishStatus = async () => {
     try {
       const data = await examsApi.getStudentEnglishStatusV2();
@@ -142,8 +70,8 @@ export const DashboardStudent = () => {
   if (!stats) {
     return (
       <Layout>
-        <div className="p-6">
-          <div className="bg-error-container/30 border border-error/30 text-error px-4 py-3 rounded-lg">
+        <div className={ds.page.shell}>
+          <div className={`${ds.banner.error} px-4 py-3 rounded-lg`}>
             Error al cargar los datos del dashboard
           </div>
         </div>
@@ -152,20 +80,19 @@ export const DashboardStudent = () => {
   }
 
   const englishAlerts = english ? buildEnglishAlerts(english) : [];
-  const englishActionCount = englishAlerts.filter((a) => a.actionable).length;
+  const englishActionCount = pendingEnglishActionCount(englishAlerts);
   const englishRequirementMet = english?.cumpleRequisitoIngles ?? false;
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
+      <div className={ds.page.shell}>
         <div>
-          <h1 className="text-3xl font-bold text-on-surface font-headline">Panel del Estudiante</h1>
-          <p className="text-on-surface-variant mt-2">
+          <h1 className={ds.page.title}>Panel del Estudiante</h1>
+          <p className={ds.page.subtitle}>
             {stats.student && (
               <>
                 Bienvenido,{' '}
-                <span className="font-semibold">
+                <span className="font-semibold text-on-surface">
                   {stats.student.nombre} {stats.student.apellidoPaterno}
                 </span>
               </>
@@ -173,43 +100,31 @@ export const DashboardStudent = () => {
           </p>
         </div>
 
-        {/* Student Info Card (hero) */}
         {stats.student && (
-          <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl shadow-soft p-6 text-on-primary">
+          <div className={ds.card.hero}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm opacity-90">Matrícula</p>
-                <p className="text-xl font-bold">{stats.student.matricula}</p>
-              </div>
-              <div>
-                <p className="text-sm opacity-90">Carrera</p>
-                <p className="text-xl font-bold">{stats.student.carrera}</p>
-              </div>
-              <div>
-                <p className="text-sm opacity-90">Semestre</p>
-                <p className="text-xl font-bold">{stats.student.semestre}</p>
-              </div>
-              <div>
-                <p className="text-sm opacity-90">Estatus</p>
-                <p className="text-xl font-bold">{stats.student.estatus}</p>
-              </div>
+              <HeroField label="Matrícula" value={stats.student.matricula} />
+              <HeroField label="Carrera" value={stats.student.carrera} />
+              <HeroField label="Semestre" value={String(stats.student.semestre)} />
+              <HeroField label="Estatus" value={stats.student.estatus} />
             </div>
-            {/* Promedios oficiales (RB-037) — única fuente de verdad del promedio */}
             {(stats.student.promedioGeneral !== undefined ||
               stats.student.promedioIngles !== undefined) && (
               <div className="mt-6 pt-6 border-t border-on-primary/20">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {stats.student.promedioGeneral !== undefined && (
-                    <div>
-                      <p className="text-sm opacity-90">Promedio General</p>
-                      <p className="text-2xl font-bold">{stats.student.promedioGeneral.toFixed(2)}</p>
-                    </div>
+                    <HeroField
+                      label="Promedio General"
+                      value={stats.student.promedioGeneral.toFixed(2)}
+                      large
+                    />
                   )}
                   {stats.student.promedioIngles !== undefined && (
-                    <div>
-                      <p className="text-sm opacity-90">Promedio Inglés</p>
-                      <p className="text-2xl font-bold">{stats.student.promedioIngles.toFixed(2)}</p>
-                    </div>
+                    <HeroField
+                      label="Promedio Inglés"
+                      value={stats.student.promedioIngles.toFixed(2)}
+                      large
+                    />
                   )}
                 </div>
               </div>
@@ -217,31 +132,23 @@ export const DashboardStudent = () => {
           </div>
         )}
 
-        {/* Mi Inglés — resumen de acciones pendientes (producto SIPI Inglés) */}
         {english && (
-          <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border-l-4 border-yellow-400">
+          <div className={ds.card.accentBorderL}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="bg-yellow-100 p-2 rounded-lg">
-                  <Icon name="book" size={22} className="text-yellow-600" />
+                <div className={`${ds.semantic.pendingBg} p-2 rounded-lg`}>
+                  <Icon name="book" size={22} className={ds.semantic.pendingIcon} />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-lg font-semibold text-on-surface">Mi Inglés</h2>
-                    {englishActionCount > 0 ? (
-                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
-                        {englishActionCount} acción{englishActionCount > 1 ? 'es' : ''} pendiente
-                        {englishActionCount > 1 ? 's' : ''}
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Al día
-                      </span>
-                    )}
+                    <Badge variant={englishActionCount > 0 ? 'warning' : 'success'}>
+                      {englishStatusChipLabel(englishActionCount)}
+                    </Badge>
                   </div>
-                  <p className="text-xs text-on-surface-variant mt-0.5">
+                  <p className={`${ds.page.meta} mt-0.5`}>
                     Requisito de graduación:{' '}
-                    <span className={englishRequirementMet ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>
+                    <span className={englishRequirementMet ? ds.semantic.successText : ds.semantic.errorText}>
                       {englishRequirementMet ? 'Cumplido' : 'Pendiente'}
                     </span>
                     {english.nivelInglesActual
@@ -251,8 +158,9 @@ export const DashboardStudent = () => {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => navigate('/student/english/status')}
-                className="shrink-0 text-yellow-700 hover:text-yellow-900 text-sm font-medium"
+                className={`shrink-0 ${ds.btn.link}`}
               >
                 Ver mi inglés →
               </button>
@@ -262,89 +170,114 @@ export const DashboardStudent = () => {
               <ul className="mt-4 space-y-2">
                 {englishAlerts.map((alert, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${ENGLISH_ALERT_STYLES[alert.tone].dot}`} />
-                    <span className={ENGLISH_ALERT_STYLES[alert.tone].text}>{alert.text}</span>
+                    <span
+                      className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${ds.alertTone[alert.tone].dot}`}
+                    />
+                    <span className={ds.alertTone[alert.tone].text}>{alert.text}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="mt-4 text-sm text-on-surface-variant">
+              <p className={`mt-4 ${ds.page.body}`}>
                 No tienes acciones de inglés pendientes por ahora.
               </p>
             )}
           </div>
         )}
 
-        {/* Statistics Cards — métricas del producto (SIPI Inglés) */}
         {english && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
               title="Nivel de inglés actual"
               value={english.nivelInglesActual ? `Nivel ${english.nivelInglesActual}` : 'No definido'}
               icon="book"
-              color="text-primary"
+              valueClass={ds.semantic.successIcon}
               onClick={() => navigate('/student/english/status')}
             />
             <StatCard
               title="Niveles completados"
               value={`${english.progress.completed}/${english.progress.totalLevels}`}
               icon="award"
-              color="text-tertiary"
+              valueClass="text-tertiary"
               onClick={() => navigate('/student/english/status')}
             />
             <StatCard
               title="Requisito de inglés"
               value={english.cumpleRequisitoIngles ? 'Cumplido' : 'Pendiente'}
               icon={english.cumpleRequisitoIngles ? 'check-circle' : 'x-circle'}
-              color={english.cumpleRequisitoIngles ? 'text-green-600' : 'text-red-600'}
+              valueClass={
+                english.cumpleRequisitoIngles ? ds.semantic.successTextStrong : ds.semantic.errorText
+              }
               onClick={() => navigate('/student/english/status')}
             />
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">
-          <h2 className="text-xl font-semibold text-on-surface mb-4">Accesos Rápidos</h2>
-          <div className="grid grid-cols-1 gap-4">
-            <QuickAction
-              title="Mi Inglés"
-              description="Consulta tu progreso y solicita exámenes o cursos"
-              icon="book"
-              onClick={() => navigate('/student/english/status')}
-            />
-          </div>
+        <div className={`${ds.card.base} p-6`}>
+          <h2 className={`${ds.page.sectionTitle} mb-4`}>Accesos Rápidos</h2>
+          <QuickAction
+            title="Mi Inglés"
+            description="Consulta tu progreso y solicita exámenes o cursos"
+            icon="book"
+            onClick={() => navigate('/student/english/status')}
+          />
         </div>
       </div>
     </Layout>
   );
 };
 
+const HeroField = ({
+  label,
+  value,
+  large,
+}: {
+  label: string;
+  value: string;
+  large?: boolean;
+}) => (
+  <div>
+    <p className="text-sm opacity-90">{label}</p>
+    <p className={large ? 'text-2xl font-bold' : 'text-xl font-bold'}>{value}</p>
+  </div>
+);
+
 const StatCard = ({
   title,
   value,
   icon,
-  color,
+  valueClass,
   onClick,
 }: {
   title: string;
   value: number | string;
   icon: IconName;
-  color: string;
+  valueClass: string;
   onClick?: () => void;
 }) => (
   <div
     onClick={onClick}
-    className={`bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20 transition-shadow ${
-      onClick ? 'cursor-pointer hover:shadow-medium' : ''
-    }`}
+    className={`${ds.card.base} p-6 ${onClick ? ds.card.interactive : ''}`}
+    role={onClick ? 'button' : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    onKeyDown={
+      onClick
+        ? (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onClick();
+            }
+          }
+        : undefined
+    }
   >
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-on-surface-variant">{title}</p>
-        <p className={`text-3xl font-bold mt-2 ${color}`}>{value}</p>
+        <p className={ds.page.label}>{title}</p>
+        <p className={`text-3xl font-bold mt-2 ${valueClass}`}>{value}</p>
       </div>
-      <div className={`${color} bg-current/10 p-3 rounded-full`}>
-        <Icon name={icon} size={28} className={color} />
+      <div className={`${valueClass} bg-current/10 p-3 rounded-full`}>
+        <Icon name={icon} size={28} className={valueClass} />
       </div>
     </div>
   </div>
@@ -362,15 +295,16 @@ const QuickAction = ({
   onClick: () => void;
 }) => (
   <button
+    type="button"
     onClick={onClick}
-    className="flex items-center gap-4 p-4 bg-surface hover:bg-surface-container rounded-xl transition-colors text-left border border-outline-variant/20"
+    className="flex items-center gap-4 p-4 bg-surface hover:bg-surface-container rounded-[12px] transition-colors text-left border border-outline-variant/20 w-full"
   >
     <div className="bg-primary p-3 rounded-lg text-on-primary">
       <Icon name={icon} size={24} />
     </div>
     <div>
       <p className="font-semibold text-on-surface">{title}</p>
-      <p className="text-sm text-on-surface-variant">{description}</p>
+      <p className={ds.page.body}>{description}</p>
     </div>
   </button>
 );

@@ -5,6 +5,7 @@ import { Layout } from '../../components/layout/Layout';
 import { examsApi, studentsApi, examPeriodsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { Badge, Icon, SkeletonTable, EmptyState, FormField, ButtonLoader, PromptDialog } from '../../components/ui';
+import { ds } from '../../lib/designSystem';
 import type { Student, ExamPeriod } from '../../types';
 
 interface Exam {
@@ -371,12 +372,12 @@ export const DiagnosticExamsListPage = () => {
 
   const getSortIcon = (field: string) => {
     if (sortBy !== field) {
-      return <Icon name="filter" size={16} className="text-gray-400" />;
+      return <Icon name="filter" size={16} className={ds.admin.sortIconIdle} />;
     }
     return sortOrder === 'asc' ? (
-      <Icon name="chevron-up" size={16} className="text-blue-600" />
+      <Icon name="chevron-up" size={16} className={ds.admin.sortIconActive} />
     ) : (
-      <Icon name="chevron-down" size={16} className="text-blue-600" />
+      <Icon name="chevron-down" size={16} className={ds.admin.sortIconActive} />
     );
   };
 
@@ -395,19 +396,19 @@ export const DiagnosticExamsListPage = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className={ds.admin.pageShellCompact}>
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Exámenes de Diagnóstico</h1>
+          <h1 className={ds.admin.pageTitle}>Exámenes de Diagnóstico</h1>
         </div>
 
         {waitlist && waitlist.total > 0 && (
-          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className={`${ds.admin.waitlistBanner} flex flex-wrap items-center justify-between gap-4`}>
             <div>
-              <p className="font-semibold text-indigo-900">
+              <p className={ds.admin.waitlistTitle}>
                 Lista de espera: {waitlist.total} solicitud{waitlist.total === 1 ? '' : 'es'} sin período
               </p>
-              <p className="text-sm text-indigo-800 mt-1">
+              <p className={ds.admin.waitlistHint}>
                 Asigna un período abierto a cada solicitud en lista de espera.
               </p>
             </div>
@@ -417,7 +418,7 @@ export const DiagnosticExamsListPage = () => {
                 setEstatusFilter('LISTA_ESPERA');
                 setCurrentPage(1);
               }}
-              className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              className={ds.admin.btnSmPrimary}
             >
               Ver lista de espera
             </button>
@@ -425,11 +426,11 @@ export const DiagnosticExamsListPage = () => {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+        <div className={ds.admin.filterPanel}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {/* Search */}
             <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">
                 Buscar
               </label>
               <input
@@ -437,13 +438,13 @@ export const DiagnosticExamsListPage = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por estudiante, matrícula o código..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-outline-variant rounded-lg bg-surface-container-lowest text-on-surface focus:ring-2 focus:ring-primary-container focus:border-primary-container"
               />
             </div>
 
             {/* Estudiante filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">
                 Estudiante
               </label>
               <select
@@ -452,7 +453,7 @@ export const DiagnosticExamsListPage = () => {
                   setStudentIdFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container"
                 disabled={loadingOptions}
               >
                 <option value="">Todos</option>
@@ -466,7 +467,7 @@ export const DiagnosticExamsListPage = () => {
 
             {/* Período filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">
                 Período
               </label>
               <select
@@ -475,7 +476,7 @@ export const DiagnosticExamsListPage = () => {
                   setPeriodIdFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container"
                 disabled={loadingOptions}
               >
                 <option value="">Todos</option>
@@ -489,7 +490,7 @@ export const DiagnosticExamsListPage = () => {
 
             {/* Tipo de Examen filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">
                 Tipo de Examen
               </label>
               <select
@@ -498,7 +499,7 @@ export const DiagnosticExamsListPage = () => {
                   setExamTypeFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container"
               >
                 <option value="">Todos</option>
                 <option value="DIAGNOSTICO">Diagnóstico</option>
@@ -509,7 +510,7 @@ export const DiagnosticExamsListPage = () => {
 
             {/* Estatus filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">
                 Estatus
               </label>
               <select
@@ -518,7 +519,7 @@ export const DiagnosticExamsListPage = () => {
                   setEstatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container"
               >
                 <option value="">Todos</option>
                 <option value="LISTA_ESPERA">Lista de Espera</option>
@@ -538,7 +539,7 @@ export const DiagnosticExamsListPage = () => {
             <div className="mt-4">
               <button
                 onClick={handleClearFilters}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-primary hover:text-primary-container font-medium"
               >
                 Limpiar filtros
               </button>
@@ -548,7 +549,7 @@ export const DiagnosticExamsListPage = () => {
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-error-container border border-error/30 text-error px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
@@ -558,7 +559,7 @@ export const DiagnosticExamsListPage = () => {
 
         {/* Exams table */}
         {!loading && !error && (
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+          <div className="bg-surface-container-lowest rounded-lg shadow-md border border-outline-variant overflow-hidden">
             {exams.length === 0 ? (
               <EmptyState
                 icon="document"
@@ -568,17 +569,17 @@ export const DiagnosticExamsListPage = () => {
             ) : (
               <>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className="min-w-full divide-y divide-outline-variant">
+                    <thead className="bg-surface-container-low">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">
                           Código
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">
                           Estudiante
                         </th>
                         <th 
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                          className="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider cursor-pointer hover:bg-surface-container"
                           onClick={() => handleSort('examType')}
                         >
                           <div className="flex items-center gap-2">
@@ -586,14 +587,14 @@ export const DiagnosticExamsListPage = () => {
                             {getSortIcon('examType')}
                           </div>
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">
                           Período
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">
                           Nivel Inglés
                         </th>
                         <th 
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                          className="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider cursor-pointer hover:bg-surface-container"
                           onClick={() => handleSort('estatus')}
                         >
                           <div className="flex items-center gap-2">
@@ -601,14 +602,14 @@ export const DiagnosticExamsListPage = () => {
                             {getSortIcon('estatus')}
                           </div>
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">
                           Pago
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider">
                           Resultado
                         </th>
                         <th 
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                          className="px-6 py-3 text-left text-xs font-medium text-on-surface-variant uppercase tracking-wider cursor-pointer hover:bg-surface-container"
                           onClick={() => handleSort('fechaInscripcion')}
                         >
                           <div className="flex items-center gap-2">
@@ -616,44 +617,44 @@ export const DiagnosticExamsListPage = () => {
                             {getSortIcon('fechaInscripcion')}
                           </div>
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-right text-xs font-medium text-on-surface-variant uppercase tracking-wider">
                           Acciones
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-surface-container-lowest divide-y divide-outline-variant">
                       {exams.map((exam) => (
                         <tr
                           key={exam.id}
-                          className="hover:bg-gray-50 transition-colors"
+                          className="hover:bg-surface-container-low transition-colors"
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-on-surface">
                               {exam.codigo}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-on-surface">
                               {exam.student?.matricula || '-'}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-on-surface-variant">
                               {exam.student 
                                 ? `${exam.student.nombre} ${exam.student.apellidoPaterno} ${exam.student.apellidoMaterno}`
                                 : '-'}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
+                            <div className="text-sm text-on-surface">
                               {getExamTypeLabel(exam.exam?.examType)}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
+                            <div className="text-sm text-on-surface">
                               {exam.exam?.period?.nombre || '-'}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
+                            <div className="text-sm text-on-surface">
                               {exam.exam?.nivelIngles ? `Nivel ${exam.exam.nivelIngles}` : '-'}
                             </div>
                           </td>
@@ -666,36 +667,36 @@ export const DiagnosticExamsListPage = () => {
                             {exam.exam?.requierePago ? (
                               <div className="space-y-1">
                                 {exam.exam.montoPago && (
-                                  <div className="text-sm text-gray-900">${exam.exam.montoPago.toFixed(2)}</div>
+                                  <div className="text-sm text-on-surface">${exam.exam.montoPago.toFixed(2)}</div>
                                 )}
                                 {exam.estatus === 'PAGO_PENDIENTE_APROBACION' && (
-                                  <Badge className="bg-purple-100 text-purple-800">En Revisión</Badge>
+                                  <Badge variant="info">En Revisión</Badge>
                                 )}
                                 {exam.exam.pagoAprobado === true && (
-                                  <Badge className="bg-green-100 text-green-800">Aprobado</Badge>
+                                  <Badge variant="success">Aprobado</Badge>
                                 )}
                                 {exam.exam.pagoAprobado === false && (
-                                  <Badge className="bg-red-100 text-red-800">Rechazado</Badge>
+                                  <Badge variant="danger">Rechazado</Badge>
                                 )}
                                 {exam.estatus === 'PENDIENTE_PAGO' && (
-                                  <Badge className="bg-orange-100 text-orange-800">Pendiente</Badge>
+                                  <Badge variant="warning">Pendiente</Badge>
                                 )}
                               </div>
                             ) : (
-                              <Badge className="bg-gray-100 text-gray-600">No requiere</Badge>
+                              <Badge variant="default">No requiere</Badge>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {exam.exam?.resultado !== undefined && exam.exam.resultado !== null ? (
-                              <div className="text-sm font-medium text-gray-900">
+                              <div className="text-sm font-medium text-on-surface">
                                 {exam.exam.resultado}%
                               </div>
                             ) : (
-                              <span className="text-sm text-gray-400">Pendiente</span>
+                              <span className="text-sm text-outline">Pendiente</span>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
+                            <div className="text-sm text-on-surface">
                               {formatDate(exam.fechaInscripcion)}
                             </div>
                           </td>
@@ -704,7 +705,7 @@ export const DiagnosticExamsListPage = () => {
                               {exam.estatus === 'LISTA_ESPERA' && (
                                 <button
                                   onClick={() => handleOpenAssignModal(exam.id)}
-                                  className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+                                  className={ds.admin.btnSmAssign}
                                   title="Asignar período"
                                 >
                                   Asignar Período
@@ -714,14 +715,14 @@ export const DiagnosticExamsListPage = () => {
                                 <>
                                   <button
                                     onClick={() => handleOpenPaymentModal(exam.id)}
-                                    className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                    className={ds.admin.btnSmSuccess}
                                     title="Recibir comprobante físico y aprobar pago"
                                   >
                                     Recibir y Aprobar
                                   </button>
                                   <button
                                     onClick={() => setRejectModal({ isOpen: true, examId: exam.id })}
-                                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                                    className={ds.admin.btnSmDanger}
                                     title="Rechazar pago"
                                   >
                                     Rechazar
@@ -732,14 +733,14 @@ export const DiagnosticExamsListPage = () => {
                                (exam.exam?.resultado === undefined || exam.exam.resultado === null) && (
                                 <button
                                   onClick={() => handleProcessResult(exam.id)}
-                                  className="text-blue-600 hover:text-blue-900"
+                                  className="text-primary hover:text-primary-container"
                                   title="Procesar resultado"
                                 >
                                   Procesar
                                 </button>
                               )}
                               {exam.exam?.resultado !== undefined && exam.exam.resultado !== null && (
-                                <span className="text-gray-400">Completado</span>
+                                <span className="text-outline">Completado</span>
                               )}
                             </div>
                           </td>
@@ -751,26 +752,26 @@ export const DiagnosticExamsListPage = () => {
 
                 {/* Pagination */}
                 {pagination && pagination.totalPages > 1 && (
-                  <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                  <div className="bg-surface-container-lowest px-4 py-3 flex items-center justify-between border-t border-outline-variant sm:px-6">
                     <div className="flex-1 flex justify-between sm:hidden">
                       <button
                         onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
-                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="relative inline-flex items-center px-4 py-2 border border-outline-variant text-sm font-medium rounded-md text-on-surface-variant bg-surface-container-lowest hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Anterior
                       </button>
                       <button
                         onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
                         disabled={currentPage === pagination.totalPages}
-                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-outline-variant text-sm font-medium rounded-md text-on-surface-variant bg-surface-container-lowest hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Siguiente
                       </button>
                     </div>
                     <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-on-surface-variant">
                           Mostrando <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> a{' '}
                           <span className="font-medium">{Math.min(currentPage * pageSize, pagination.total)}</span> de{' '}
                           <span className="font-medium">{pagination.total}</span> resultados
@@ -781,7 +782,7 @@ export const DiagnosticExamsListPage = () => {
                           <button
                             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
-                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-outline-variant bg-surface-container-lowest text-sm font-medium text-on-surface-variant hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Icon name="chevron-left" size={20} />
                           </button>
@@ -798,8 +799,8 @@ export const DiagnosticExamsListPage = () => {
                                   onClick={() => setCurrentPage(page)}
                                   className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                                     currentPage === page
-                                      ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                      ? 'z-10 bg-primary-fixed border-primary text-primary'
+                                      : 'bg-surface-container-lowest border-outline-variant text-on-surface-variant hover:bg-surface-container-low'
                                   }`}
                                 >
                                   {page}
@@ -807,7 +808,7 @@ export const DiagnosticExamsListPage = () => {
                               );
                             } else if (page === currentPage - 3 || page === currentPage + 3) {
                               return (
-                                <span key={page} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                <span key={page} className="relative inline-flex items-center px-4 py-2 border border-outline-variant bg-surface-container-lowest text-sm font-medium text-on-surface-variant">
                                   ...
                                 </span>
                               );
@@ -817,7 +818,7 @@ export const DiagnosticExamsListPage = () => {
                           <button
                             onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
                             disabled={currentPage === pagination.totalPages}
-                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-outline-variant bg-surface-container-lowest text-sm font-medium text-on-surface-variant hover:bg-surface-container-low disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Icon name="chevron-right" size={20} />
                           </button>
@@ -834,16 +835,16 @@ export const DiagnosticExamsListPage = () => {
 
       {/* Assign Period Modal */}
       {assignModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Asignar Período</h2>
-            <p className="text-sm text-gray-600 mb-4">
+        <div className={ds.admin.modalOverlay}>
+          <div className={ds.admin.modal}>
+            <h2 className={ds.admin.modalTitle}>Asignar Período</h2>
+            <p className={ds.admin.modalBody}>
               Selecciona un período en estatus <strong>ABIERTO</strong> con cupo disponible.
               Si el período requiere pago, el alumno quedará en pendiente de pago.
               La asignación admin no depende de la ventana de inscripción pública.
             </p>
             {openPeriods.length === 0 ? (
-              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              <div className={ds.admin.modalWarning}>
                 No hay períodos ABIERTOS con cupo. Crea o abre un período en Administración → Períodos de examen.
               </div>
             ) : null}
@@ -861,17 +862,17 @@ export const DiagnosticExamsListPage = () => {
                 })),
               ]}
             />
-            <div className="flex justify-end gap-3 mt-6">
+            <div className={ds.admin.modalActions}>
               <button
                 onClick={handleCloseAssignModal}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className={ds.admin.btnCancel}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAssignPeriod}
                 disabled={!assignModal.periodId || assigning}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                className={`${ds.btn.primary} text-sm flex items-center gap-2`}
               >
                 {assigning ? <ButtonLoader /> : null}
                 Asignar
@@ -883,18 +884,18 @@ export const DiagnosticExamsListPage = () => {
 
       {/* Payment Approval Modal */}
       {paymentModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <div className={ds.admin.modalOverlay}>
+          <div className={ds.admin.modal}>
+            <h2 className={ds.admin.modalTitle}>
               Recibir Comprobante y Aprobar Pago
             </h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className={ds.admin.modalBody}>
               El estudiante ha entregado el comprobante físico. Ingresa los datos del pago:
             </p>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={ds.admin.filterLabel}>
                   Monto del Pago *
                 </label>
                 <input
@@ -903,36 +904,36 @@ export const DiagnosticExamsListPage = () => {
                   min="0"
                   value={paymentModal.montoPago}
                   onChange={(e) => setPaymentModal({ ...paymentModal, montoPago: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={ds.admin.input}
                   placeholder="0.00"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={ds.admin.filterLabel}>
                   Observaciones (Opcional)
                 </label>
                 <textarea
                   value={paymentModal.observaciones}
                   onChange={(e) => setPaymentModal({ ...paymentModal, observaciones: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={ds.admin.input}
                   rows={3}
                   placeholder="Notas sobre el comprobante recibido..."
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className={ds.admin.modalActions}>
               <button
                 onClick={handleClosePaymentModal}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className={ds.admin.btnCancel}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleApprovePayment}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                className={ds.btn.primary}
               >
                 Aprobar Pago
               </button>

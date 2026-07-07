@@ -5,7 +5,13 @@ import { Layout } from '../../components/layout/Layout';
 import { examPeriodsApi, examsApi } from '../../lib/api';
 import { getExamEligibility, hasPriorDiagnosticExam, type StudentEnglishStatusSnapshot } from '../../lib/englishEligibility';
 import { useToast } from '../../context/ToastContext';
-import { Card, Loader, Icon, ConfirmDialog } from '../../components/ui';
+import { Card, Loader, Icon, ConfirmDialog, Badge } from '../../components/ui';
+import {
+  alertBanner,
+  btnPrimary,
+  btnPrimaryFull,
+  studentPage,
+} from '../../lib/studentEnglishPresentation';
 import type { AvailableExamPeriod } from '../../types';
 
 export const AvailableExamPeriodsPage = () => {
@@ -87,8 +93,6 @@ export const AvailableExamPeriodsPage = () => {
     }
   };
 
-  // Lista de espera: el primer diagnóstico sin período se solicita sin periodId y
-  // el backend lo deja en LISTA_ESPERA (gratuito). No aplica para un retake.
   const requestWaitlist = () => {
     if (!examEligibility?.canRequest) {
       showToast(examEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
@@ -161,15 +165,15 @@ export const AvailableExamPeriodsPage = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate('/student/english/status')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            className={studentPage.backLink}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Volver al estado de inglés
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Períodos de Exámenes Disponibles</h1>
-          <p className="text-gray-600">
+          <h1 className={studentPage.title}>Períodos de Exámenes Disponibles</h1>
+          <p className={studentPage.subtitle}>
             {priorDiagnostic
               ? 'Para un segundo examen de diagnóstico debes inscribirte a un período publicado (puede tener costo).'
               : 'Selecciona un período abierto o solicita el examen sin período para entrar a lista de espera.'}
@@ -177,22 +181,22 @@ export const AvailableExamPeriodsPage = () => {
         </div>
 
         {!canEnroll && examEligibility?.reason && (
-          <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
-            <Icon name="warning" size={24} className="text-orange-600 mt-0.5" />
+          <div className={`mb-6 rounded-lg p-4 flex items-start gap-3 ${alertBanner.pending}`}>
+            <Icon name="warning" size={24} className="text-secondary mt-0.5" />
             <div>
-              <h3 className="font-semibold text-orange-900 mb-1">No puedes inscribirte ahora</h3>
-              <p className="text-sm text-orange-800">{examEligibility.reason}</p>
+              <h3 className="font-semibold text-on-surface mb-1">No puedes inscribirte ahora</h3>
+              <p className={`text-sm ${studentPage.body}`}>{examEligibility.reason}</p>
             </div>
           </div>
         )}
 
         {periods.length === 0 ? (
           <Card className="p-8 text-center">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 text-outline mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay períodos disponibles</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className={`text-lg font-semibold ${studentPage.sectionTitle} mb-2`}>No hay períodos disponibles</h3>
+            <p className={`${studentPage.subtitle} mb-4`}>
               {priorDiagnostic
                 ? 'No hay períodos de examen abiertos en este momento. Vuelve cuando el administrador publique uno.'
                 : 'No hay períodos abiertos. Puedes solicitar tu primer examen y quedar en lista de espera hasta que se asignen fechas.'}
@@ -201,7 +205,7 @@ export const AvailableExamPeriodsPage = () => {
               <button
                 onClick={requestWaitlist}
                 disabled={waitlisting}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`inline-flex items-center gap-2 px-6 py-3 font-medium ${btnPrimary}`}
               >
                 {waitlisting ? 'Procesando...' : 'Entrar a lista de espera'}
               </button>
@@ -212,37 +216,35 @@ export const AvailableExamPeriodsPage = () => {
             {periods.map((period) => (
               <Card key={period.id} className="p-6 hover:shadow-lg transition-shadow">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">{period.nombre}</h3>
-                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                    Disponible
-                  </span>
+                  <h3 className={studentPage.sectionTitle}>{period.nombre}</h3>
+                  <Badge variant="success">Disponible</Badge>
                 </div>
 
-                {period.descripcion && <p className="text-gray-600 mb-4">{period.descripcion}</p>}
+                {period.descripcion && <p className={`${studentPage.subtitle} mb-4`}>{period.descripcion}</p>}
 
                 <div className="space-y-3 mb-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Inscripciones:</p>
-                    <p className="text-sm text-gray-600">
+                    <p className={studentPage.label}>Inscripciones:</p>
+                    <p className={studentPage.body}>
                       {formatDateTime(period.fechaInscripcionInicio)} - {formatDateTime(period.fechaInscripcionFin)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Período de Exámenes:</p>
-                    <p className="text-sm text-gray-600">
+                    <p className={studentPage.label}>Período de Exámenes:</p>
+                    <p className={studentPage.body}>
                       {formatDate(period.fechaInicio)} - {formatDate(period.fechaFin)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Cupos:</p>
-                    <p className="text-sm text-gray-600">
+                    <p className={studentPage.label}>Cupos:</p>
+                    <p className={studentPage.body}>
                       {period.cuposDisponibles} de {period.cupoMaximo} disponibles
                     </p>
                   </div>
                   {period.requierePago && period.montoPago != null && (
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Costo:</p>
-                      <p className="text-sm text-gray-600">
+                      <p className={studentPage.label}>Costo:</p>
+                      <p className={studentPage.body}>
                         ${period.montoPago.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </p>
                     </div>
@@ -252,7 +254,7 @@ export const AvailableExamPeriodsPage = () => {
                 <button
                   onClick={() => requestEnroll(period.id, period.nombre)}
                   disabled={!canEnroll || enrolling === period.id || period.cuposDisponibles === 0}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className={btnPrimaryFull}
                 >
                   {enrolling === period.id ? (
                     <>

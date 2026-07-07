@@ -1,4 +1,4 @@
-# Contrato API móvil — SIPI (iOS hoy, Android después)
+# Contrato API móvil — SIPI (iOS + Android)
 
 Contrato compartido entre el backend `sipi-v2` y los clientes móviles (`sipi-mobile-ios` y la futura app Android). Define qué endpoints son canónicos, cuáles son legacy y cómo debe consumirse el flujo de inglés (producto principal: requisito del 70%).
 
@@ -122,7 +122,7 @@ Relevante para una futura app/admin nativa que administre la oferta de cursos. N
 Reglas:
 - **`GET /api/groups` por defecto solo devuelve grupos activos** (`deletedAt = null`); usar `eliminados=true` para el historial.
 - **Filtro `estatus`** admite **lista separada por comas** (p. ej. `estatus=ABIERTO,EN_CURSO` para "vigentes"); junto con `esCursoIngles` permite separar vigentes / cerrados / cancelados / inglés.
-- **Costo no se muestra al maestro**: aunque `group.costo` viene en la respuesta, la UI del rol TEACHER **no** debe exhibirlo (es dato administrativo). Para STUDENT sí (lo paga).
+- **Costo y rol TEACHER (2026-07-07)**: el backend **no incluye** el campo `costo` en `GET /api/groups` ni `GET /api/groups/:id` cuando el rol es **TEACHER** (dato administrativo). STUDENT y ADMIN sí lo reciben donde aplica (p. ej. alumno al pagar curso). La UI del maestro tampoco debe mostrar precio aunque lo reciba por error.
 
 ---
 
@@ -136,12 +136,13 @@ Sin cambios de contrato, con la semántica post-limpieza:
 | `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout` | Sin cambios |
 | `GET /api/students/me` | Incluye perfil de inglés del alumno (`nivelInglesActual`, `porcentajeIngles`, `cumpleRequisitoIngles`, `promedioIngles`) — útil para badges, pero la pantalla de inglés debe usar `english-status` |
 | `GET /api/enrollments/me` | Solo inscripciones de materias regulares (inglés legacy filtrado). **No usar en la app del alumno** (calificaciones SIS fuera de alcance, 2026-06-24); sigue disponible para ADMIN/herramientas |
-| `GET /api/enrollments/:id` | Resuelve también actividades V2 (cursos de inglés con grupo) por id de actividad |
+| `GET /api/enrollments/:id` | Resuelve también actividades V2 (cursos de inglés con grupo) por id de actividad. **RBAC (2026-07)**: STUDENT solo las propias; TEACHER solo inscripciones de sus grupos; sin permiso → **`403`** (`ForbiddenError`), no 500 |
 | `GET /api/enrollments/group/:groupId` | Fusiona inscripciones regulares + cursos de inglés V2 del grupo; campos `isSpecialCourse`, `courseType`, `nivelIngles`. **Solo cohorte activa (2026-06-24)**: excluye `CANCELADO`, `BAJA`, `PENDIENTE_PAGO`, `PAGO_PENDIENTE_APROBACION` y `LISTA_ESPERA` (es la foto de quienes están en el grupo). Para ver pendientes/cancelados usar `GET /api/enrollments?groupId=&estatus=` (ADMIN) |
-| `GET /api/groups` (+ `periodo`, `subjectId`, `esCursoIngles`, `estatus`, `eliminados`) | **Actualizado 2026-06-24**: `estatus` admite lista separada por comas (p. ej. `ABIERTO,EN_CURSO`); `eliminados=true` devuelve el historial de bajas lógicas. Por **defecto solo grupos activos** (`deletedAt = null`). Ver ciclo de vida en §2.4 |
+| `GET /api/groups/:id` | **RBAC (2026-07)**: ADMIN cualquier grupo activo; TEACHER solo grupos donde `teacherId` = su registro (ajeno → **404**); STUDENT solo si está inscrito en el grupo (ajeno → **404**). Grupos con baja lógica → **404** para TEACHER/STUDENT. **`costo` omitido** en la respuesta para TEACHER |
+| `GET /api/groups` (+ `periodo`, `subjectId`, `esCursoIngles`, `estatus`, `eliminados`) | **Actualizado 2026-06-24**: `estatus` admite lista separada por comas (p. ej. `ABIERTO,EN_CURSO`); `eliminados=true` devuelve el historial de bajas lógicas. Por **defecto solo grupos activos** (`deletedAt = null`). TEACHER: solo sus grupos, **sin `costo`**. Ver ciclo de vida en §2.4 |
 | `GET /api/students`, `/api/teachers`, `/api/subjects` | Directorio admin, sin cambios |
 | `GET /api/careers` | **Nuevo** — catálogo de carreras (ADMIN/TEACHER). Para filtros por carrera con UTF-8 correcto |
-| `GET /api/search` | **Solo ADMIN (2026-06-24)** — antes lo consumía cualquier usuario autenticado; ahora responde **`403`** a STUDENT/TEACHER (exponía PII de toda la institución). Las apps de alumno/maestro no deben ofrecer búsqueda global. |
+| `GET /api/search` | **Solo ADMIN (2026-06-24)** — responde **`403`** a STUDENT/TEACHER. **`strictLimiter` (2026-07)**: 10 req/hora por IP — no reintentar en bucle ante `429` |
 
 ---
 
@@ -248,7 +249,7 @@ Cuando se implementen estos roles en nativo, alinear con la web (cambios 2026-06
 - **TEACHER** (alinear con web 2026-06-24):
   - **Navegación**: dashboard o "Calificar" → elegir grupo → **vista única del grupo** (equivalente web `/teacher/groups/:id`). No mantener dos pantallas separadas (detalle vs calificar) que pierdan contexto.
   - **Vista única del grupo** — una sola pantalla por grupo con:
-    1. **Encabezado**: materia/nombre, periodo, estatus, badge de inglés/nivel, horario, ubicación, modalidad, cupo. **No mostrar `costo`** (dato administrativo).
+    1. **Encabezado**: materia/nombre, periodo, estatus, badge de inglés/nivel, horario, ubicación, modalidad, cupo. **`costo` no viene en API para TEACHER** (§2.4); no mostrar precio en UI.
     2. **Urgencia**: si hay pendientes por calificar, badge derivado de `group.fechaFin` — "Termina en N días" (≤ 7), "Termina hoy", "Curso finalizado" (vencido).
     3. **Resumen de calificación**: progreso (% calificados), promedio, conteos aprobados (≥ 70) / reprobados / pendientes.
     4. **Roster + calificación inline**: tabla de la **cohorte activa** (`GET /api/enrollments/group/:groupId`, §3 — excluye cancelados, pendientes de pago y lista de espera). Calificar en la misma fila:
@@ -272,6 +273,7 @@ Desde 2026-06-15 el backend aplica límites por IP (detrás de Cloudflare Tunnel
 |--------|---------|--------|-------|
 | `POST /api/auth/login` | 15 min | 5 intentos fallidos | Los logins exitosos **no** cuentan (`skipSuccessfulRequests`) |
 | Resto de `/api/*` | 15 min | 400 requests | Incluye navegación con muchas pantallas o paginación |
+| `GET /api/search`, `GET /api/export/*` | 1 h | 10 requests | **`strictLimiter` (2026-07)** — superficie de PII masiva; solo ADMIN; tratar `429` como contrato, no reintentar en bucle |
 | Desarrollo | 15 min | 500 requests / 20 logins | Solo si el cliente apunta a un backend local |
 
 `GET /health` queda **fuera** del limitador general.
@@ -312,4 +314,4 @@ No hay endpoints nuevos por esta optimización: es política de consumo sobre lo
 - Las rutas retiradas responden `410 Gone` con `{ error, message, replacement, docs }` — los clientes deben tratar 410 como "actualiza la integración", no como error transitorio.
 - Fuente de verdad del producto: `docs/PRODUCTO.md`. Flujos de negocio: `docs/FLUJOS-NEGOCIO.md`.
 
-**Última actualización**: 2026-07-05 — §4.7: tabla de referencia web TEACHER (Dashboard / Mis Grupos / Calificar / vista única). Previo: vista única del maestro (detalle + calificar inline + herramientas), assign-group admin, cohorte activa, experiencia del alumno §4, cancelación restringida, search solo ADMIN. Contrato aplicable a iOS y Android.
+**Última actualización**: 2026-07-07 — RBAC `GET /api/groups/:id` y `GET /api/enrollments/:id` (403); `costo` omitido en API para TEACHER; `strictLimiter` en search/export (§5). Previo: §4.7 TEACHER, vista única del maestro, assign-group admin, cohorte activa, experiencia del alumno §4.

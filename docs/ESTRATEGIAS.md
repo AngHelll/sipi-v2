@@ -1,5 +1,7 @@
 # 🎯 Estrategias y Decisiones de Diseño - SIPI-V2
 
+> **Archivo histórico (2025-01-23).** Para alcance, roadmap y design system vigentes: [PRODUCTO.md](PRODUCTO.md), [ROADMAP.md](ROADMAP.md), [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md).
+
 **Última actualización:** 2025-01-23
 
 Este documento centraliza las estrategias y decisiones de diseño importantes del sistema.

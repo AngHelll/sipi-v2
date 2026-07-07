@@ -1,5 +1,7 @@
 # 📊 Estado del Sistema - SIPI-V2
 
+> **Nota (2026-07-07):** snapshot parcialmente desactualizado. Para estado vigente del producto y roadmap, usar [ROADMAP.md](ROADMAP.md) y [PRODUCTO.md](PRODUCTO.md). Design system: [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md).
+
 **Última actualización:** 2026-01-24  
 **Versión:** 1.0.0
 
@@ -20,7 +22,7 @@ SIPI-V2 es un sistema de gestión académica moderno y escalable con arquitectur
 | Seguridad | ✅ Implementado | Rate limiting, sanitización, validación |
 | CI/CD | ✅ Operativo | Drone pipeline con migraciones automáticas |
 | Optimizaciones | ✅ Implementado | Compresión HTTP, caché LRU, índices, lazy loading |
-| Sistema de Diseño | ✅ Implementado | Paleta educativa única, componentes personalizados |
+| Sistema de Diseño | ⚠️ Parcial | MD3 en Tailwind + `components/ui/`; móvil D0–D3 Android ✓, iOS en progreso — ver [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) |
 
 ---
 

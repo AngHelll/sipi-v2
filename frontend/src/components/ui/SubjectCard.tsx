@@ -30,7 +30,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEd
             </button>
           )}
           {onDelete && (
-            <button onClick={onDelete} className="p-1.5 rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Eliminar">
+            <button onClick={onDelete} className="p-1.5 rounded-md text-error hover:bg-error-container transition-colors" title="Eliminar">
               <span className="material-symbols-outlined text-[18px]">delete</span>
             </button>
           )}
@@ -53,7 +53,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({ subject, onClick, onEd
                 <span
                   className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                     isEstatusActiva
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      ? 'bg-primary-fixed text-on-primary-fixed-variant'
                       : 'bg-surface-variant text-on-surface-variant'
                   }`}
                 >

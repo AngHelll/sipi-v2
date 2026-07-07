@@ -16,10 +16,10 @@ const positionClasses = {
 };
 
 const arrowClasses = {
-  top: 'top-full left-1/2 -translate-x-1/2 border-t-gray-800',
-  bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-gray-800',
-  left: 'left-full top-1/2 -translate-y-1/2 border-l-gray-800',
-  right: 'right-full top-1/2 -translate-y-1/2 border-r-gray-800',
+  top: 'top-full left-1/2 -translate-x-1/2 border-t-inverse-surface',
+  bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-inverse-surface',
+  left: 'left-full top-1/2 -translate-y-1/2 border-l-inverse-surface',
+  right: 'right-full top-1/2 -translate-y-1/2 border-r-inverse-surface',
 };
 
 export const Tooltip = ({
@@ -39,7 +39,7 @@ export const Tooltip = ({
       {children}
       {isVisible && (
         <div
-          className={`absolute z-50 px-3 py-2 text-sm text-white bg-gray-800 rounded-lg shadow-lg whitespace-nowrap ${positionClasses[position]}`}
+          className={`absolute z-50 px-3 py-2 text-sm text-inverse-on-surface bg-inverse-surface rounded-lg shadow-lg whitespace-nowrap ${positionClasses[position]}`}
           role="tooltip"
         >
           {content}
@@ -62,7 +62,7 @@ interface IconTooltipProps {
 export const IconTooltip = ({ icon, tooltip, position = 'top' }: IconTooltipProps) => {
   return (
     <Tooltip content={tooltip} position={position}>
-      <span className="inline-flex items-center text-gray-400 hover:text-gray-600 cursor-help">
+      <span className="inline-flex items-center text-outline hover:text-on-surface-variant cursor-help">
         {icon}
       </span>
     </Tooltip>

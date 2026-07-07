@@ -5,7 +5,7 @@ interface SkeletonProps {
 }
 
 export const Skeleton = ({ className = '', variant = 'text' }: SkeletonProps) => {
-  const baseClasses = 'animate-pulse bg-gray-200';
+  const baseClasses = 'animate-pulse bg-surface-container-high';
   
   const variantClasses = {
     text: 'h-4 rounded',
@@ -35,7 +35,7 @@ export const SkeletonText = ({ lines = 3, className = '' }: { lines?: number; cl
 
 export const SkeletonCard = () => {
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+    <div className="bg-surface-container-lowest rounded-lg shadow-md border border-outline-variant p-6">
       <Skeleton variant="rectangular" className="h-6 w-1/3 mb-4" />
       <SkeletonText lines={3} />
     </div>
@@ -44,11 +44,11 @@ export const SkeletonCard = () => {
 
 export const SkeletonTable = ({ rows = 5 }: { rows?: number }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-      <div className="p-4 border-b border-gray-200">
+    <div className="bg-surface-container-lowest rounded-lg shadow-md border border-outline-variant overflow-hidden">
+      <div className="p-4 border-b border-outline-variant">
         <Skeleton variant="rectangular" className="h-6 w-1/4" />
       </div>
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-outline-variant">
         {Array.from({ length: rows }).map((_, i) => (
           <div key={i} className="p-4 flex items-center gap-4">
             <Skeleton variant="circular" className="w-10 h-10" />

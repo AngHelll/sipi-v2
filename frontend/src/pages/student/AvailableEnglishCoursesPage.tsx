@@ -9,7 +9,13 @@ import {
   type StudentEnglishStatusSnapshot,
 } from '../../lib/englishEligibility';
 import { useToast } from '../../context/ToastContext';
-import { Card, Loader, Icon, ConfirmDialog } from '../../components/ui';
+import { Card, Loader, Icon, ConfirmDialog, Badge } from '../../components/ui';
+import {
+  alertBanner,
+  btnPrimaryFull,
+  btnSecondary,
+  studentPage,
+} from '../../lib/studentEnglishPresentation';
 import type { Group } from '../../types';
 
 export const AvailableEnglishCoursesPage = () => {
@@ -48,8 +54,6 @@ export const AvailableEnglishCoursesPage = () => {
       setCourseEligibility(eligibility);
 
       const level = getEligibleCourseLevel(snapshot);
-      // Mostrar grupos del nivel del alumno y también los mal configurados sin
-      // nivel (se muestran deshabilitados con aviso) para no ocultarlos en silencio.
       const filtered = (coursesResult.courses || []).filter(
         (c) => c.nivelIngles === level || c.nivelIngles == null
       );
@@ -102,8 +106,6 @@ export const AvailableEnglishCoursesPage = () => {
     }
   };
 
-  // Lista de espera: cuando no hay grupo publicado para el nivel del alumno,
-  // se solicita el curso sin groupId y el backend lo deja en LISTA_ESPERA.
   const requestWaitlist = () => {
     if (!courseEligibility?.canRequest) {
       showToast(courseEligibility?.reason || 'No puedes inscribirte en este momento', 'error');
@@ -151,21 +153,9 @@ export const AvailableEnglishCoursesPage = () => {
     });
   };
 
-  const getLevelBadge = (level: number) => {
-    const colors = [
-      'bg-blue-100 text-blue-800',
-      'bg-green-100 text-green-800',
-      'bg-yellow-100 text-yellow-800',
-      'bg-orange-100 text-orange-800',
-      'bg-red-100 text-red-800',
-      'bg-purple-100 text-purple-800',
-    ];
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[level - 1] || colors[0]}`}>
-        Nivel {level}
-      </span>
-    );
-  };
+  const getLevelBadge = (level: number) => (
+    <Badge variant="info">Nivel {level}</Badge>
+  );
 
   const eligibleLevel = courseEligibility?.level ?? 1;
   const canEnroll = courseEligibility?.canRequest ?? false;
@@ -186,15 +176,15 @@ export const AvailableEnglishCoursesPage = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate('/student/english/status')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            className={studentPage.backLink}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Volver al estado de inglés
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Cursos de Inglés Disponibles</h1>
-          <p className="text-gray-600">
+          <h1 className={studentPage.title}>Cursos de Inglés Disponibles</h1>
+          <p className={studentPage.subtitle}>
             Solo se muestran grupos de <strong>nivel {eligibleLevel}</strong> (tu nivel actual).
             {!courseEligibility?.canRequest && courseEligibility?.reason
               ? ''
@@ -203,28 +193,28 @@ export const AvailableEnglishCoursesPage = () => {
         </div>
 
         {!canEnroll && courseEligibility?.reason && (
-          <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
-            <Icon name="warning" size={24} className="text-orange-600 mt-0.5" />
+          <div className={`mb-6 rounded-lg p-4 flex items-start gap-3 ${alertBanner.pending}`}>
+            <Icon name="warning" size={24} className="text-secondary mt-0.5" />
             <div>
-              <h3 className="font-semibold text-orange-900 mb-1">No puedes inscribirte ahora</h3>
-              <p className="text-sm text-orange-800">{courseEligibility.reason}</p>
+              <h3 className="font-semibold text-on-surface mb-1">No puedes inscribirte ahora</h3>
+              <p className={`text-sm ${studentPage.body}`}>{courseEligibility.reason}</p>
             </div>
           </div>
         )}
 
         {courses.length === 0 ? (
           <Card className="p-8 text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className={`text-lg font-semibold ${studentPage.sectionTitle} mb-2`}>
               No hay cursos de nivel {eligibleLevel} disponibles
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className={`${studentPage.subtitle} mb-4`}>
               No hay grupos abiertos para tu nivel. Puedes unirte a la lista de espera y el área abrirá un grupo según la demanda.
             </p>
             {canEnroll && (
               <button
                 onClick={requestWaitlist}
                 disabled={waitlisting}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`inline-flex items-center gap-2 px-6 py-3 font-medium ${btnSecondary}`}
               >
                 {waitlisting ? 'Uniéndote...' : 'Unirme a lista de espera'}
               </button>
@@ -240,41 +230,41 @@ export const AvailableEnglishCoursesPage = () => {
               return (
                 <Card key={course.id} className="p-6 hover:shadow-lg transition-shadow">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-semibold text-gray-900">{course.nombre}</h3>
+                    <h3 className={studentPage.sectionTitle}>{course.nombre}</h3>
                     {nivel != null && getLevelBadge(nivel)}
                   </div>
 
                   <div className="space-y-2 mb-4">
                     {course.subject && (
                       <div>
-                        <p className="text-sm font-medium text-gray-700">Materia:</p>
-                        <p className="text-sm text-gray-600">
+                        <p className={studentPage.label}>Materia:</p>
+                        <p className={studentPage.body}>
                           {course.subject.clave} - {course.subject.nombre}
                         </p>
                       </div>
                     )}
                     {course.teacher && (
                       <div>
-                        <p className="text-sm font-medium text-gray-700">Maestro:</p>
-                        <p className="text-sm text-gray-600">
+                        <p className={studentPage.label}>Maestro:</p>
+                        <p className={studentPage.body}>
                           {course.teacher.nombre} {course.teacher.apellidoPaterno}
                         </p>
                       </div>
                     )}
                     <div>
-                      <p className="text-sm font-medium text-gray-700">Cupos:</p>
-                      <p className="text-sm text-gray-600">{cupoDisponible} disponibles</p>
+                      <p className={studentPage.label}>Cupos:</p>
+                      <p className={studentPage.body}>{cupoDisponible} disponibles</p>
                     </div>
                     {course.costo != null && (
                       <div>
-                        <p className="text-sm font-medium text-gray-700">Costo:</p>
-                        <p className="text-sm font-semibold text-green-700">${course.costo.toFixed(2)}</p>
+                        <p className={studentPage.label}>Costo:</p>
+                        <p className="text-sm font-semibold text-primary">${course.costo.toFixed(2)}</p>
                       </div>
                     )}
                     {course.fechaInscripcionFin && (
                       <div>
-                        <p className="text-sm font-medium text-gray-700">Inscripciones hasta:</p>
-                        <p className="text-sm text-gray-600">{formatDate(course.fechaInscripcionFin)}</p>
+                        <p className={studentPage.label}>Inscripciones hasta:</p>
+                        <p className={studentPage.body}>{formatDate(course.fechaInscripcionFin)}</p>
                       </div>
                     )}
                   </div>
@@ -288,7 +278,7 @@ export const AvailableEnglishCoursesPage = () => {
                       requestEnroll(course.id, course.nombre, nivel, course.costo);
                     }}
                     disabled={!canEnrollThis || enrolling === course.id || cupoDisponible <= 0 || nivel == null}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={btnPrimaryFull}
                   >
                     {enrolling === course.id ? 'Inscribiendo...' : 'Inscribirme'}
                   </button>

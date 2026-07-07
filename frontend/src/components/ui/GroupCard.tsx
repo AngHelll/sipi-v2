@@ -82,7 +82,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
                     onClick={(e) => { setMenuOpen(false); onClose(e); }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors text-left"
                   >
-                    <span className="material-symbols-outlined text-[18px] text-amber-600">lock</span>
+                    <span className="material-symbols-outlined text-[18px] text-on-secondary-fixed-variant">lock</span>
                     Cerrar curso
                   </button>
                 )}
@@ -92,7 +92,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
                     onClick={(e) => { setMenuOpen(false); onRestore(e); }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors text-left"
                   >
-                    <span className="material-symbols-outlined text-[18px] text-green-600">restore</span>
+                    <span className="material-symbols-outlined text-[18px] text-primary">restore</span>
                     Restaurar
                   </button>
                 )}
@@ -100,7 +100,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
                   <button
                     role="menuitem"
                     onClick={(e) => { setMenuOpen(false); onDelete(e); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-error hover:bg-error-container transition-colors text-left"
                   >
                     <span className="material-symbols-outlined text-[18px]">delete</span>
                     Eliminar
@@ -125,7 +125,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
               <span
                 className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ${
                   isEstatusAbierto
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    ? 'bg-primary-fixed text-on-primary-fixed-variant'
                     : 'bg-surface-variant text-on-surface-variant'
                 }`}
               >
@@ -139,7 +139,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
               </span>
             )}
             {pendingGrades !== undefined && pendingGrades > 0 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 inline-flex items-center gap-1">
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-secondary-fixed text-on-secondary-fixed-variant inline-flex items-center gap-1">
                 <span className="material-symbols-outlined text-[12px]">pending_actions</span>
                 {pendingGrades} sin calificar
               </span>
@@ -175,9 +175,9 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onClick, onEdit, on
           <div 
             className={`h-1.5 rounded-full ${
               capacityPercent >= 100 
-                ? 'bg-red-500' 
+                ? 'bg-error' 
                 : capacityPercent >= 80 
-                  ? 'bg-orange-500' 
+                  ? 'bg-secondary' 
                   : 'bg-primary'
             }`}
             style={{ width: `${capacityPercent}%` }}

@@ -8,6 +8,7 @@ import { groupsApi, enrollmentsApi, specialCoursesApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { Loader, Badge, Icon } from '../../components/ui';
 import type { Group, Enrollment } from '../../types';
+import { ds, gradeToneClass } from '../../lib/designSystem';
 
 type RosterFilter = 'all' | 'ungraded' | 'passed' | 'failed';
 
@@ -200,18 +201,9 @@ export const TeacherGroupDetailPage = () => {
                   </Badge>
                 )}
                 {urgency.label && (
-                  <span
-                    className={`px-2 py-0.5 text-xs font-semibold rounded-full inline-flex items-center gap-1 ${
-                      urgency.tone === 'overdue'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-amber-100 text-amber-700'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[12px]">
-                      {urgency.tone === 'overdue' ? 'event_busy' : 'schedule'}
-                    </span>
+                  <Badge variant={urgency.tone === 'overdue' ? 'error' : 'warning'}>
                     {urgency.label}
-                  </span>
+                  </Badge>
                 )}
               </div>
               <h1 className="text-2xl font-bold text-on-surface font-headline">
@@ -240,26 +232,26 @@ export const TeacherGroupDetailPage = () => {
         </div>
 
         {/* Resumen de calificación */}
-        <div className="bg-surface-container-lowest rounded-2xl shadow-soft p-6 border border-outline-variant/20">
+        <div className={`${ds.card.base} p-6`}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-on-surface">Progreso de calificación</h2>
-            <span className="text-sm font-medium text-on-surface-variant">
+            <span className={ds.page.body}>
               {stats.gradedCount} de {stats.total} ({stats.progress}%)
             </span>
           </div>
           <div className="h-2.5 w-full rounded-full bg-surface-container overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${
-                stats.progress === 100 ? 'bg-green-500' : 'bg-primary'
+                stats.progress === 100 ? 'bg-primary' : 'bg-secondary'
               }`}
               style={{ width: `${stats.progress}%` }}
             />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-5">
             <SummaryStat label="Promedio" value={stats.promedio !== null ? stats.promedio.toFixed(1) : '—'} />
-            <SummaryStat label="Aprobados" value={stats.aprobados} tone="text-green-600" />
-            <SummaryStat label="Reprobados" value={stats.reprobados} tone="text-red-600" />
-            <SummaryStat label="Pendientes" value={stats.pendientes} tone="text-amber-600" />
+            <SummaryStat label="Aprobados" value={stats.aprobados} tone={ds.semantic.successTextStrong} />
+            <SummaryStat label="Reprobados" value={stats.reprobados} tone={ds.semantic.errorText} />
+            <SummaryStat label="Pendientes" value={stats.pendientes} tone={ds.semantic.pendingText} />
           </div>
         </div>
 
@@ -418,14 +410,7 @@ const GradeRow = ({ enrollment, updating, onUpdate }: GradeRowProps) => {
   };
 
   const cal = enrollment.calificacion;
-  const gradeColor =
-    cal !== null && cal !== undefined
-      ? cal >= 70
-        ? 'text-green-600'
-        : cal >= 60
-          ? 'text-yellow-600'
-          : 'text-red-600'
-      : 'text-on-surface-variant';
+  const gradeColor = gradeToneClass(cal ?? null);
 
   return (
     <tr>

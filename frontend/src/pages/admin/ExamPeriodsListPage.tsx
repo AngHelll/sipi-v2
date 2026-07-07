@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { examPeriodsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { ConfirmDialog, Loader } from '../../components/ui';
+import { ConfirmDialog, Loader, Badge, Icon } from '../../components/ui';
+import { ds, examPeriodStatusBadge } from '../../lib/designSystem';
 import type { ExamPeriod, ExamPeriodStatus, ExamPeriodsListResponse } from '../../types';
 
 export const ExamPeriodsListPage = () => {
@@ -15,7 +16,6 @@ export const ExamPeriodsListPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<ExamPeriodsListResponse['pagination'] | null>(null);
 
-  // Delete confirmation state (if needed in future)
   const [actionConfirm, setActionConfirm] = useState<{
     isOpen: boolean;
     periodId: string | null;
@@ -28,7 +28,6 @@ export const ExamPeriodsListPage = () => {
     action: null,
   });
 
-  // Filter states
   const [estatusFilter, setEstatusFilter] = useState<ExamPeriodStatus | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -43,7 +42,7 @@ export const ExamPeriodsListPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const params: any = {
+      const params: Record<string, unknown> = {
         page: currentPage,
         limit: pageSize,
         sortBy,
@@ -111,21 +110,6 @@ export const ExamPeriodsListPage = () => {
     }
   };
 
-  const getStatusBadge = (estatus: ExamPeriodStatus) => {
-    const colors: Record<ExamPeriodStatus, string> = {
-      PLANEADO: 'bg-gray-100 text-gray-800',
-      ABIERTO: 'bg-green-100 text-green-800',
-      CERRADO: 'bg-red-100 text-red-800',
-      EN_PROCESO: 'bg-blue-100 text-blue-800',
-      FINALIZADO: 'bg-purple-100 text-purple-800',
-    };
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[estatus]}`}>
-        {estatus}
-      </span>
-    );
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
@@ -147,7 +131,7 @@ export const ExamPeriodsListPage = () => {
   if (loading && periods.length === 0) {
     return (
       <Layout>
-        <div className="p-6">
+        <div className={ds.admin.pageShellCompact}>
           <Loader />
         </div>
       </Layout>
@@ -156,33 +140,29 @@ export const ExamPeriodsListPage = () => {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
+      <div className={ds.admin.pageShellCompact}>
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Períodos de Exámenes de Diagnóstico</h1>
+          <h1 className={ds.admin.pageTitle}>Períodos de Exámenes de Diagnóstico</h1>
           <button
             onClick={handleNewPeriod}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className={`${ds.btn.primary} flex items-center gap-2`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+            <Icon name="plus" size={20} />
             Nuevo Período
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div className={ds.admin.filterPanel}>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+              <label className={ds.admin.filterLabel}>Estatus</label>
               <select
                 value={estatusFilter}
                 onChange={(e) => {
                   setEstatusFilter(e.target.value as ExamPeriodStatus | '');
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="">Todos</option>
                 <option value="PLANEADO">Planeado</option>
@@ -193,14 +173,14 @@ export const ExamPeriodsListPage = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
+              <label className={ds.admin.filterLabel}>Ordenar por</label>
               <select
                 value={sortBy}
                 onChange={(e) => {
-                  setSortBy(e.target.value as any);
+                  setSortBy(e.target.value as typeof sortBy);
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="fechaInscripcionInicio">Fecha de Inscripción</option>
                 <option value="fechaInicio">Fecha de Inicio</option>
@@ -209,28 +189,28 @@ export const ExamPeriodsListPage = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Orden</label>
+              <label className={ds.admin.filterLabel}>Orden</label>
               <select
                 value={sortOrder}
                 onChange={(e) => {
                   setSortOrder(e.target.value as 'asc' | 'desc');
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value="desc">Descendente</option>
                 <option value="asc">Ascendente</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Por página</label>
+              <label className={ds.admin.filterLabel}>Por página</label>
               <select
                 value={pageSize}
                 onChange={(e) => {
                   setPageSize(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={ds.admin.input}
               >
                 <option value={10}>10</option>
                 <option value={20}>20</option>
@@ -240,122 +220,104 @@ export const ExamPeriodsListPage = () => {
           </div>
         </div>
 
-        {/* Error message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
-          </div>
+          <div className={ds.admin.errorBox}>{error}</div>
         )}
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className={ds.admin.tableWrap}>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className={ds.admin.table}>
+              <thead className={ds.admin.thead}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nombre
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fechas de Inscripción
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fechas de Exámenes
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cupos
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estatus
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
+                  <th className={ds.admin.th}>Nombre</th>
+                  <th className={ds.admin.th}>Fechas de Inscripción</th>
+                  <th className={ds.admin.th}>Fechas de Exámenes</th>
+                  <th className={ds.admin.th}>Cupos</th>
+                  <th className={ds.admin.th}>Estatus</th>
+                  <th className={ds.admin.th}>Acciones</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className={ds.admin.tbody}>
                 {periods.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={6} className={`${ds.admin.td} text-center ${ds.semantic.mutedText}`}>
                       No se encontraron períodos de exámenes
                     </td>
                   </tr>
                 ) : (
-                  periods.map((period) => (
-                    <tr key={period.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{period.nombre}</div>
-                        {period.descripcion && (
-                          <div className="text-sm text-gray-500">{period.descripcion}</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {formatDateTime(period.fechaInscripcionInicio)}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          hasta {formatDateTime(period.fechaInscripcionFin)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {formatDate(period.fechaInicio)}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          hasta {formatDate(period.fechaFin)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {period.cupoActual} / {period.cupoMaximo}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {period.cupoMaximo - period.cupoActual} disponibles
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(period.estatus)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEdit(period.id)}
-                            className="text-blue-600 hover:text-blue-900"
-                            title="Editar"
-                          >
-                            Editar
-                          </button>
-                          {period.estatus === 'PLANEADO' && (
-                            <button
-                              onClick={() => handleOpen(period.id, period.nombre)}
-                              className="text-green-600 hover:text-green-900"
-                              title="Abrir período"
-                            >
-                              Abrir
-                            </button>
+                  periods.map((period) => {
+                    const statusBadge = examPeriodStatusBadge(period.estatus);
+                    return (
+                      <tr key={period.id} className={ds.admin.trHover}>
+                        <td className={ds.admin.td}>
+                          <div className={ds.admin.tdStrong}>{period.nombre}</div>
+                          {period.descripcion && (
+                            <div className={ds.admin.tdMeta}>{period.descripcion}</div>
                           )}
-                          {period.estatus === 'ABIERTO' && (
+                        </td>
+                        <td className={ds.admin.td}>
+                          <div>{formatDateTime(period.fechaInscripcionInicio)}</div>
+                          <div className={ds.admin.tdMeta}>
+                            hasta {formatDateTime(period.fechaInscripcionFin)}
+                          </div>
+                        </td>
+                        <td className={ds.admin.td}>
+                          <div>{formatDate(period.fechaInicio)}</div>
+                          <div className={ds.admin.tdMeta}>
+                            hasta {formatDate(period.fechaFin)}
+                          </div>
+                        </td>
+                        <td className={ds.admin.td}>
+                          <div>
+                            {period.cupoActual} / {period.cupoMaximo}
+                          </div>
+                          <div className={ds.admin.tdMeta}>
+                            {period.cupoMaximo - period.cupoActual} disponibles
+                          </div>
+                        </td>
+                        <td className={ds.admin.td}>
+                          <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                        </td>
+                        <td className={`${ds.admin.td} font-medium`}>
+                          <div className="flex gap-2">
                             <button
-                              onClick={() => handleClose(period.id, period.nombre)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Cerrar período"
+                              onClick={() => handleEdit(period.id)}
+                              className={ds.admin.actionLink}
+                              title="Editar"
                             >
-                              Cerrar
+                              Editar
                             </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            {period.estatus === 'PLANEADO' && (
+                              <button
+                                onClick={() => handleOpen(period.id, period.nombre)}
+                                className={ds.admin.actionLinkSuccess}
+                                title="Abrir período"
+                              >
+                                Abrir
+                              </button>
+                            )}
+                            {period.estatus === 'ABIERTO' && (
+                              <button
+                                onClick={() => handleClose(period.id, period.nombre)}
+                                className={ds.admin.actionLinkDanger}
+                                title="Cerrar período"
+                              >
+                                Cerrar
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
 
-          {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200">
-              <div className="text-sm text-gray-700">
+            <div className={ds.admin.paginationFooter}>
+              <div className={ds.admin.paginationText}>
                 Mostrando {(pagination.page - 1) * pagination.limit + 1} a{' '}
                 {Math.min(pagination.page * pagination.limit, pagination.total)} de{' '}
                 {pagination.total} períodos
@@ -364,17 +326,17 @@ export const ExamPeriodsListPage = () => {
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={pagination.page === 1}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className={ds.admin.paginationBtn}
                 >
                   Anterior
                 </button>
-                <span className="px-3 py-1 text-sm text-gray-700">
+                <span className={`${ds.admin.paginationText} px-3 py-1`}>
                   Página {pagination.page} de {pagination.totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className={ds.admin.paginationBtn}
                 >
                   Siguiente
                 </button>
@@ -383,7 +345,6 @@ export const ExamPeriodsListPage = () => {
           )}
         </div>
 
-        {/* Confirm Dialog */}
         <ConfirmDialog
           isOpen={actionConfirm.isOpen}
           title={actionConfirm.action === 'open' ? 'Abrir Período' : 'Cerrar Período'}
@@ -401,5 +362,3 @@ export const ExamPeriodsListPage = () => {
     </Layout>
   );
 };
-
-

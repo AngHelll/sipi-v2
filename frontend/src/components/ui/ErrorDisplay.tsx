@@ -22,10 +22,10 @@ export const ErrorDisplay = ({
     typeof error === 'string' ? error : error.message || 'Ha ocurrido un error';
 
   return (
-    <div className={`bg-red-50 border border-red-200 rounded-lg p-4 ${className}`}>
+    <div className={`bg-error-container border border-error/30 rounded-lg p-4 ${className}`}>
       <div className="flex items-start gap-3">
         <svg
-          className="w-5 h-5 text-red-600 shrink-0 mt-0.5"
+          className="w-5 h-5 text-error shrink-0 mt-0.5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -38,17 +38,17 @@ export const ErrorDisplay = ({
           />
         </svg>
         <div className="flex-1">
-          <p className="text-red-800 font-medium">{errorMessage}</p>
+          <p className="text-on-error-container font-medium">{errorMessage}</p>
           {showDetails && error instanceof Error && error.stack && (
             <details className="mt-2">
               <summary
-                className="cursor-pointer text-sm text-red-600 hover:text-red-800"
+                className="cursor-pointer text-sm text-error hover:text-on-error-container"
                 onClick={() => setShowErrorDetails(!showErrorDetails)}
               >
                 {showErrorDetails ? 'Ocultar' : 'Mostrar'} detalles técnicos
               </summary>
               {showErrorDetails && (
-                <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto">
+                <pre className="mt-2 text-xs bg-error-container/80 p-2 rounded overflow-auto">
                   {error.stack}
                 </pre>
               )}
@@ -58,7 +58,7 @@ export const ErrorDisplay = ({
         {onRetry && (
           <button
             onClick={onRetry}
-            className="text-red-600 hover:text-red-800 transition-colors shrink-0"
+            className="text-error hover:text-on-error-container transition-colors shrink-0"
             title="Reintentar"
           >
             <svg

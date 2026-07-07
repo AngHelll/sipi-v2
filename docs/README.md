@@ -6,10 +6,25 @@ Este directorio contiene toda la documentación del proyecto organizada por cate
 
 ## 📖 Guías Principales
 
-### Producto y alcance
+### Canónico (leer primero — humanos e IA)
+
+| Documento | Rol |
+|-----------|-----|
+| [PRODUCTO.md](PRODUCTO.md) | Alcance y leyes de producto |
+| [ROADMAP.md](ROADMAP.md) | Cola por capas 0→4 + Capa 4-UX |
+| [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md) | Verdad de negocio |
+| [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md) | Contrato API móvil |
+| [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) | Design system: semántico + web + móvil |
+| [EVOLUCION.md](EVOLUCION.md) | Log de hipótesis y decisiones |
+| [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) | Checklist capturas iOS/Android (cierre Capa 4-UX) |
+| [SECURITY.md](../SECURITY.md) | Endurecimiento P0–P2 |
+
+### Producto y alcance (detalle)
 - **[PRODUCTO.md](PRODUCTO.md)** - Enfoque actual (SIPI Inglés + SIS básico), API canónica, roadmap
 - **[ROADMAP.md](ROADMAP.md)** - Workflow por capas: Producto → Flujos → Contratos → Web → Móvil
 - **[MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)** - Contrato API para clientes móviles (iOS/Android)
+- **[DESIGN-SYSTEM.md](DESIGN-SYSTEM.md)** - Tokens, componentes, paridad móvil, reglas web
+- **[EVOLUCION.md](EVOLUCION.md)** - Marco de evolución del producto y proceso
 
 ### Estado y Visión General
 - **[ESTADO-SISTEMA.md](ESTADO-SISTEMA.md)** - Estado actual del sistema y métricas
@@ -106,4 +121,4 @@ Para ver el historial de cambios del proyecto, consulta:
 
 ---
 
-**Última actualización:** 2025-01-23
+**Última actualización:** 2026-07-07

@@ -9,6 +9,7 @@
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "audit:nav": "node scripts/audit-navigation.mjs",
+    "audit:ds": "node scripts/audit-design-tokens.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

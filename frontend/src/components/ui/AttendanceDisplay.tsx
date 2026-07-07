@@ -13,9 +13,9 @@ interface AttendanceDisplayProps {
 }
 
 const getAttendanceColor = (porcentaje: number): string => {
-  if (porcentaje >= 80) return 'bg-green-600';
-  if (porcentaje >= 60) return 'bg-yellow-600';
-  return 'bg-red-600';
+  if (porcentaje >= 80) return 'bg-primary';
+  if (porcentaje >= 60) return 'bg-secondary';
+  return 'bg-error';
 };
 
 const getAttendanceVariant = (porcentaje: number): 'success' | 'warning' | 'error' => {
@@ -47,7 +47,7 @@ export const AttendanceDisplay = ({
   return (
     <div className={`space-y-1 ${className}`}>
       {showProgressBar && (
-        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+        <div className="w-full bg-surface-container-high rounded-full h-2.5">
           <div
             className={`h-2.5 rounded-full transition-all ${getAttendanceColor(displayPercentage)}`}
             style={{ width: `${Math.min(displayPercentage, 100)}%` }}
@@ -58,21 +58,21 @@ export const AttendanceDisplay = ({
       
       {showDetails && (
         <div className={`flex items-center gap-2 ${sizeClasses[size]}`}>
-          <div className="flex items-center gap-1 text-gray-600">
-            <span className="font-medium text-green-600">{asistencias}</span>
-            <span className="text-gray-500">asistencias</span>
+          <div className="flex items-center gap-1 text-on-surface-variant">
+            <span className="font-medium text-primary">{asistencias}</span>
+            <span className="text-outline">asistencias</span>
           </div>
-          <span className="text-gray-300">|</span>
-          <div className="flex items-center gap-1 text-gray-600">
-            <span className="font-medium text-red-600">{faltas}</span>
-            <span className="text-gray-500">faltas</span>
+          <span className="text-outline-variant">|</span>
+          <div className="flex items-center gap-1 text-on-surface-variant">
+            <span className="font-medium text-error">{faltas}</span>
+            <span className="text-outline">faltas</span>
           </div>
           {retardos > 0 && (
             <>
-              <span className="text-gray-300">|</span>
-              <div className="flex items-center gap-1 text-gray-600">
-                <span className="font-medium text-yellow-600">{retardos}</span>
-                <span className="text-gray-500">retardos</span>
+              <span className="text-outline-variant">|</span>
+              <div className="flex items-center gap-1 text-on-surface-variant">
+                <span className="font-medium text-on-secondary-fixed-variant">{retardos}</span>
+                <span className="text-outline">retardos</span>
               </div>
             </>
           )}

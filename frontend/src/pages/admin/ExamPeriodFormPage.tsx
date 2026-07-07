@@ -4,7 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { examPeriodsApi } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { FormField, PageLoader, ButtonLoader } from '../../components/ui';
+import { FormField, PageLoader, ButtonLoader, Icon } from '../../components/ui';
+import { ds } from '../../lib/designSystem';
 export const ExamPeriodFormPage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
@@ -234,19 +235,19 @@ export const ExamPeriodFormPage = () => {
 
   return (
     <Layout>
-      <div className="p-6">
+      <div className={ds.admin.pageShellCompact}>
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className={ds.admin.pageTitle}>
             {isEdit ? 'Editar Período de Exámenes' : 'Nuevo Período de Exámenes'}
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className={ds.admin.pageSubtitle}>
             {isEdit
               ? 'Modifica la información del período'
               : 'Completa el formulario para crear un nuevo período de exámenes'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-3xl border border-gray-200">
+        <form onSubmit={handleSubmit} className={`${ds.admin.detailSection} max-w-3xl mb-0`}>
           <div className="space-y-6">
             <FormField
               label="Nombre del Período"
@@ -340,9 +341,9 @@ export const ExamPeriodFormPage = () => {
                     name="requierePago"
                     checked={formData.requierePago}
                     onChange={handleChange}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className={ds.admin.checkbox}
                   />
-                  <span className="text-sm font-medium text-gray-700">Requiere Pago</span>
+                  <span className={ds.admin.checkboxLabel}>Requiere Pago</span>
                 </label>
                 {formData.requierePago && (
                   <FormField
@@ -378,22 +379,20 @@ export const ExamPeriodFormPage = () => {
             <button
               type="button"
               onClick={() => navigate('/admin/exam-periods')}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className={ds.btn.secondary}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || hasErrors}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className={`${ds.btn.primary} flex items-center gap-2`}
             >
               {loading ? (
                 <ButtonLoader />
               ) : (
                 <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Icon name="check" size={20} />
                   {isEdit ? 'Actualizar' : 'Crear'} Período
                 </>
               )}
