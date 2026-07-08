@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Layout } from '../../components/layout/Layout';
 import { examsApi, specialCoursesApi } from '../../lib/api';
 import { getCourseEligibility, getExamEligibility } from '../../lib/englishEligibility';
+import { historicalDiagnosticExams } from '../../lib/englishJourney';
 import { Loader, Card, Badge, Icon, ConfirmDialog } from '../../components/ui';
 import {
   alertBanner,
@@ -226,7 +227,10 @@ export const EnglishStatusPage = () => {
   const examEligibility = getExamEligibility(status);
   const courseEligibility = getCourseEligibility(status);
 
-  const examItems: EnglishItem[] = status.diagnosticExams.map((e) => ({
+  const examItems: EnglishItem[] = historicalDiagnosticExams(
+    status.diagnosticExams,
+    status.pendingExam,
+  ).map((e) => ({
     kind: 'examen',
     id: e.id,
     titulo: 'Examen de diagnóstico',

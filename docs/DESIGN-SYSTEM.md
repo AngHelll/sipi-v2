@@ -91,6 +91,8 @@ Fuente móvil: `Labels.kt` / `DomainLabels` (iOS). Web: mapeos en vistas de ingl
 
 **Alertas inglés compartidas:** `frontend/src/lib/englishAlerts.ts` — misma derivación que móvil §4.2.1.
 
+**Historial exámenes (D5k):** `frontend/src/lib/englishJourney.ts` → `historicalDiagnosticExams` (paridad `EnglishJourney` móvil).
+
 ### Reglas (leyes DS web)
 
 1. En archivos **modificados**, no introducir clases `gray-*`, `blue-*`, `red-*` sueltas; usar tokens MD3 o `ds.*`.
@@ -179,9 +181,10 @@ Implementación: `sipi-mobile-ios/SipiMVP/Core/StudentLayout.swift` · `sipi-mob
 | **D5b — Chrome** | Tab bar, navigation bar tint, botones primarios/secundarios | Theme / `MaterialTheme`, SwiftUI `.tint` |
 | **D5c — Inicio** | Hero perfil (como web W4b): nombre, matrícula, carrera — **mismos campos** que hoy | Vista tab Inicio iOS + Android |
 | **D5d — Mi Inglés** | Gauge/barra progreso gold; chips pendiente/pago; `NextStepCard` con acento | Pantallas inglés existentes |
-| **D5e — Capturas** | Regenerar [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) post-paleta | `docs/images/paridad-ux/` |
+| **D5e — Capturas** | Regenerar [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) post-paleta | ✓ 2026-07-07 |
+| **D5k — Historial** | `Mis exámenes` sin duplicar `pendingExam` (`historicalDiagnosticExams`) | ✓ 2026-07-07 — [PRODUCTO.md](PRODUCTO.md) |
 
-**Fuera de alcance D5:** Manrope embebida (opcional D5f), admin/teacher móvil (web-first), unificar layout web sidebar con tab bar nativo.
+**Fuera de alcance D5:** Manrope embebida (opcional D5f), admin/teacher móvil (web-first), unificar layout web sidebar con tab bar nativo. Micro-paridad D5g–D5j: ver [ROADMAP.md](ROADMAP.md) y `DISENO-PARIDAD.md`.
 
 **Criterio de done:** iOS y Android compilan; capturas 3 tabs actualizadas; `englishAlerts` / textos **sin cambios**; diff solo tokens + vistas.
 

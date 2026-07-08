@@ -1,6 +1,6 @@
 # SIPI — Alcance de producto
 
-**Última actualización:** 2026-07-07
+**Última actualización:** 2026-07-07 (D5k — IA tab Mi Inglés)
 
 ## Enfoque: SIPI Inglés
 
@@ -96,8 +96,8 @@ Detalle de flujos: [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md).
 | Cliente | Inglés V2 |
 |---------|-----------|
 | Web React | Sí — inglés solo en sus pantallas; hub "Mi Inglés" del alumno por ciclo de vida (solicitado / inscrito / historial), explorador de cursos disponibles y resumen de acciones pendientes en el dashboard; admin con dashboard de operación de inglés y **bandeja única** de aprobación de pagos (examen + curso); el formulario genérico de inscripciones es exclusivo de materias regulares. **Maestro**: vista única por grupo (`/teacher/groups/:id`) que unifica detalle, calificación inline y herramientas de clase; `/teacher/grades` es selector de grupo |
-| iOS (`sipi-mobile-ios`) | Sí — journey STUDENT completo. Roadmap móvil: [`contexto/ROADMAP.md`](../../sipi-mobile-ios/contexto/ROADMAP.md) — pendiente Capa 4-UX (diseño alumno), TEACHER §4.7, ADMIN inglés |
-| Android (`sipi-mobile-android`) | Sí — journey STUDENT completo. Roadmap móvil: [`contexto/ROADMAP.md`](../../sipi-mobile-android/contexto/ROADMAP.md) — Capa 4-UX **parcial** (D0–D3 en Android); pendiente paridad iOS, TEACHER, ADMIN |
+| iOS (`sipi-mobile-ios`) | Sí — journey STUDENT completo. **Capa 4-UX D0–D5k ✓** (paridad iOS↔Android, paleta Academic Prestige). Pendiente: R5 E2E en dispositivo; TEACHER/ADMIN (web-first). Roadmap: [`contexto/ROADMAP.md`](../../sipi-mobile-ios/contexto/ROADMAP.md) |
+| Android (`sipi-mobile-android`) | Sí — journey STUDENT completo, **mismo contrato y paridad visual** que iOS. **Capa 4-UX D0–D5k ✓**. Pendiente: R5 E2E; TEACHER/ADMIN. Roadmap: [`contexto/ROADMAP.md`](../../sipi-mobile-android/contexto/ROADMAP.md) |
 
 ---
 
@@ -134,7 +134,7 @@ Más detalle: [REGLAS-NEGOCIO-ENROLLMENTS.md](REGLAS-NEGOCIO-ENROLLMENTS.md) (re
 1. ~~Migración Prisma V2~~
 2. ~~Deprecar `/api/enrollments/english` y eliminar código legacy~~
 3. ~~Cierre capa web: inglés solo en pantallas V2, typecheck en CI~~
-4. iOS y Android contra `academic-activities` (mismo contrato): journey STUDENT **completo**; **pendiente** roles TEACHER/ADMIN en móvil y cerrar Capa 4-UX (ver roadmaps en cada repo móvil). Contrato: [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
+4. iOS y Android contra `academic-activities` (mismo contrato): journey STUDENT **completo**; **Capa 4-UX cerrada en código** (D0–D5k). Pendiente: R5 E2E en dispositivo; roles TEACHER/ADMIN en móvil (web-first). Contrato: [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md)
 5. ~~Endurecimiento de seguridad backend/web (P0–P2, 2026-07)~~ — Helmet, RBAC en `GET /api/groups/:id`, `ForbiddenError` en enrollments, JWT ≥32 chars, rate limit en search/export. Detalle: [SECURITY.md](../SECURITY.md)
 6. Opcional: otra `SpecialCourseType` cuando exista requisito de negocio
 
@@ -151,9 +151,32 @@ Referencia de navegación e información por rol. El detalle de pantallas del **
 | Destino | Propósito |
 |---------|-----------|
 | **Dashboard** | Identidad, métricas de inglés (nivel, progreso 70%, requisito), alertas y acceso a Mi Inglés |
-| **Mi Inglés** | Hub único: progreso, exámenes/cursos, solicitudes embebidas según elegibilidad, cancelación |
+| **Mi Inglés** | Hub único: progreso, exámenes/cursos, solicitudes embebidas según elegibilidad, cancelación. Banner `pendingExam` + listas por ciclo de vida **sin duplicar** el examen activo (D5k; paridad móvil). |
 
 **Fuera de alcance:** "Mis Calificaciones" (SIS), "Mis Grupos", solicitar examen/curso como menús sueltos, búsqueda global.
+
+### Alumno — móvil (Capa 4, paridad iOS ↔ Android)
+
+Tres tabs: **Inicio** · **Mi Inglés** · **Perfil**. Detalle de contrato: [MOBILE-API-CONTRACT.md §4](MOBILE-API-CONTRACT.md).
+
+| Tab | Propósito |
+|-----|-----------|
+| **Inicio** | Hero de identidad, resumen de inglés, alertas derivadas, acceso a Mi Inglés |
+| **Mi Inglés** | Hub del producto (ver bloques abajo) |
+| **Perfil** | Datos académicos, sesión, cerrar sesión |
+
+**Tab Mi Inglés — orden de bloques (cerrado):**
+
+1. **Siguiente paso** — un solo CTA primario según `EnglishJourney.nextStep` (narrativa del estado).
+2. **Avance del requisito** — gauge, niveles completados, promedio, último diagnóstico.
+3. **Niveles** — chips 1–6, certificado, completados, pendientes.
+4. **Examen pendiente** — solo si `pendingExam` existe: periodo, pago, observaciones, cancelar.
+5. **Mis exámenes** — historial (`diagnosticExams[]` **sin** el `id` de `pendingExam`; regla **D5k**).
+6. **Mis cursos** — `englishCourses[]` (cursos vigentes y terminados; sin `pendingCourse` en API).
+
+**Regla D5k (producto):** el examen activo aparece **una vez** en la card operativa `Examen pendiente`, no duplicado en `Mis exámenes`. Implementación compartida: `historicalDiagnosticExams` en `EnglishJourney` (iOS + Android).
+
+**Fuera de alcance móvil alumno:** Calificaciones SIS, Mis Grupos, búsqueda global, acciones de admin/maestro.
 
 ### Maestro
 

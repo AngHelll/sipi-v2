@@ -197,10 +197,23 @@ El chip "N acciones pendientes" cuenta solo las alertas con "¿Acción? = Sí"; 
 
 ### 4.3 Tab "Mi Inglés" (hub del producto)
 
-Fuente única: `GET .../exams/student/english-status` (ver sección 2.1). Subsecciones:
+Fuente única: `GET .../exams/student/english-status` (ver sección 2.1).
+
+**Orden de bloques en pantalla (cerrado — paridad iOS ↔ Android):**
+
+| # | Bloque | Fuente API | Notas |
+|---|--------|------------|-------|
+| 1 | Siguiente paso | `EnglishJourney.nextStep(status)` | Un solo CTA primario (examen **o** curso, nunca ambos). |
+| 2 | Avance del requisito | `progress`, `porcentajeIngles`, `fechaExamenDiagnostico`, `requirementDetails` | Gauge + barra + `KeyValueRow`. |
+| 3 | Niveles | `completedLevels`, `missingLevels`, `nivelInglesCertificado` | Chips 1–6. |
+| 4 | Examen pendiente | `pendingExam` | Solo si existe. Periodo, pago, observaciones, cancelar. |
+| 5 | Mis exámenes | `diagnosticExams[]` filtrado | **D5k:** excluir `id == pendingExam.id`. Función: `historicalDiagnosticExams` (móvil + web `frontend/src/lib/englishJourney.ts`). |
+| 6 | Mis cursos | `englishCourses[]` | Sin `pendingCourse` en API; cursos vigentes y terminados. |
+
+**Reglas de datos por subsección:**
 
 - **Progreso 70%**: `progress.percentage`, `completedLevels`/`missingLevels`, `cumpleRequisitoIngles`, `porcentajeIngles`, `nivelInglesActual`/`nivelInglesCertificado`. Si `cumpleRequisitoIngles=false`, mostrar `requirementDetails.razonNoCumple`.
-- **Examen de diagnóstico**: `pendingExam` (banner) + `diagnosticExams[]` (estatus, `calificacion`, `nivelIngles`, `period`, datos de pago).
+- **Examen de diagnóstico**: el activo vive en `pendingExam`; el historial en `diagnosticExams[]` sin duplicar el activo (D5k).
 - **Cursos de inglés (niveles 1–6)**: `englishCourses[]` (nivel, estatus, `calificacion`, `montoPago`, `pagoAprobado`, `observaciones`).
 - **Acciones embebidas** (según elegibilidad, ver sección 2):
   - *Solicitar examen*: `GET .../exam-periods/available` + `POST .../exams`.

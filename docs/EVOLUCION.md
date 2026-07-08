@@ -68,7 +68,7 @@ Registro cronológico de hipótesis, experimentos y decisiones sobre **producto,
 - **Problema:** web, iOS y Android divergían sin modelo claro de qué unificar.
 - **Hipótesis:** paridad estricta solo iOS↔Android alumno; web comparte semántica, no layout.
 - **Evidencia previa:** observada — `DISENO-PARIDAD.md` móvil; web MD3 + `gray-*` legacy.
-- **Outcome:** **validada** — iOS Capa 4 D0–D3 (2026-07-07); capturas pendientes.
+- **Outcome:** **validada** — iOS + Android Capa 4 D0–D5k (2026-07-07); capturas en `docs/images/paridad-ux/`.
 
 ### E-DS-20260707-02 — Contrato doc antes que tokens.yaml
 
@@ -91,3 +91,15 @@ Registro cronológico de hipótesis, experimentos y decisiones sobre **producto,
 - **Capa:** DS
 - **Superficie:** iOS
 - **Outcome:** **validada** — Inicio, Calificaciones, Grupos, detalles usan mismo layout; build OK 2026-07-07.
+
+### E-20260707-05 — D5k: examen activo no se duplica en historial móvil
+
+- **Capa:** 0 | 4
+- **Superficie:** iOS | Android
+- **Nivel DS:** DS-3 (estructura de vistas)
+- **Reversibilidad:** alta
+- **Problema:** con `pendingExam` + `diagnosticExams[]`, el mismo examen aparecía en **Examen pendiente** y **Mis exámenes** (redundancia UX).
+- **Hipótesis:** separar card operativa del historial filtrando por `id` mejora claridad sin cambiar API.
+- **Evidencia previa:** observada en capturas paridad alumno 2026-07-07.
+- **Outcome:** **validada** — regla en [PRODUCTO.md](PRODUCTO.md) § alumno móvil; `EnglishJourney.historicalDiagnosticExams` iOS + Android; contrato §4.3.
+- **Acción:** web alineada — `historicalDiagnosticExams` en `frontend/src/lib/englishJourney.ts` + `EnglishStatusPage` (2026-07-07).

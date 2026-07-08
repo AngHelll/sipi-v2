@@ -23,19 +23,18 @@ flowchart TB
 | 1. Flujos de negocio | [FLUJOS-NEGOCIO.md](FLUJOS-NEGOCIO.md) | **Estable** — diagnóstico → pago → placement → cursos → certificación; grupos de inglés con nivel obligatorio y regla única de disponibilidad |
 | 2. Contratos API | [MOBILE-API-CONTRACT.md](MOBILE-API-CONTRACT.md) + `/api/academic-activities/*` | **Estable** — canónico inglés en academic-activities; legacy `/enrollments/english/*` retirado (410); RBAC en `GET /api/groups/:id` y `GET /api/enrollments/:id` (403); rate limit estricto en search/export; regla canónica de "grupo disponible" documentada |
 | 3. Web (React) | `frontend/` | **Cerrada (features)** — **DS preparado para rediseño** (W0–W2 ✓ 2026-07-07): `designSystem.ts`, alumno + maestro en tokens MD3; admin pendiente W3 (`npm run audit:ds`). Ver [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) § Preparación rediseño. |
-| 4a. Móvil iOS | repo `sipi-mobile-ios` — roadmap: [`contexto/ROADMAP.md`](../../sipi-mobile-ios/contexto/ROADMAP.md) | **STUDENT completo** — journey de inglés; **3 tabs** (Inicio · Mi Inglés · Perfil) homologados con web 2026-07-07. **Capa 4-UX D0–D4 ✓**. **Pendiente**: regenerar capturas 3 tabs; rol **TEACHER** (§4.7, web-first) y **ADMIN** opcional |
-| 4b. Móvil Android | repo `sipi-mobile-android` — roadmap: [`contexto/ROADMAP.md`](../../sipi-mobile-android/contexto/ROADMAP.md) | **STUDENT completo** — mismo contrato que iOS; **3 tabs** homologados 2026-07-07. **Capa 4-UX D0–D4 ✓**. **Pendiente**: capturas 3 tabs; **TEACHER/ADMIN** web-first |
-| 4-UX. Diseño móvil (alumno) | repos iOS + Android + [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) | **D0–D4 ✓** · **D5a ✓** (2026-07-07) · pendiente D5b–e + capturas |
+| 4a. Móvil iOS | repo `sipi-mobile-ios` — roadmap: [`contexto/ROADMAP.md`](../../sipi-mobile-ios/contexto/ROADMAP.md) | **STUDENT completo** — 3 tabs homologados. **Capa 4-UX D0–D5k ✓** (código). Pendiente: **R5 E2E** en dispositivo; **TEACHER/ADMIN** (web-first) |
+| 4b. Móvil Android | repo `sipi-mobile-android` — roadmap: [`contexto/ROADMAP.md`](../../sipi-mobile-android/contexto/ROADMAP.md) | **STUDENT completo** — paridad iOS. **Capa 4-UX D0–D5k ✓**. Pendiente: R5 E2E; TEACHER/ADMIN web-first |
+| 4-UX. Diseño móvil (alumno) | repos iOS + Android + [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) | **D0–D5e ✓** · **D5g–D5k ✓** (2026-07-07). Capturas en `docs/images/paridad-ux/`. Pendiente: R5 E2E |
 
 ## Próximos pasos (en orden)
 
 El journey STUDENT de inglés está completo en web, iOS y Android. La capa web (3) quedó cerrada para el alcance actual: cualquier trabajo nuevo debe venir de las capas 0–2 o del frente móvil.
 
-1. **D5 móvil — Paleta Academic Prestige** (iOS + Android, ver § D5 abajo) — alinear con web W4 sin cambiar flujos.
-2. **Regenerar capturas iOS/Android (3 tabs)** — checklist [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md); cierra criterio Capa 4-UX (idealmente **después** de D5b–D5c).
+1. **R5 — E2E alumno en dispositivo** — checklist `CHECKLIST-E2E-ALUMNO.md` en repos móviles (validación manual post-D5k).
 2. **iOS / Android — rol TEACHER (móvil, opcional / web-first)**: vista única del grupo alineada con web (§4.7) solo si hay demanda real; web canónica para staff.
 3. **iOS / Android — rol ADMIN (móvil, opcional)**: assign-period, assign-group, waitlist/summary e initial-level — pospuesto; web canónica.
-4. **iOS / Android — hardening (R5)**: filtros admin de docentes/materias, observabilidad, snackbar de feedback, pull-to-refresh; validación end-to-end en dispositivo con alumno real.
+4. **iOS / Android — hardening (R5 restante)**: filtros admin de docentes/materias, observabilidad, snackbar de feedback; pull-to-refresh ya en STUDENT.
 5. ~~**Backend (no bloqueante)**: coherencia de `assign-group` con la regla canónica de disponibilidad~~ (**hecho 2026-06-24**): el admin usa regla "asignable" (tipo/nivel + no eliminado + `ABIERTO`/`EN_CURSO` + cupo, **sin** ventana pública); el alumno conserva la regla canónica completa. Ver `GroupValidators.englishGroupAssignable` y MOBILE-API-CONTRACT §2.3.
 6. ~~**Endurecimiento de seguridad backend/web (P0–P2, 2026-07)**~~ — Helmet, RBAC `GET /api/groups/:id`, `ForbiddenError` en enrollments, JWT ≥32 chars, `strictLimiter` en search/export, tests RBAC en CI. Detalle: [SECURITY.md](../SECURITY.md). **P3** opcional: upgrade `exceljs`, supertest HTTP, política de contraseñas.
 7. **Opcional (requiere caso de negocio)**: nueva `SpecialCourseType` (verano, talleres) u otra actividad — el schema ya lo soporta; **no** crear API sin pasar por Capa 0.
@@ -115,7 +114,8 @@ Definir una **plantilla común** por pantalla y aplicarla en ambas plataformas.
 
 - [x] **Orden de campos del perfil** — iOS `SectionCard` datos académicos + sesión (2026-07-07).
 - [x] **Inglés — CTA único**: `NextStepCard` con botón en tarjeta; solicitudes en sheet (iOS 2026-07-07).
-- [x] **Inglés — orden de bloques**: siguiente paso → avance → niveles → examen pendiente → historial (iOS 2026-07-07).
+- [x] **Inglés — orden de bloques**: siguiente paso → avance → niveles → examen pendiente → historial (iOS + Android 2026-07-07).
+- [x] **Inglés — D5k historial sin duplicar activo**: `Mis exámenes` excluye `pendingExam.id` (`historicalDiagnosticExams` en `EnglishJourney`).
 - [x] **Encabezado de pantalla uniforme**: `navigationTitle` por tab + `screenTitle` en Inicio (iOS D4, 2026-07-07).
 
 ### D4 — Estados, espaciado y navegación uniformes
@@ -170,6 +170,18 @@ Reutilizar datos ya mostrados; reskin como web `DashboardStudent` W4b:
 
 **Orden recomendado:** D5a → D5b → D5c → D5d → D5e (un PR por lote o iOS+Android juntos en el mismo lote).
 
+#### D5g–D5k — Micro-paridad UX (post-D5e)
+
+| Lote | Tema | Estado |
+|------|------|--------|
+| **D5g** | Auditoría visual alumno (iconos, hero, copy, CTAs) | ✓ 2026-07-07 |
+| **D5h** | Cards `surfaceContainerLowest` + borde | ✓ 2026-07-07 |
+| **D5i** | Títulos inline / modales / labels fila | ✓ 2026-07-07 |
+| **D5j** | `%` completado, `KeyValueRow` pago, dividers, loader boot | ✓ 2026-07-07 |
+| **D5k** | Historial sin duplicar `pendingExam` | ✓ 2026-07-07 — ver [PRODUCTO.md](PRODUCTO.md) § alumno móvil |
+
+Detalle ítem a ítem: `sipi-mobile-android/contexto/DISENO-PARIDAD.md`.
+
 ### Criterios de aceptación (Capa 4 — diseño)
 
 - [x] Capturas lado a lado iOS/Android de las vistas del alumno (2026-07-07, `docs/images/paridad-ux/`).
@@ -183,4 +195,4 @@ Reutilizar datos ya mostrados; reskin como web `DashboardStudent` W4b:
 - Cambios de API que afecten a móvil se documentan en MOBILE-API-CONTRACT.md **antes** de desplegar.
 - Lo "escalable a futuro" vive solo en schema/enums (sin API ni UI) hasta que tenga justificación de producto: `social_service`, `professional_practices`, `enrollments_v2`, `prerequisites`, `student_documents`.
 
-**Última actualización**: 2026-07-07 — **D5 planificado** (paleta Academic Prestige móvil); web W4 ✓. Previo: homologación 3 tabs; Capa 4-UX D0–D4 iOS + Android.
+**Última actualización**: 2026-07-07 — Capa 4-UX **D0–D5k ✓** (código + capturas). Pendiente: R5 E2E en dispositivo.
