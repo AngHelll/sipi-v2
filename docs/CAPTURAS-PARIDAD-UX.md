@@ -43,10 +43,12 @@ Checklist para cerrar el criterio de aceptación de [ROADMAP.md](ROADMAP.md) § 
 - [x] Logout solo en Perfil
 - [ ] Inicio sin listado ni CTA de Calificaciones SIS
 
-## Web (referencia, no bloqueante para paridad móvil)
+## Web (referencia Stitch W4 — no bloqueante para paridad móvil)
 
-| Pantalla | Ruta | Tokens MD3 |
-|----------|------|------------|
-| Estado de inglés | `/student/english/status` | ✓ 2026-07-07 |
-| Períodos examen | `/student/english/available-exam-periods` | ✓ 2026-07-07 |
-| Cursos inglés | `/student/english/available-courses` | ✓ 2026-07-07 |
+| Pantalla | Ruta web | Uso como referencia D5 |
+|----------|----------|-------------------------|
+| Dashboard alumno | `/dashboard` (STUDENT) | Hero + grid 8+4 + gauge inglés |
+| Estado de inglés | `/student/english/status` | Bloques Mi Inglés |
+| Perfil | — (móvil nativo) | Sin cambio D5 |
+
+Tras D5, las capturas móviles deben **sentirse** del mismo instituto que el dashboard web; no hace falta pixel-perfect.

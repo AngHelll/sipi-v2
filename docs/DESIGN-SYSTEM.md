@@ -34,7 +34,7 @@ flowchart TB
 
 | Nivel | Estado SIPI (2026-07-07) |
 |-------|--------------------------|
-| DS-0 Ad-hoc (`gray-*` inline) | Web **admin** (~20 páginas); **alumno + maestro grupo ✓** (2026-07-07) |
+| DS-0 Ad-hoc (`gray-*` inline) | Web **✓** (W3–W4 2026-07-07); móvil alumno en tokens D0–D4 |
 | DS-1 Tokens por plataforma | Web `tailwind.config.js`; Android ✓; iOS ✓ |
 | DS-2 Contrato semántico documentado | Este doc + [DISENO-PARIDAD.md](../../sipi-mobile-android/contexto/DISENO-PARIDAD.md) — iOS D0–D3 (2026-07-07) |
 | DS-3 Fuente única (`tokens.yaml`) | No — solo si DS-2 falla en práctica |
@@ -48,10 +48,10 @@ flowchart TB
 
 | Rol | Significado | Web (Tailwind) | Móvil |
 |-----|-------------|----------------|-------|
-| `success` | Cumple / aprobado / OK | `primary` + variantes fixed | `#1E8E3E` / verde sistema |
-| `pending` | Pago / lista de espera | `secondary` + fixed | `#B26A00` / ámbar |
-| `error` | Error / reprobado | `error`, `error-container` | `colorScheme.error` / `.red` |
-| `textSecondary` | Metadatos, hints | `on-surface-variant`, `outline` | `onSurfaceVariant` / `.secondary` |
+| `success` | Cumple / aprobado / OK | `primary` + `primary-fixed` | `SipiColor.primary` → `#001917` (D5) |
+| `pending` | Pago / lista de espera | `tertiary-fixed` + `tertiary-fixed-dim` | `SipiColor.pending` → gold `#ffdea9` / `#e9c07b` (D5) |
+| `error` | Error / reprobado | `error`, `error-container` | `SipiColor.error` → `#ba1a1a` (D5) |
+| `textSecondary` | Metadatos, hints | `on-surface-variant`, `outline` | `onSurfaceVariant` / `#414847` (D5) |
 
 ### Componentes con nombre canónico
 
@@ -150,7 +150,42 @@ Usar escala Tailwind estándar (`p-4`, `gap-6`). No hay enum `Spacing.md` en web
 
 Implementación: `sipi-mobile-ios/SipiMVP/Core/StudentLayout.swift` · `sipi-mobile-android/.../core/ui/StudentLayout.kt`.
 
+### D5 — Paleta Academic Prestige (Stitch ↔ web W4)
 
+**Objetivo:** acercar el **look institucional** de iOS y Android al rediseño web (W4), manteniendo paridad estricta **iOS ↔ Android** y **sin tocar** lógica, API ni flujos.
+
+**Fuente de verdad de hex:** `frontend/tailwind.config.js` (copia de Stitch `DESIGN.md`). No duplicar valores sueltos en Swift/Kotlin — copiar desde ese archivo o desde la tabla siguiente en el mismo PR.
+
+| Token MD3 | Hex | Uso móvil alumno |
+|-----------|-----|------------------|
+| `primary` | `#001917` | Tab activo, títulos marca, botón primario |
+| `primary-container` | `#042f2c` | Hero Inicio (fondo), headers de sección oscuros |
+| `on-primary` | `#ffffff` | Texto sobre hero |
+| `primary-fixed` | `#c2ebe5` | Fondos suaves éxito / chips “Al día” |
+| `tertiary-fixed` | `#ffdea9` | Logros, progreso completado, CTA destacado |
+| `tertiary-fixed-dim` | `#e9c07b` | Barras de progreso, borde acento card |
+| `surface` | `#f7f9fb` | Fondo pantalla |
+| `surface-container-low` | `#f2f4f6` | Filas checklist / grouped background |
+| `on-surface` | `#191c1e` | Texto principal |
+| `on-surface-variant` | `#414847` | Meta, subtítulos |
+| `outline-variant` | `#c0c8c6` | Divisores |
+| `error` / `error-container` | `#ba1a1a` / `#ffdad6` | Rechazo, urgente |
+
+**Alcance por lote (solo presentación):**
+
+| Lote | Qué | Archivos típicos |
+|------|-----|------------------|
+| **D5a — Tokens** | Enum/struct `SipiColor` MD3 idéntico iOS + Android; deprecar hex sueltos D0 | ✓ 2026-07-07 |
+| **D5b — Chrome** | Tab bar, navigation bar tint, botones primarios/secundarios | Theme / `MaterialTheme`, SwiftUI `.tint` |
+| **D5c — Inicio** | Hero perfil (como web W4b): nombre, matrícula, carrera — **mismos campos** que hoy | Vista tab Inicio iOS + Android |
+| **D5d — Mi Inglés** | Gauge/barra progreso gold; chips pendiente/pago; `NextStepCard` con acento | Pantallas inglés existentes |
+| **D5e — Capturas** | Regenerar [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) post-paleta | `docs/images/paridad-ux/` |
+
+**Fuera de alcance D5:** Manrope embebida (opcional D5f), admin/teacher móvil (web-first), unificar layout web sidebar con tab bar nativo.
+
+**Criterio de done:** iOS y Android compilan; capturas 3 tabs actualizadas; `englishAlerts` / textos **sin cambios**; diff solo tokens + vistas.
+
+### Anti-patrones
 - Un solo bundle visual web = móvil.
 - React Native / Compose Multiplatform para unificar apps.
 - `tokens.yaml` + codegen hasta demostrar dolor de sincronización.
@@ -163,7 +198,7 @@ Implementación: `sipi-mobile-ios/SipiMVP/Core/StudentLayout.swift` · `sipi-mob
 
 | Documento | Uso |
 |-----------|-----|
-| [ROADMAP.md](ROADMAP.md) | Cola D0–D4 y estado por capa |
+| [ROADMAP.md](ROADMAP.md) | Cola D0–D5 y estado por capa |
 | [DISENO-PARIDAD.md](../../sipi-mobile-android/contexto/DISENO-PARIDAD.md) | Detalle móvil alumno |
 | [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) | Checklist capturas lado a lado |
 | [EVOLUCION.md](EVOLUCION.md) | Hipótesis y experimentos DS |

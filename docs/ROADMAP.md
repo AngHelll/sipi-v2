@@ -25,13 +25,14 @@ flowchart TB
 | 3. Web (React) | `frontend/` | **Cerrada (features)** — **DS preparado para rediseño** (W0–W2 ✓ 2026-07-07): `designSystem.ts`, alumno + maestro en tokens MD3; admin pendiente W3 (`npm run audit:ds`). Ver [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) § Preparación rediseño. |
 | 4a. Móvil iOS | repo `sipi-mobile-ios` — roadmap: [`contexto/ROADMAP.md`](../../sipi-mobile-ios/contexto/ROADMAP.md) | **STUDENT completo** — journey de inglés; **3 tabs** (Inicio · Mi Inglés · Perfil) homologados con web 2026-07-07. **Capa 4-UX D0–D4 ✓**. **Pendiente**: regenerar capturas 3 tabs; rol **TEACHER** (§4.7, web-first) y **ADMIN** opcional |
 | 4b. Móvil Android | repo `sipi-mobile-android` — roadmap: [`contexto/ROADMAP.md`](../../sipi-mobile-android/contexto/ROADMAP.md) | **STUDENT completo** — mismo contrato que iOS; **3 tabs** homologados 2026-07-07. **Capa 4-UX D0–D4 ✓**. **Pendiente**: capturas 3 tabs; **TEACHER/ADMIN** web-first |
-| 4-UX. Diseño móvil (alumno) | repos iOS + Android + [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) | **D0–D4 ✓** · **Homologación 3 tabs ✓** (2026-07-07) · pendiente regenerar capturas |
+| 4-UX. Diseño móvil (alumno) | repos iOS + Android + [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) | **D0–D4 ✓** · **D5a ✓** (2026-07-07) · pendiente D5b–e + capturas |
 
 ## Próximos pasos (en orden)
 
 El journey STUDENT de inglés está completo en web, iOS y Android. La capa web (3) quedó cerrada para el alcance actual: cualquier trabajo nuevo debe venir de las capas 0–2 o del frente móvil.
 
-1. **Regenerar capturas iOS/Android (3 tabs)** — checklist [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md); cierra criterio Capa 4-UX.
+1. **D5 móvil — Paleta Academic Prestige** (iOS + Android, ver § D5 abajo) — alinear con web W4 sin cambiar flujos.
+2. **Regenerar capturas iOS/Android (3 tabs)** — checklist [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md); cierra criterio Capa 4-UX (idealmente **después** de D5b–D5c).
 2. **iOS / Android — rol TEACHER (móvil, opcional / web-first)**: vista única del grupo alineada con web (§4.7) solo si hay demanda real; web canónica para staff.
 3. **iOS / Android — rol ADMIN (móvil, opcional)**: assign-period, assign-group, waitlist/summary e initial-level — pospuesto; web canónica.
 4. **iOS / Android — hardening (R5)**: filtros admin de docentes/materias, observabilidad, snackbar de feedback, pull-to-refresh; validación end-to-end en dispositivo con alumno real.
@@ -124,6 +125,51 @@ Definir una **plantilla común** por pantalla y aplicarla en ambas plataformas.
 - [x] **Énfasis de acciones consistente**: `StudentSecondaryButton`; cancelar destructivo — iOS + Android 2026-07-07.
 - [x] **Paridad de navegación**: 3 tabs (Inicio, Mi Inglés, Perfil); sin Calificaciones SIS; logout solo en Perfil.
 
+### D5 — Paleta Academic Prestige (referencia web W4 / Stitch)
+
+> **Alcance:** presentación únicamente (igual que D0–D4). Sin cambios en API, view models de negocio, `englishAlerts` ni textos de alerta. Paridad **iOS ↔ Android** obligatoria en cada lote.
+
+**Fuente de hex:** `frontend/tailwind.config.js` + [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) § D5 móvil.
+
+#### D5a — Tokens MD3 en `DesignTokens` (iOS + Android)
+
+- [x] Añadir struct/enum **`SipiColor`** (o equivalente) con tokens MD3: `primary`, `primaryContainer`, `tertiaryFixed`, `tertiaryFixedDim`, `surface`, `onSurface`, `error`, etc. — **mismos hex en ambas plataformas**.
+- [x] Mapear aliases semánticos D0: `success` → `primary`/`primaryFixed`; `pending` → `onTertiaryFixedVariant`/`tertiaryFixedDim` (gold, alineado a web post-W4).
+- [x] Actualizar `DISENO-PARIDAD.md` (repo Android) y roadmaps `contexto/ROADMAP.md` en iOS/Android.
+- [ ] Modo oscuro: diferido (web lo soporta; móvil puede quedarse en claro para D5).
+
+#### D5b — Theme / chrome global
+
+- [ ] **Tab bar** y **navigation bar**: tint `primary` (#001917).
+- [ ] Botón primario: fondo `primary`, texto `onPrimary`.
+- [ ] Botón secundario / cancelar: borde `outlineVariant`, sin grises sueltos.
+
+#### D5c — Tab Inicio (hero + métricas)
+
+Reutilizar datos ya mostrados; reskin como web `DashboardStudent` W4b:
+
+- [ ] **Hero** `primaryContainer`: nombre completo, estatus, matrícula, carrera, semestre.
+- [ ] **Card progreso inglés** (si `english-status` ya en Inicio): barra gold + link a tab Mi Inglés.
+- [ ] **Pendientes**: lista derivada de las mismas reglas que `buildEnglishAlerts` (textos ya en cliente móvil — solo estilo Stitch).
+
+#### D5d — Tab Mi Inglés
+
+- [ ] Indicador circular o barra de niveles con `tertiaryFixedDim` (como gauge web).
+- [ ] Chips de estado: gold pendiente/pago, `error-container` rechazo, `primaryFixed` al día.
+- [ ] `NextStepCard` / CTA: borde o fondo acento gold; botón primario verde midnight.
+
+#### D5e — Capturas y cierre
+
+- [ ] Regenerar capturas § [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) (Inicio, Mi Inglés, Perfil).
+- [ ] Verificar: sin UUID visible; 3 tabs; logout solo Perfil.
+- [ ] `compileDebugKotlin` + build iOS en verde.
+
+#### Opcional D5f — Tipografía Manrope
+
+- [ ] Embeber Manrope en iOS/Android para paridad con web. **No bloqueante** — sistema nativo OK si el producto prioriza velocidad.
+
+**Orden recomendado:** D5a → D5b → D5c → D5d → D5e (un PR por lote o iOS+Android juntos en el mismo lote).
+
 ### Criterios de aceptación (Capa 4 — diseño)
 
 - [x] Capturas lado a lado iOS/Android de las vistas del alumno (2026-07-07, `docs/images/paridad-ux/`).
@@ -137,4 +183,4 @@ Definir una **plantilla común** por pantalla y aplicarla en ambas plataformas.
 - Cambios de API que afecten a móvil se documentan en MOBILE-API-CONTRACT.md **antes** de desplegar.
 - Lo "escalable a futuro" vive solo en schema/enums (sin API ni UI) hasta que tenga justificación de producto: `social_service`, `professional_practices`, `enrollments_v2`, `prerequisites`, `student_documents`.
 
-**Última actualización**: 2026-07-07 — Homologación móvil a 3 tabs (sin Calificaciones SIS); staff móvil web-first. Previo: Capa 4-UX D0–D4 iOS + Android.
+**Última actualización**: 2026-07-07 — **D5 planificado** (paleta Academic Prestige móvil); web W4 ✓. Previo: homologación 3 tabs; Capa 4-UX D0–D4 iOS + Android.
