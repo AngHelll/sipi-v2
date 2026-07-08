@@ -3,9 +3,8 @@
 # Uso: navega manualmente a cada pantalla en el Simulador y ejecuta:
 #   ./scripts/capture-ios-paridad.sh 01-inicio
 #   ./scripts/capture-ios-paridad.sh 02-ingles
+#   ./scripts/capture-ios-paridad.sh 02-ingles-cursos
 #   ./scripts/capture-ios-paridad.sh 03-perfil
-#   ./scripts/capture-ios-paridad.sh 04-examen-dialog
-#   ./scripts/capture-ios-paridad.sh 05-curso-dialog
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

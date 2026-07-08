@@ -22,4 +22,11 @@ tap_tab 0 && capture "01-inicio-android.png"
 tap_tab 1 && capture "02-ingles-android.png"
 tap_tab 2 && capture "03-perfil-android.png"
 
-echo "Listo. Diálogos examen/curso: abrir manualmente en Mi Inglés si hay CTA."
+# Mi Inglés — scroll a exámenes/cursos (paridad `02-ingles-ios-cursos`)
+tap_tab 1
+sleep 1
+"$ADB" -s "$DEV" shell input swipe 540 1800 540 600 400
+sleep 1
+capture "02-ingles-android-cursos.png"
+
+echo "Listo. iOS: login manual en Simulador + ./scripts/capture-ios-paridad.sh <slug>"

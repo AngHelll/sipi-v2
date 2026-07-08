@@ -140,29 +140,29 @@ Definir una **plantilla común** por pantalla y aplicarla en ambas plataformas.
 
 #### D5b — Theme / chrome global
 
-- [ ] **Tab bar** y **navigation bar**: tint `primary` (#001917).
-- [ ] Botón primario: fondo `primary`, texto `onPrimary`.
-- [ ] Botón secundario / cancelar: borde `outlineVariant`, sin grises sueltos.
+- [x] **Tab bar** y **navigation bar**: tint `primary` (#001917).
+- [x] Botón primario: fondo `primary`, texto `onPrimary`.
+- [x] Botón secundario / cancelar: borde `outlineVariant`, sin grises sueltos.
 
 #### D5c — Tab Inicio (hero + métricas)
 
 Reutilizar datos ya mostrados; reskin como web `DashboardStudent` W4b:
 
-- [ ] **Hero** `primaryContainer`: nombre completo, estatus, matrícula, carrera, semestre.
-- [ ] **Card progreso inglés** (si `english-status` ya en Inicio): barra gold + link a tab Mi Inglés.
-- [ ] **Pendientes**: lista derivada de las mismas reglas que `buildEnglishAlerts` (textos ya en cliente móvil — solo estilo Stitch).
+- [x] **Hero** `primaryContainer`: nombre completo, estatus, matrícula, carrera, semestre.
+- [x] **Card progreso inglés** (si `english-status` ya en Inicio): barra gold + link a tab Mi Inglés.
+- [x] **Pendientes**: lista derivada de las mismas reglas que `buildEnglishAlerts` (textos ya en cliente móvil — solo estilo Stitch).
 
 #### D5d — Tab Mi Inglés
 
-- [ ] Indicador circular o barra de niveles con `tertiaryFixedDim` (como gauge web).
-- [ ] Chips de estado: gold pendiente/pago, `error-container` rechazo, `primaryFixed` al día.
-- [ ] `NextStepCard` / CTA: borde o fondo acento gold; botón primario verde midnight.
+- [x] Indicador circular o barra de niveles con `tertiaryFixedDim` (como gauge web).
+- [x] Chips de estado: gold pendiente/pago, `error-container` rechazo, `primaryFixed` al día.
+- [x] `NextStepCard` / CTA: borde o fondo acento gold; botón primario verde midnight.
 
 #### D5e — Capturas y cierre
 
-- [ ] Regenerar capturas § [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) (Inicio, Mi Inglés, Perfil).
-- [ ] Verificar: sin UUID visible; 3 tabs; logout solo Perfil.
-- [ ] `compileDebugKotlin` + build iOS en verde.
+- [x] Regenerar capturas § [CAPTURAS-PARIDAD-UX.md](CAPTURAS-PARIDAD-UX.md) (Inicio, Mi Inglés, Perfil). **iOS + Android ✓ 2026-07-07** (scroll cursos iOS opcional).
+- [x] Verificar: sin UUID visible; 3 tabs; logout solo Perfil (Android capturas D5).
+- [x] `compileDebugKotlin` + build iOS en verde (2026-07-07).
 
 #### Opcional D5f — Tipografía Manrope
 
