@@ -44,8 +44,9 @@ JWT_SECRET=tu_secret_generado_aqui
 
 ### 9. Dependencias
 
-- Mantener `react-router-dom` ≥ 7.15.1 (CVEs de open redirect / XSS en componentes de ruta).
-- Revisar `npm audit` periódicamente; `exceljs` (export admin) y deps de dev (`vite`, `tmp`) pueden requerir upgrades planificados.
+- Frontend: `react-router-dom` resuelve a `react-router@8.3.0` (alias npm; cierra GHSA-qwww-vcr4-c8h2). Mantener ≥ 8.3.0 o, si se vuelve a la línea 7.x, ≥ 7.18.2.
+- Backend: override `uuid` ≥ 11.1.1 (transitivo de `exceljs`); `body-parser` ≥ 2.3.0.
+- Revisar `npm audit` periódicamente; deps de dev (`vite`, `tmp`) pueden requerir upgrades planificados.
 
 ### 10. Endurecimiento P1–P2 (2026-07)
 
@@ -61,9 +62,14 @@ JWT_SECRET=tu_secret_generado_aqui
 - **`sanitizeSoft`** global en el backend (trim de body/query); no se usa `sanitizeInput` con escape HTML en la API JSON (escapar al persistir corrompería datos; React escapa en salida).
 - **Tests RBAC** en CI: `groups.access`, `enrollments.access`, `auth.middleware`, `errorHandler`.
 
-**Pendiente (P3 — mejora continua)**
+**P3 deps (aplicado 2026-08)**
 
-- [ ] `npm audit fix` en frontend (`vite`, `form-data`) y evaluar upgrade de `exceljs`.
+- `npm audit` limpio (high/critical = 0) en frontend y backend tras refresh de lockfiles.
+- Frontend: React 19.2.8 + `react-router@8.3.0` vía alias de `react-router-dom`.
+- Backend: override `uuid@^11.1.1` sin forzar downgrade de `exceljs`.
+
+**Pendiente (mejora continua)**
+
 - [ ] Tests de integración HTTP (supertest) para rutas críticas.
 - [ ] Política de contraseñas fuerte en creación de usuarios (opcional producto).
 
