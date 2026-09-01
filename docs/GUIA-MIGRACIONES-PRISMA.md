@@ -288,7 +288,7 @@ npx prisma migrate status
 ```yaml
 # .drone.yml
 - name: migrate
-  image: node:20.19
+  image: node:22
   commands:
     - cd backend
     - npm ci

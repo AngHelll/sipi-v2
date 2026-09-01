@@ -20,13 +20,18 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
-# Check Node.js version (>= 20.19.0, < 23)
+# Check Node.js version (>= 20.19.0 on v20, or >= 22.12.0 on v22+)
 NODE_SEMVER=$(node -v | sed 's/^v//')
 if ! node -e "
-  const [maj, min] = process.argv[1].split('.').map(Number);
-  process.exit(maj > 20 || (maj === 20 && min >= 19) || maj === 22 ? 0 : 1);
+  const p = process.argv[1].split('.').map(Number);
+  const [maj, min] = p;
+  const ok =
+    (maj === 20 && min >= 19) ||
+    (maj === 22 && min >= 12) ||
+    maj >= 23;
+  process.exit(ok ? 0 : 1);
 " "$NODE_SEMVER"; then
-    echo -e "${RED}❌ Node.js must be >= 20.19.0 (or 22.x). Current: v${NODE_SEMVER}${NC}"
+    echo -e "${RED}❌ Node.js must be 20.19+, 22.12+ LTS, or newer. Current: v${NODE_SEMVER}${NC}"
     echo "   Run: nvm install && nvm use"
     exit 1
 fi

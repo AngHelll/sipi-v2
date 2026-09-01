@@ -10,7 +10,7 @@ Antes de comenzar, asegúrate de tener instalado:
 
 ### 1. Node.js y npm
 
-**Versión requerida:** Node.js **20.19** o superior (LTS 20.x; Vite 7 no soporta 20.0–20.18)
+**Versión requerida:** Node.js **22 LTS** (recomendado) o ≥20.19 — ver `.nvmrc` en la raíz del repo
 
 > 📖 **Guía detallada:** Si necesitas ayuda detallada, consulta [Instalar Node.js y npm en Windows](instalar-nodejs-windows.md)
 

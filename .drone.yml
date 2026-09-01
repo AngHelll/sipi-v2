@@ -20,7 +20,7 @@ trigger:
 
 steps:
   - name: clone-and-build
-    image: node:20.19-alpine
+    image: node:22-alpine
     environment:
       TOKEN:
         from_secret: gitea_token

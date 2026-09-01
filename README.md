@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)
 ![React](https://img.shields.io/badge/React-19.2-blue.svg)
-![Node](https://img.shields.io/badge/Node.js-20.19+-green.svg)
+![Node](https://img.shields.io/badge/Node.js-22_LTS-green.svg)
 
 **Sistema moderno de registro estudiantil para instituciones educativas**
 
@@ -161,7 +161,7 @@ Pages → Components → Context → API Client
 
 ### Prerrequisitos
 
-- Node.js **20.19+** y npm (ver `.nvmrc`; Vite 7 lo exige)
+- Node.js **22 LTS** (o ≥20.19) y npm — ver `.nvmrc`
 - MySQL 8.0+
 - Git
 

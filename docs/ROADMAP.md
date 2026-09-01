@@ -195,4 +195,15 @@ Detalle ítem a ítem: `sipi-mobile-android/contexto/DISENO-PARIDAD.md`.
 - Cambios de API que afecten a móvil se documentan en MOBILE-API-CONTRACT.md **antes** de desplegar.
 - Lo "escalable a futuro" vive solo en schema/enums (sin API ni UI) hasta que tenga justificación de producto: `social_service`, `professional_practices`, `enrollments_v2`, `prerequisites`, `student_documents`.
 
-**Última actualización**: 2026-07-07 — Capa 4-UX **D0–D5k ✓** (código + capturas). Pendiente: R5 E2E en dispositivo.
+### Stack toolchain (2026-09-01)
+
+Actualización controlada sin features de producto:
+
+- **Node 22 LTS** — `.nvmrc`, Drone CI, docs (mínimo 20.19 / 22.12+).
+- **Frontend** — Vite 8, `@vitejs/plugin-react` 6, `react-router@8.3.1`; TypeScript 5.9; ESLint 9 (deuda `no-explicit-any` pendiente).
+- **Backend** — Prisma **6.19** (pospuesto v7: adapter + prisma.config + ~33 imports); TypeScript 5.9 + ts-node.
+- **Audit** — 0 high/critical en backend y frontend.
+
+**Pospuesto (cuando haya ventana):** Prisma 7, TypeScript 7 backend (tsx), ESLint 10.
+
+**Última actualización**: 2026-09-01 — Stack toolchain + Capa 4-UX **D0–D5k ✓**. Pendiente: R5 E2E en dispositivo.
