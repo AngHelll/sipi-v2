@@ -2,7 +2,7 @@
 import { randomUUID } from 'node:crypto';
 import prisma from '../../config/database';
 import { recalculateStudentAverages } from '../students/students.service';
-import { Prisma, enrollments_estatus } from '@/db/client';
+import { Prisma, enrollments_estatus } from '../../db/client';
 import {
   CreateEnrollmentDto,
   UpdateEnrollmentDto,

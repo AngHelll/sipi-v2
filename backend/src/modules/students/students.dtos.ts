@@ -1,6 +1,6 @@
 // DTOs (Data Transfer Objects) for Students module
 // Request and response type definitions
-import { students_estatus } from '@/db/client';
+import { students_estatus } from '../../db/client';
 
 /**
  * User data for creating a new student

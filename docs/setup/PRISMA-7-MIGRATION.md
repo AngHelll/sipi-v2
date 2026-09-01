@@ -25,6 +25,7 @@
 - `backend/prisma/schema.prisma` — generator + models (sin `datasource.url`)
 - `backend/src/config/create-prisma-client.ts` — factory con adapter
 - `backend/src/db/client.ts` — re-export tipos/enums para la app
+- **Imports:** rutas relativas a `db/client` (no `@/` — tsc no resuelve paths en runtime CJS)
 - `backend/jest.setup.ts` — `DATABASE_URL` dummy para tests
 
 ---

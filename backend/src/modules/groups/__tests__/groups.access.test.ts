@@ -11,7 +11,7 @@ jest.mock('../../../config/database', () => ({
   },
 }));
 
-import { Prisma } from '@/db/client';
+import { Prisma } from '../../../db/client';
 import prisma from '../../../config/database';
 import { getGroupById } from '../groups.service';
 

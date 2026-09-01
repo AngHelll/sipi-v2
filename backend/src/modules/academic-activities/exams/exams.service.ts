@@ -1,7 +1,7 @@
 // Exams Service - Business logic for exam activities
 // V2: Servicio para exámenes (NO requiere grupo)
 import { randomUUID } from 'node:crypto';
-import { Prisma } from '@/db/client';
+import { Prisma } from '../../../db/client';
 import prisma from '../../../config/database';
 import { generateActivityCode, updateActivityStatus } from '../academic-activities.service';
 import { recalculateStudentAverages } from '../../students/students.service';
