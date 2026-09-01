@@ -8,10 +8,13 @@ if command -v node &> /dev/null; then
     NODE_VERSION=$(node -v)
     echo "✅ Node.js: $NODE_VERSION"
     
-    # Check version
-    MAJOR_VERSION=$(echo $NODE_VERSION | cut -d'v' -f2 | cut -d'.' -f1)
-    if [ "$MAJOR_VERSION" -lt 18 ]; then
-        echo "   ⚠️  Warning: Node.js 18+ recommended (you have $NODE_VERSION)"
+    # Check version (>= 20.19.0 or 22.x)
+    NODE_SEMVER=$(echo "$NODE_VERSION" | sed 's/^v//')
+    if ! node -e "
+      const [maj, min] = process.argv[1].split('.').map(Number);
+      process.exit(maj > 20 || (maj === 20 && min >= 19) || maj === 22 ? 0 : 1);
+    " "$NODE_SEMVER" 2>/dev/null; then
+        echo "   ⚠️  Warning: Node.js 20.19+ required (Vite 7). You have $NODE_VERSION — run: nvm install && nvm use"
     fi
 else
     echo "❌ Node.js: Not found"

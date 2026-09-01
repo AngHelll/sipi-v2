@@ -16,14 +16,18 @@ NC='\033[0m' # No Color
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then
     echo -e "${RED}❌ Node.js is not installed or not in PATH${NC}"
-    echo "Please install Node.js 18+ from: https://nodejs.org/"
+    echo "Please install Node.js 20.19+ from: https://nodejs.org/ (or: nvm install && nvm use)"
     exit 1
 fi
 
-# Check Node.js version
-NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$NODE_VERSION" -lt 18 ]; then
-    echo -e "${RED}❌ Node.js version must be 18 or higher. Current version: $(node -v)${NC}"
+# Check Node.js version (>= 20.19.0, < 23)
+NODE_SEMVER=$(node -v | sed 's/^v//')
+if ! node -e "
+  const [maj, min] = process.argv[1].split('.').map(Number);
+  process.exit(maj > 20 || (maj === 20 && min >= 19) || maj === 22 ? 0 : 1);
+" "$NODE_SEMVER"; then
+    echo -e "${RED}❌ Node.js must be >= 20.19.0 (or 22.x). Current: v${NODE_SEMVER}${NC}"
+    echo "   Run: nvm install && nvm use"
     exit 1
 fi
 
