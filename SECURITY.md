@@ -45,7 +45,7 @@ JWT_SECRET=tu_secret_generado_aqui
 ### 9. Dependencias
 
 - Frontend: `react-router-dom` resuelve a `react-router@8.3.0` (alias npm; cierra GHSA-qwww-vcr4-c8h2). Mantener ≥ 8.3.0 o, si se vuelve a la línea 7.x, ≥ 7.18.2.
-- Backend: override `uuid` ≥ 11.1.1 (transitivo de `exceljs`); `body-parser` ≥ 2.3.0.
+- Backend: override `uuid` ≥ 11.1.1 (transitivo de `exceljs`); override `deepmerge-ts` ≥ 8.0.2 (transitivo de `prisma` → `@prisma/config`; cierra GHSA-ggr8-5vv4-36mx / CVE-2026-40345 hasta que upstream suba la dep); `body-parser` ≥ 2.3.0.
 - Revisar `npm audit` periódicamente; deps de dev (`vite`, `tmp`) pueden requerir upgrades planificados.
 
 ### 10. Endurecimiento P1–P2 (2026-07)
@@ -62,11 +62,11 @@ JWT_SECRET=tu_secret_generado_aqui
 - **`sanitizeSoft`** global en el backend (trim de body/query); no se usa `sanitizeInput` con escape HTML en la API JSON (escapar al persistir corrompería datos; React escapa en salida).
 - **Tests RBAC** en CI: `groups.access`, `enrollments.access`, `auth.middleware`, `errorHandler`.
 
-**P3 deps (aplicado 2026-08)**
+**P3 deps (aplicado 2026-08 / refresh 2026-09-01)**
 
 - `npm audit` limpio (high/critical = 0) en frontend y backend tras refresh de lockfiles.
-- Frontend: React 19.2.8 + `react-router@8.3.0` vía alias de `react-router-dom`.
-- Backend: override `uuid@^11.1.1` sin forzar downgrade de `exceljs`.
+- Frontend: React 19.2.8 + `react-router@8.3.0` vía alias de `react-router-dom`; `js-yaml` ≥ 4.3.2, `nanoid` ≥ 3.3.18 (transitivos).
+- Backend: override `uuid@^11.1.1` sin forzar downgrade de `exceljs`; override `deepmerge-ts@^8.0.2` (Prisma CLI; quitar cuando `@prisma/config` lo incluya nativamente).
 
 **Pendiente (mejora continua)**
 

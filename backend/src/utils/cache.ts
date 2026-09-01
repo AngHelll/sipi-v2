@@ -45,6 +45,8 @@ class MemoryCache {
     this.cleanupInterval = setInterval(() => {
       this.cleanup();
     }, 60 * 1000);
+    // No bloquear exit del proceso (p. ej. Jest) si este timer es el único handle activo
+    this.cleanupInterval.unref();
   }
 
   /**

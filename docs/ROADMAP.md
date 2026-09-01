@@ -31,7 +31,7 @@ flowchart TB
 
 El journey STUDENT de inglés está completo en web, iOS y Android. La capa web (3) quedó cerrada para el alcance actual: cualquier trabajo nuevo debe venir de las capas 0–2 o del frente móvil.
 
-1. **R5 — E2E alumno en dispositivo** — checklist `CHECKLIST-E2E-ALUMNO.md` en repos móviles (validación manual post-D5k).
+1. **R5 — E2E alumno en dispositivo** — checklist [CHECKLIST-E2E-ALUMNO.md](CHECKLIST-E2E-ALUMNO.md) (índice + estado); detalle en repos móviles.
 2. **iOS / Android — rol TEACHER (móvil, opcional / web-first)**: vista única del grupo alineada con web (§4.7) solo si hay demanda real; web canónica para staff.
 3. **iOS / Android — rol ADMIN (móvil, opcional)**: assign-period, assign-group, waitlist/summary e initial-level — pospuesto; web canónica.
 4. **iOS / Android — hardening (R5 restante)**: filtros admin de docentes/materias, observabilidad, snackbar de feedback; pull-to-refresh ya en STUDENT.
