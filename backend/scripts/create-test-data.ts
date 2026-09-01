@@ -1,9 +1,9 @@
 // Script to create test data (subject, group, enrollment)
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import dotenv from 'dotenv';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function createTestData() {
   console.log('🔧 Creating test data...\n');

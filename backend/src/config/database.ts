@@ -1,11 +1,7 @@
 // Database configuration and Prisma client setup
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from './create-prisma-client';
 
-// Singleton pattern for Prisma client
-// This ensures we only have one instance of PrismaClient across the app
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-});
+const prisma = createPrismaClient();
 
 // Graceful shutdown: disconnect Prisma on app termination
 process.on('beforeExit', async () => {
@@ -13,4 +9,3 @@ process.on('beforeExit', async () => {
 });
 
 export default prisma;
-

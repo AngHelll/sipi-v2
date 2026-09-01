@@ -7,12 +7,12 @@
  * WARNING: This will delete ALL data except the admin user!
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import * as dotenv from 'dotenv';
 import * as readline from 'readline';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const rl = readline.createInterface({
   input: process.stdin,

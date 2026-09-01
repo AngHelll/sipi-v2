@@ -13,12 +13,12 @@
  *   RESET_CORE_AUTO=true npx ts-node scripts/reset-to-core-users.ts
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcryptjs';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function purgeToCore() {
   console.log('\n╔══════════════════════════════════════════════════════════════╗');

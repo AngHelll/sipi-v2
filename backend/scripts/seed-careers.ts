@@ -4,12 +4,12 @@
  * Usage: npm run seed:careers
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import { randomUUID } from 'crypto';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const CAREERS = [
   {

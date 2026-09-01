@@ -6,11 +6,11 @@
  * Or: npx ts-node scripts/create-bulk-groups.ts [count]
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import dotenv from 'dotenv';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 // Nombres de grupos comunes
 const nombresGrupos = ['Grupo A', 'Grupo B', 'Grupo C', 'Grupo D', 'Grupo E', 'Grupo F'];

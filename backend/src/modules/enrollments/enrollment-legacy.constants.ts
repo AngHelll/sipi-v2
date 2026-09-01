@@ -1,7 +1,7 @@
 // Legacy English data stored on `enrollments` before academic_activities (RB-038).
 // Excluded from list endpoints; English flows use /api/academic-activities only.
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/db/client';
 
 export const LEGACY_ENGLISH_ENROLLMENT_FILTER: Prisma.enrollmentsWhereInput = {
   NOT: {

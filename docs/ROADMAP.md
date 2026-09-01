@@ -31,7 +31,7 @@ flowchart TB
 
 El journey STUDENT de inglés está completo en web, iOS y Android. La capa web (3) quedó cerrada para el alcance actual: cualquier trabajo nuevo debe venir de las capas 0–2 o del frente móvil.
 
-1. **R5 — E2E alumno en dispositivo** — checklist [CHECKLIST-E2E-ALUMNO.md](CHECKLIST-E2E-ALUMNO.md) (índice + estado); detalle en repos móviles.
+1. **R5 — E2E alumno en dispositivo** — [E2E-SETUP.md](E2E-SETUP.md) + [CHECKLIST-E2E-ALUMNO.md](CHECKLIST-E2E-ALUMNO.md).
 2. **iOS / Android — rol TEACHER (móvil, opcional / web-first)**: vista única del grupo alineada con web (§4.7) solo si hay demanda real; web canónica para staff.
 3. **iOS / Android — rol ADMIN (móvil, opcional)**: assign-period, assign-group, waitlist/summary e initial-level — pospuesto; web canónica.
 4. **iOS / Android — hardening (R5 restante)**: filtros admin de docentes/materias, observabilidad, snackbar de feedback; pull-to-refresh ya en STUDENT.
@@ -201,11 +201,13 @@ Actualización controlada sin features de producto:
 
 - **Node 22 LTS** — `.nvmrc`, Drone CI, docs (mínimo 20.19 / 22.12+).
 - **Frontend** — Vite 8, `@vitejs/plugin-react` 6, `react-router@8.3.1`; TypeScript 5.9; ESLint 9 (deuda `no-explicit-any` pendiente).
-- **Backend** — Prisma **6.19** (pospuesto v7: adapter + prisma.config + ~33 imports); TypeScript 5.9 + ts-node.
-- **Audit** — 0 high/critical en backend y frontend.
+- **Backend** — branch `chore/prisma-7-upgrade`: Prisma **7.10** + adapter MariaDB; TypeScript 5.9 + ts-node. Ver [setup/PRISMA-7-MIGRATION.md](setup/PRISMA-7-MIGRATION.md).
+- **Audit** — frontend 0; backend Prisma 7: revisar `mariadb` transitivo (adapter obligatorio).
 
 Detalle operativo (Mac, Pi, Drone, upgrade Node): [setup/NODE-STACK.md](setup/NODE-STACK.md).
 
-**Pospuesto (cuando haya ventana):** Prisma 7, TypeScript 7 backend (tsx), ESLint 10.
+**Pospuesto:** TypeScript 7 backend (tsx), ESLint 10.
+
+**Producto pendiente:** R5 E2E — [E2E-SETUP.md](E2E-SETUP.md).
 
 **Última actualización**: 2026-09-01 — Stack toolchain + Capa 4-UX **D0–D5k ✓**. Pendiente: R5 E2E en dispositivo.

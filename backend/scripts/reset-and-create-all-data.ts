@@ -14,14 +14,14 @@
  * 7. Create enrollments (50)
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import * as bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import * as readline from 'readline';
 import { recalculateStudentAverages } from '../src/modules/students/students.service';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const rl = readline.createInterface({
   input: process.stdin,

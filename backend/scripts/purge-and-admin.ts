@@ -4,13 +4,13 @@
  * Uso: npm run reset:admin
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';

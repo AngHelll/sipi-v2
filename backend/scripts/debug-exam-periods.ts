@@ -1,7 +1,7 @@
 // Debug script to check exam periods availability
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main() {
   console.log('\n🔍 DIAGNÓSTICO DE PERÍODOS DE EXÁMENES\n');

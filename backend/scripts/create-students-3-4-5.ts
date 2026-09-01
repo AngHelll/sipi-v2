@@ -7,13 +7,13 @@
  * Usage: npx ts-node scripts/create-students-3-4-5.ts
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 interface StudentData {
   username: string;

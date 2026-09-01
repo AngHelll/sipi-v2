@@ -50,8 +50,8 @@ temp/
 Thumbs.db
 .DS_Store
 
-# Prisma
-# Keep migrations but ignore generated client in node_modules
+# Prisma — client generado en src/ (Prisma 7); se regenera con `npm run prisma:generate`
+backend/src/generated/
 
 # Database
 *.db

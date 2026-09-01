@@ -11,13 +11,13 @@
  * Usage: npx ts-node scripts/purge-and-create-minimal-data.ts
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import * as dotenv from 'dotenv';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function purgeDatabase() {
   console.log('\n🧹 Purging database (preserving subjects, groups, and exam periods)...\n');

@@ -22,4 +22,6 @@ Validación manual post-D5k. Los checklists viven en los repos móviles (mismo c
 | Red / errores | ☐ pendiente | ☐ pendiente |
 | Paridad iOS ↔ Android | ☐ pendiente | ☐ pendiente |
 
+**Guía de sesión:** [E2E-SETUP.md](E2E-SETUP.md) — credenciales, Pi, orden de prueba.
+
 Marcar ítems en los checklists de cada repo móvil al completar la pasada en dispositivo.

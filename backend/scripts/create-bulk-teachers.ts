@@ -5,12 +5,13 @@
  * Or: npx ts-node scripts/create-bulk-teachers.ts [count]
  */
 
-import { PrismaClient, UserRole } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
+import { UserRole } from '../src/db/client';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 // Arrays de datos para generar maestros realistas
 const nombres = [

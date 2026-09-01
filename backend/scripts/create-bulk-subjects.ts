@@ -5,11 +5,11 @@
  * Or: npx ts-node scripts/create-bulk-subjects.ts [count]
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import dotenv from 'dotenv';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 // Array de materias académicas realistas con claves y créditos
 const materias = [

@@ -1,7 +1,7 @@
 // Script to get test users (student and teacher) with their credentials
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function getTestUsers() {
   try {

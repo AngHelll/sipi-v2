@@ -9,11 +9,11 @@
  * Usage: npx ts-node scripts/mark-diagnostic-courses.ts
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function markDiagnosticCourses() {
   console.log('\n🔍 Identifying courses completed by diagnostic exam...\n');

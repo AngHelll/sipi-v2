@@ -2,7 +2,7 @@
 import { randomUUID } from 'node:crypto';
 import prisma from '../../config/database';
 import { cache, generateCacheKey } from '../../utils/cache';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/db/client';
 import {
   CreateGroupDto,
   UpdateGroupDto,

@@ -1,10 +1,11 @@
 // Script to create a test teacher user
-import { PrismaClient, UserRole } from '@prisma/client';
+import { createPrismaClient } from '../src/config/create-prisma-client';
+import { UserRole } from '../src/db/client';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
 dotenv.config();
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function createTestTeacher() {
   const username = 'teacher';

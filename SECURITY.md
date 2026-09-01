@@ -66,7 +66,7 @@ JWT_SECRET=tu_secret_generado_aqui
 
 - `npm audit` limpio (high/critical = 0) en frontend y backend tras refresh de lockfiles.
 - Frontend: React 19.2.8 + `react-router@8.3.1` vía alias de `react-router-dom`; Vite 8.x; `js-yaml` ≥ 4.3.2, `nanoid` ≥ 3.3.18 (transitivos).
-- Backend: Prisma **6.19** (sin salto a v7 — ver estrategia stack); override `uuid@^11.1.1`; override `deepmerge-ts@^8.0.2`.
+- Backend: Prisma **7.10** + `@prisma/adapter-mariadb`; override `mariadb@^3.5.3` (transitivo del adapter); override `uuid@^11.1.1`; override `deepmerge-ts@^8.0.2` si aplica al CLI.
 - **Node:** 22 LTS en CI (Drone) y `.nvmrc`; mínimo 20.19 / 22.12+.
 
 **Pendiente (mejora continua)**
