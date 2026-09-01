@@ -204,6 +204,8 @@ Actualización controlada sin features de producto:
 - **Backend** — Prisma **6.19** (pospuesto v7: adapter + prisma.config + ~33 imports); TypeScript 5.9 + ts-node.
 - **Audit** — 0 high/critical en backend y frontend.
 
+Detalle operativo (Mac, Pi, Drone, upgrade Node): [setup/NODE-STACK.md](setup/NODE-STACK.md).
+
 **Pospuesto (cuando haya ventana):** Prisma 7, TypeScript 7 backend (tsx), ESLint 10.
 
 **Última actualización**: 2026-09-01 — Stack toolchain + Capa 4-UX **D0–D5k ✓**. Pendiente: R5 E2E en dispositivo.
